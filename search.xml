@@ -21,7 +21,7 @@
   </entry>
   <entry>
     <title>LRU缓存机制</title>
-    <url>/2021/08/26/2021-08-26-LRU%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/</url>
+    <url>/2021/08/26/LRU%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/</url>
     <content><![CDATA[<p>这是 <a href="https://leetcode-cn.com/problems/lru-cache/">LeetCode 第 146 题</a> 。</p>
 <blockquote>
 <p><strong>题目描述</strong>：运用你所掌握的数据结构，设计和实现一个  LRU (最近最少使用) 缓存机制 。</p>
@@ -56,7 +56,7 @@
   </entry>
   <entry>
     <title>C++内存分配</title>
-    <url>/2021/08/12/2021-08-12-C++%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/</url>
+    <url>/2021/08/12/C++%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/</url>
     <content><![CDATA[<h3 id="1-池化技术"><a class="markdownIt-Anchor" href="#1-池化技术"></a> 1. 池化技术</h3>
 <p><strong>池</strong> 是计算机技术中经常使用的一种设计模型，其内涵在于：将程序中需要经常使用的核心资源先申请出来放到一个池中，由程序自己管理，不仅能够提高资源的利用率，还能保证本程序占有的资源数量。经常使用的池化技术包括内存池和线程池。</p>
 <h3 id="2-内存池"><a class="markdownIt-Anchor" href="#2-内存池"></a> 2. 内存池</h3>
@@ -90,7 +90,7 @@
   </entry>
   <entry>
     <title>virtual底层实现</title>
-    <url>/2021/08/08/2021-08-08-virtual%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0/</url>
+    <url>/2021/08/08/virtual%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0/</url>
     <content><![CDATA[<p>在基类中，通过 virtual修饰虚函数可以实现多态的效果，下面就介绍下它的底层实现原理。</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span> &#123;</span><br><span class="line"><span class="attr">public</span>:</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func1</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Base - func1()&quot;</span> &lt;&lt; endl; </span><br><span class="line">	&#125;</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func2</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Base - func2()&quot;</span> &lt;&lt; endl; </span><br><span class="line">	&#125;</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func3</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Base - func3()&quot;</span> &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 当基类的成员变量或函数被声明为虚函数后</span></span><br><span class="line"><span class="comment">// 其子类中的同名变量或函数都将自动成为虚函数（virtual关键字可省略）</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Son</span> : public <span class="title class_">Base</span> &#123;</span><br><span class="line"><span class="attr">public</span>:</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func1</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Son  - func1()&quot;</span> &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 注意：func2() 虽然没重写，但依然继承下来了！！</span></span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func3</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Son  - func3()&quot;</span> &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">func</span>(<span class="params">Base&amp; base</span>) &#123;</span><br><span class="line">    base.<span class="title function_">func1</span>();</span><br><span class="line">    base.<span class="title function_">func2</span>();</span><br><span class="line">    base.<span class="title function_">func3</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int <span class="title function_">main</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="title class_">Son</span> son;</span><br><span class="line">    <span class="title function_">func</span>(son);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>编译器见到这种继承层次结构后，就知道 Base定义了虚函数，并在 Son类中重写了虚函数，因此，编译器会为定义了虚函数的基类创建一个虚函数表（Virtual Function Table，VFT），这个虚函数表会被子类继承下去。在用 Base或 Son实例化对象时，编译器会在该对象内部创建一个隐藏的指针 VFT* 指向相应的虚函数表。虚函数表可视为一个由函数指针构成的静态数组，其中每个指针都指向相应虚函数的实现：</p>
@@ -113,7 +113,7 @@
   </entry>
   <entry>
     <title>C++智能指针</title>
-    <url>/2021/08/05/2021-08-05-%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/</url>
+    <url>/2021/08/05/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/</url>
     <content><![CDATA[<p>智能指针是用来管理指针的，主要解决两类问题：一是忘记释放内存，造成内存泄漏；二是内存提前释放，造成指针悬空。智能指针是一个类，它的行为类似于常规指针，主要区别在于它会自动释放对象。<br />
 C++ 有四种智能指针：auto_ptr, unique_ptr, shared_ptr 和 weak_ptr，其中 auto_ptr 已被 11 弃用。它们的区别在于管理底层指针的方法不同，shared_ptr允许多个指针指向同一个对象，unique_ptr则“独占”所指向的对象，weak_ptr是一种弱引用，指向 shared_ptr所管理的对象，它们都定义在 memory 头文件中。</p>
 <h3 id="1-auto_ptr"><a class="markdownIt-Anchor" href="#1-auto_ptr"></a> 1. auto_ptr</h3>
@@ -157,7 +157,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
   </entry>
   <entry>
     <title>CPU分支预测优化</title>
-    <url>/2021/07/22/2021-07-22-CPU%E5%88%86%E6%94%AF%E9%A2%84%E6%B5%8B%E4%BC%98%E5%8C%96/</url>
+    <url>/2021/07/22/CPU%E5%88%86%E6%94%AF%E9%A2%84%E6%B5%8B%E4%BC%98%E5%8C%96/</url>
     <content><![CDATA[<p>之前介绍过CPU的分支预测功能，如果错误的分支预测经常发生，性能损失就会显著增加。因为当这样的事件发生时，CPU 需要清除所有提前完成但后来被证明是错误的推测性工作，同时还需要用来自正确分支路径的指令来填充流水线。 通常，现代 CPU 会因分支预测错误而遭受 10-20 个周期的惩罚。</p>
 <p>如今，处理器非常擅长预测分支结果，不仅可以遵循静态预测规则，还可以检测动态模式。通常，分支预测器会采用后者。</p>
 <blockquote>
@@ -210,7 +210,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
   </entry>
   <entry>
     <title>CPU性能分析中的术语和指标</title>
-    <url>/2021/07/04/2021-07-04-CPU%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E4%B8%AD%E7%9A%84%E6%9C%AF%E8%AF%AD%E5%92%8C%E6%8C%87%E6%A0%87/</url>
+    <url>/2021/07/04/CPU%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E4%B8%AD%E7%9A%84%E6%9C%AF%E8%AF%AD%E5%92%8C%E6%8C%87%E6%A0%87/</url>
     <content><![CDATA[<p>简单介绍一下 Linux 性能分析工具 <code>perf</code> 中所使用到的基本术语和指标。</p>
 <h2 id="1-retired-vs-executed-instruction"><a class="markdownIt-Anchor" href="#1-retired-vs-executed-instruction"></a> 1. Retired vs. Executed Instruction</h2>
 <p>现代处理器通常执行比程序流所需更多的指令，这主要是因为其中一些是推测执行的。</p>
@@ -279,7 +279,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
   </entry>
   <entry>
     <title>CPU微架构</title>
-    <url>/2021/07/03/2021-07-03-CPU%E5%BE%AE%E6%9E%B6%E6%9E%84/</url>
+    <url>/2021/07/03/CPU%E5%BE%AE%E6%9E%B6%E6%9E%84/</url>
     <content><![CDATA[<p>简单总结一下影响软件性能的关键 CPU 架构和微架构特征。有些内容过于基础，我会只介绍重点。</p>
 <h2 id="1-指令集架构isa"><a class="markdownIt-Anchor" href="#1-指令集架构isa"></a> 1. 指令集架构（ISA）</h2>
 <ul>
@@ -433,7 +433,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
   </entry>
   <entry>
     <title>多发射数据通路和数据调度</title>
-    <url>/2021/06/25/2021-06-25-%E5%A4%9A%E5%8F%91%E5%B0%84%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF%E5%92%8C%E6%95%B0%E6%8D%AE%E8%B0%83%E5%BA%A6/</url>
+    <url>/2021/06/25/%E5%A4%9A%E5%8F%91%E5%B0%84%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF%E5%92%8C%E6%95%B0%E6%8D%AE%E8%B0%83%E5%BA%A6/</url>
     <content><![CDATA[<p>介绍两种提高流水线效率（即提高 IPC）的技术： <strong>多发射数据通路</strong> 和 <strong>动态调度</strong>。</p>
 <p>为了提高流水线的执行效率，一个最直观的方式就是让处理器中的每级流水线能够同时处理多条指令，这就是多发射数据通路技术。比如对于双发射流水线来说，每次都会进行两条指令的取指、译码、执行、访存和写回操作，其理想 IPC 就从单发射流水线的 1 提升到了 2。</p>
 <p>之所以说理想情况，是因为会有各类相关（也叫冒险）所引起的阻塞，因此其实际执行效率会大打折扣。为了减少这些阻塞，引入了动态调度技术。</p>
@@ -470,7 +470,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
   </entry>
   <entry>
     <title>获取数组元素的物理地址范围</title>
-    <url>/2021/05/02/2021-05-02-%E8%8E%B7%E5%8F%96%E6%95%B0%E7%BB%84%E5%85%83%E7%B4%A0%E7%9A%84%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80%E8%8C%83%E5%9B%B4/</url>
+    <url>/2021/05/02/%E8%8E%B7%E5%8F%96%E6%95%B0%E7%BB%84%E5%85%83%E7%B4%A0%E7%9A%84%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80%E8%8C%83%E5%9B%B4/</url>
     <content><![CDATA[<p>近期由于实验需要，编写了一个获取数组元素物理地址范围的小程序。</p>
 <h2 id="1-获取trace"><a class="markdownIt-Anchor" href="#1-获取trace"></a> 1. 获取trace</h2>
 <p>首先要对数组进行遍历，然后通过插桩工具获取到此 ROI 的物理地址。<br />
@@ -493,7 +493,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
   </entry>
   <entry>
     <title>浅谈结构体中的数据对齐</title>
-    <url>/2021/04/12/2021-04-12-%E6%B5%85%E8%B0%88%E7%BB%93%E6%9E%84%E4%BD%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E5%AF%B9%E9%BD%90/</url>
+    <url>/2021/04/12/%E6%B5%85%E8%B0%88%E7%BB%93%E6%9E%84%E4%BD%93%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E5%AF%B9%E9%BD%90/</url>
     <content><![CDATA[<p>在计算机中，CPU是按 32/64 位的大小进行存取的，为了提高CPU的执行效率，计算机系统对基本数据类型的合法地址做了一些限制，要求某种类型的地址必须是某个值（2 / 4 / 8）的倍数，这就是数据对齐。数据对齐会由编译器自动实现，但了解其实现方法还是很有必要的，可以优化代码结构，达到节省空间和提高效率的目的。</p>
 <p>数据对齐的基本原则是，任何 k 字节的基本对象的地址必须是 k 的倍数，同时结构体本身也要对齐，因此编译器可能需要在字段的地址空间分配时插入一些空隙以达到对齐的目的。</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">struct s1 &#123;</span><br><span class="line">    int i;</span><br><span class="line">    double d;</span><br><span class="line">    float f;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -518,7 +518,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
   </entry>
   <entry>
     <title>CPU 缓存一致性问题</title>
-    <url>/2021/03/12/2021-03-12-MESI/</url>
+    <url>/2021/03/12/MESI/</url>
     <content><![CDATA[<p>当 CPU 中的某个核要对内存中的数据进行修改时，会先将其缓存到 cache 中，然后再去修改。此时由于修改后的数据尚未写回到内存，如果其他核要去访问这个数据，就会读到修改之前的数据，这就是 <strong>缓存一致性问题</strong>。对此问题有两种解决方式：</p>
 <h3 id="1对总线加锁"><a class="markdownIt-Anchor" href="#1对总线加锁"></a> 1）对总线加锁</h3>
 <p>CPU 和其他组件都是通过总线（数据总线、控制总线、地址总线）进行通信的，因此通过对总线加锁就可以保证只有一个核获取到锁，而其他核都处于阻塞状态。这样虽然保证了数据的一致性，但也严重影响了 CPU 的执行效率。</p>
@@ -678,7 +678,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
   </entry>
   <entry>
     <title>以 hello为例了解程序的执行过程</title>
-    <url>/2021/03/05/2021-03-05-%E4%BB%A5hello%E4%B8%BA%E4%BE%8B%E4%BA%86%E8%A7%A3%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B/</url>
+    <url>/2021/03/05/%E4%BB%A5hello%E4%B8%BA%E4%BE%8B%E4%BA%86%E8%A7%A3%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<p>hello 程序的生命周期从高级 C 程序 hello.c 开始的，这实际上是一个文本文件，里面都是 0 和 1 组成的比特序列。每 8 位为一个字节，一个字节对应的整数值表示一个 ASCII 文本字符。为了在系统上运行 hello.c 程序，每条 C 语句都必须被编译器转换为一系列低级的机器语言指令，这些指令被封装为可执行目标程序 hello，并以二进制文件的形式保存在磁盘上。</p>
 <h2 id="1-程序的翻译"><a class="markdownIt-Anchor" href="#1-程序的翻译"></a> 1. 程序的翻译</h2>
 <p>从源程序到目标程序的翻译过程可分为四个阶段，执行这四个阶段的程序——预处理器、编译器、汇编器、链接器一起构成了编译系统。</p>
@@ -709,7 +709,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
   </entry>
   <entry>
     <title>Ubuntu16.0 下部署 Web项目（jdk + Tomcat + SQL Server）</title>
-    <url>/2021/03/01/2021-03-01-Web%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2/</url>
+    <url>/2021/03/01/Web%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2/</url>
     <content><![CDATA[<h2 id="安装-jdk"><a class="markdownIt-Anchor" href="#安装-jdk"></a> 安装 jdk</h2>
 <p>下载 jdk需要注意的两点：</p>
 <ol>
@@ -899,7 +899,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
   </entry>
   <entry>
     <title>中标麒麟操作系统下部署 Web项目（Tongweb + DM）</title>
-    <url>/2021/03/01/2021-03-01-Web%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B22/</url>
+    <url>/2021/03/01/Web%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B22/</url>
     <content><![CDATA[<p>系统：中标麒麟桌面操作系统 V7.0</p>
 <p>内核：Linux</p>
 <p>CPU：龙芯</p>
