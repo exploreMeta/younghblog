@@ -242,6 +242,41 @@
       </tags>
   </entry>
   <entry>
+    <title>LRU缓存机制</title>
+    <url>/posts/2357652358.html</url>
+    <content><![CDATA[<p>这是 <a href="https://leetcode-cn.com/problems/lru-cache/">LeetCode 第 146 题</a> 。</p>
+<blockquote>
+<p><strong>题目描述</strong>：运用你所掌握的数据结构，设计和实现一个  LRU (最近最少使用) 缓存机制 。</p>
+<p>实现 LRUCache 类：</p>
+<ul>
+<li>LRUCache(int capacity) 以正整数作为容量 capacity 初始化 LRU 缓存</li>
+<li>int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。</li>
+<li>void put(int key, int value) 如果关键字已经存在，则变更其数据值；如果关键字不存在，则插入该组「关键字-值」。当缓存容量达到上限时，它应该在写入新数据之前删除最久未使用的数据值，从而为新的数据值留出空间。</li>
+</ul>
+<p><strong>进阶</strong>：你是否可以在 <code>O(1)</code> 时间复杂度内完成这两种操作？</p>
+<p><strong>示例</strong>：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">输入:</span><br><span class="line">[<span class="string">&quot;LRUCache&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;get&quot;</span>]</span><br><span class="line">[[<span class="number">2</span>], [<span class="number">1</span>, <span class="number">1</span>], [<span class="number">2</span>, <span class="number">2</span>], [<span class="number">1</span>], [<span class="number">3</span>, <span class="number">3</span>], [<span class="number">2</span>], [<span class="number">4</span>, <span class="number">4</span>], [<span class="number">1</span>], [<span class="number">3</span>], [<span class="number">4</span>]]</span><br><span class="line">输出:</span><br><span class="line">[<span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="number">1</span>, <span class="literal">null</span>, -<span class="number">1</span>, <span class="literal">null</span>, -<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>]</span><br><span class="line"></span><br><span class="line">解释:</span><br><span class="line"><span class="title class_">LRUCache</span> lRUCache = <span class="keyword">new</span> <span class="title class_">LRUCache</span>(<span class="number">2</span>);</span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">1</span>, <span class="number">1</span>); <span class="comment">// 缓存是 &#123;1=1&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">2</span>, <span class="number">2</span>); <span class="comment">// 缓存是 &#123;1=1, 2=2&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">1</span>);    <span class="comment">// 返回 1</span></span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">3</span>, <span class="number">3</span>); <span class="comment">// 该操作会使得关键字 2 作废，缓存是 &#123;1=1, 3=3&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">2</span>);    <span class="comment">// 返回 -1 (未找到)</span></span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">4</span>, <span class="number">4</span>); <span class="comment">// 该操作会使得关键字 1 作废，缓存是 &#123;4=4, 3=3&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">1</span>);    <span class="comment">// 返回 -1 (未找到)</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">3</span>);    <span class="comment">// 返回 3</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">4</span>);    <span class="comment">// 返回 4</span></span><br></pre></td></tr></table></figure>
+</blockquote>
+<h2 id="思路"><a class="markdownIt-Anchor" href="#思路"></a> 思路</h2>
+<ul>
+<li>要在 O(1) 时间复杂度内实现关键字的查找以及修改工作，必须使用 map。</li>
+<li>当容量达到上限时需要删除最久未使用的元素，因此每访问一个元素就应该将其放到一端，表示最近被访问的位置，并将当前位置删除；而每次删除从另一端开始，表示最久未使用元素。</li>
+<li>这里涉及到头部和尾部数据的维护以及中间数据的删除，要在 O(1) 的时间复杂度内完成，就需要用到循环队列 list。双端队列 deque 虽然也能够维护头部和尾部数据，但其中间元素的插入和删除还是需要移动数据的。</li>
+<li>map 支持快速查找但不支持头部尾部数据的维护和中间数据的删除，而 list 正好相反，二者可以结合使用，各取所长。</li>
+</ul>
+<p>接下来要考虑的就是怎么结合的问题。</p>
+<p>可以将 map 作为索引表，将 list 作为实际操作的对象。因此需要在 map 中保存 key 值以及对应在 list 中节点的位置，而在 list 中如果只保存 map 中的 key 所对应的 value 显然是不行的，因为对 list 操作的同时需要维护其索引表 map，比如要删除某个节点，那 map 中对应的 key 也应该删除，或者要移动某个节点，map 中对应的指向 list 节点的位置也要更新。而此时只有一个 map 指向 list 的指针，必须再维护一个 list 指向 map 的指针，只需在 list 中多保存一个 key 即可，因为 key 在 map 中是唯一字段，因此可以定位到 map。</p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gttyla4fwoj30jr07maar.jpg" alt="LRU"/>
+<h2 id="c代码"><a class="markdownIt-Anchor" href="#c代码"></a> C++代码</h2>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">LRUCache</span> &#123;</span><br><span class="line"><span class="attr">private</span>:</span><br><span class="line">    int _capacity;</span><br><span class="line">    list&lt;pair&lt;int, int&gt;&gt; _list;</span><br><span class="line">    unordered_map&lt;int, list&lt;pair&lt;int, int&gt;&gt;::iterator&gt; _map;</span><br><span class="line">    </span><br><span class="line"><span class="attr">public</span>:</span><br><span class="line">    <span class="title class_">LRUCache</span>(int capacity) &#123;</span><br><span class="line">        _capacity = capacity;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    int <span class="title function_">get</span>(<span class="params">int key</span>) &#123;</span><br><span class="line">        auto pos = _map.<span class="title function_">find</span>(key);</span><br><span class="line">        <span class="keyword">if</span>(pos == _map.<span class="title function_">end</span>())  <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 将_list中pos-&gt;second位置的节点剪切到_list的最前端</span></span><br><span class="line">        _list.<span class="title function_">splice</span>(_list.<span class="title function_">begin</span>(), _list, pos-&gt;second);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// pos-&gt;second即为_map的value，它是指向_list中某个节点的迭代器</span></span><br><span class="line">        <span class="comment">// _list节点保存的是pair，所以再次-&gt;second即为pair所对应的value</span></span><br><span class="line">        <span class="keyword">return</span> pos-&gt;second-&gt;second;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">put</span>(<span class="params">int key, int value</span>) &#123;</span><br><span class="line">        auto pos = _map.<span class="title function_">find</span>(key);</span><br><span class="line">        <span class="comment">// 如果存在，更新_list并将其剪切到最前面</span></span><br><span class="line">        <span class="keyword">if</span>(pos != _map.<span class="title function_">end</span>()) &#123;</span><br><span class="line">            pos-&gt;second-&gt;second = value;</span><br><span class="line">            _list.<span class="title function_">splice</span>(_list.<span class="title function_">begin</span>(), _list, pos-&gt;second);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(_list.<span class="title function_">size</span>() == _capacity) &#123;</span><br><span class="line">            <span class="comment">// _map中erase的形参既可以是迭代器，也可以是key值</span></span><br><span class="line">            _map.<span class="title function_">erase</span>(_list.<span class="title function_">back</span>().<span class="property">first</span>);</span><br><span class="line">            _list.<span class="title function_">pop_back</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        ls.<span class="title function_">emplace_front</span>(key, value);</span><br><span class="line">        _map[key] = _list.<span class="title function_">begin</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>LeeCode</category>
+      </categories>
+      <tags>
+        <tag>LRU</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>CPU性能分析中的术语和指标</title>
     <url>/posts/682752931.html</url>
     <content><![CDATA[<p>简单介绍一下 Linux 性能分析工具 <code>perf</code> 中所使用到的基本术语和指标。</p>
@@ -308,41 +343,6 @@
       </categories>
       <tags>
         <tag>perf IPC 微指令融合 slot 动态频率缩放</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>LRU缓存机制</title>
-    <url>/posts/2357652358.html</url>
-    <content><![CDATA[<p>这是 <a href="https://leetcode-cn.com/problems/lru-cache/">LeetCode 第 146 题</a> 。</p>
-<blockquote>
-<p><strong>题目描述</strong>：运用你所掌握的数据结构，设计和实现一个  LRU (最近最少使用) 缓存机制 。</p>
-<p>实现 LRUCache 类：</p>
-<ul>
-<li>LRUCache(int capacity) 以正整数作为容量 capacity 初始化 LRU 缓存</li>
-<li>int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。</li>
-<li>void put(int key, int value) 如果关键字已经存在，则变更其数据值；如果关键字不存在，则插入该组「关键字-值」。当缓存容量达到上限时，它应该在写入新数据之前删除最久未使用的数据值，从而为新的数据值留出空间。</li>
-</ul>
-<p><strong>进阶</strong>：你是否可以在 <code>O(1)</code> 时间复杂度内完成这两种操作？</p>
-<p><strong>示例</strong>：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">输入:</span><br><span class="line">[<span class="string">&quot;LRUCache&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;put&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;get&quot;</span>,<span class="string">&quot;get&quot;</span>]</span><br><span class="line">[[<span class="number">2</span>], [<span class="number">1</span>, <span class="number">1</span>], [<span class="number">2</span>, <span class="number">2</span>], [<span class="number">1</span>], [<span class="number">3</span>, <span class="number">3</span>], [<span class="number">2</span>], [<span class="number">4</span>, <span class="number">4</span>], [<span class="number">1</span>], [<span class="number">3</span>], [<span class="number">4</span>]]</span><br><span class="line">输出:</span><br><span class="line">[<span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="number">1</span>, <span class="literal">null</span>, -<span class="number">1</span>, <span class="literal">null</span>, -<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>]</span><br><span class="line"></span><br><span class="line">解释:</span><br><span class="line"><span class="title class_">LRUCache</span> lRUCache = <span class="keyword">new</span> <span class="title class_">LRUCache</span>(<span class="number">2</span>);</span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">1</span>, <span class="number">1</span>); <span class="comment">// 缓存是 &#123;1=1&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">2</span>, <span class="number">2</span>); <span class="comment">// 缓存是 &#123;1=1, 2=2&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">1</span>);    <span class="comment">// 返回 1</span></span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">3</span>, <span class="number">3</span>); <span class="comment">// 该操作会使得关键字 2 作废，缓存是 &#123;1=1, 3=3&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">2</span>);    <span class="comment">// 返回 -1 (未找到)</span></span><br><span class="line">lRUCache.<span class="title function_">put</span>(<span class="number">4</span>, <span class="number">4</span>); <span class="comment">// 该操作会使得关键字 1 作废，缓存是 &#123;4=4, 3=3&#125;</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">1</span>);    <span class="comment">// 返回 -1 (未找到)</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">3</span>);    <span class="comment">// 返回 3</span></span><br><span class="line">lRUCache.<span class="title function_">get</span>(<span class="number">4</span>);    <span class="comment">// 返回 4</span></span><br></pre></td></tr></table></figure>
-</blockquote>
-<h2 id="思路"><a class="markdownIt-Anchor" href="#思路"></a> 思路</h2>
-<ul>
-<li>要在 O(1) 时间复杂度内实现关键字的查找以及修改工作，必须使用 map。</li>
-<li>当容量达到上限时需要删除最久未使用的元素，因此每访问一个元素就应该将其放到一端，表示最近被访问的位置，并将当前位置删除；而每次删除从另一端开始，表示最久未使用元素。</li>
-<li>这里涉及到头部和尾部数据的维护以及中间数据的删除，要在 O(1) 的时间复杂度内完成，就需要用到循环队列 list。双端队列 deque 虽然也能够维护头部和尾部数据，但其中间元素的插入和删除还是需要移动数据的。</li>
-<li>map 支持快速查找但不支持头部尾部数据的维护和中间数据的删除，而 list 正好相反，二者可以结合使用，各取所长。</li>
-</ul>
-<p>接下来要考虑的就是怎么结合的问题。</p>
-<p>可以将 map 作为索引表，将 list 作为实际操作的对象。因此需要在 map 中保存 key 值以及对应在 list 中节点的位置，而在 list 中如果只保存 map 中的 key 所对应的 value 显然是不行的，因为对 list 操作的同时需要维护其索引表 map，比如要删除某个节点，那 map 中对应的 key 也应该删除，或者要移动某个节点，map 中对应的指向 list 节点的位置也要更新。而此时只有一个 map 指向 list 的指针，必须再维护一个 list 指向 map 的指针，只需在 list 中多保存一个 key 即可，因为 key 在 map 中是唯一字段，因此可以定位到 map。</p>
-<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gttyla4fwoj30jr07maar.jpg" alt="LRU"/>
-<h2 id="c代码"><a class="markdownIt-Anchor" href="#c代码"></a> C++代码</h2>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">LRUCache</span> &#123;</span><br><span class="line"><span class="attr">private</span>:</span><br><span class="line">    int _capacity;</span><br><span class="line">    list&lt;pair&lt;int, int&gt;&gt; _list;</span><br><span class="line">    unordered_map&lt;int, list&lt;pair&lt;int, int&gt;&gt;::iterator&gt; _map;</span><br><span class="line">    </span><br><span class="line"><span class="attr">public</span>:</span><br><span class="line">    <span class="title class_">LRUCache</span>(int capacity) &#123;</span><br><span class="line">        _capacity = capacity;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    int <span class="title function_">get</span>(<span class="params">int key</span>) &#123;</span><br><span class="line">        auto pos = _map.<span class="title function_">find</span>(key);</span><br><span class="line">        <span class="keyword">if</span>(pos == _map.<span class="title function_">end</span>())  <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 将_list中pos-&gt;second位置的节点剪切到_list的最前端</span></span><br><span class="line">        _list.<span class="title function_">splice</span>(_list.<span class="title function_">begin</span>(), _list, pos-&gt;second);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// pos-&gt;second即为_map的value，它是指向_list中某个节点的迭代器</span></span><br><span class="line">        <span class="comment">// _list节点保存的是pair，所以再次-&gt;second即为pair所对应的value</span></span><br><span class="line">        <span class="keyword">return</span> pos-&gt;second-&gt;second;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">put</span>(<span class="params">int key, int value</span>) &#123;</span><br><span class="line">        auto pos = _map.<span class="title function_">find</span>(key);</span><br><span class="line">        <span class="comment">// 如果存在，更新_list并将其剪切到最前面</span></span><br><span class="line">        <span class="keyword">if</span>(pos != _map.<span class="title function_">end</span>()) &#123;</span><br><span class="line">            pos-&gt;second-&gt;second = value;</span><br><span class="line">            _list.<span class="title function_">splice</span>(_list.<span class="title function_">begin</span>(), _list, pos-&gt;second);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(_list.<span class="title function_">size</span>() == _capacity) &#123;</span><br><span class="line">            <span class="comment">// _map中erase的形参既可以是迭代器，也可以是key值</span></span><br><span class="line">            _map.<span class="title function_">erase</span>(_list.<span class="title function_">back</span>().<span class="property">first</span>);</span><br><span class="line">            _list.<span class="title function_">pop_back</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        ls.<span class="title function_">emplace_front</span>(key, value);</span><br><span class="line">        _map[key] = _list.<span class="title function_">begin</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>LeeCode</category>
-      </categories>
-      <tags>
-        <tag>LRU</tag>
       </tags>
   </entry>
   <entry>
@@ -846,26 +846,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Hello World</title>
-    <url>/posts/1243066710.html</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="quick-start"><a class="markdownIt-Anchor" href="#quick-start"></a> Quick Start</h2>
-<h3 id="create-a-new-post"><a class="markdownIt-Anchor" href="#create-a-new-post"></a> Create a new post</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (v &gt;= <span class="number">0</span> &amp;&amp; v &lt; <span class="number">10</span>)  <span class="keyword">return</span> <span class="number">0</span>; <span class="keyword">if</span> (v &gt;= <span class="number">10</span> &amp;&amp; v &lt; <span class="number">20</span>) <span class="keyword">return</span> <span class="number">1</span>; <span class="keyword">if</span> (v &gt;= <span class="number">20</span> &amp;&amp; v &lt; <span class="number">30</span>) <span class="keyword">return</span> <span class="number">2</span>; <span class="keyword">if</span> (v &gt;= <span class="number">30</span> &amp;&amp; v &lt; <span class="number">40</span>) <span class="keyword">return</span> <span class="number">3</span>; <span class="keyword">if</span> (v &gt;= <span class="number">40</span> &amp;&amp; v &lt; <span class="number">50</span>) <span class="keyword">return</span> <span class="number">4</span>; <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="run-server"><a class="markdownIt-Anchor" href="#run-server"></a> Run server</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="generate-static-files"><a class="markdownIt-Anchor" href="#generate-static-files"></a> Generate static files</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="deploy-to-remote-sites"><a class="markdownIt-Anchor" href="#deploy-to-remote-sites"></a> Deploy to remote sites</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-]]></content>
-  </entry>
-  <entry>
     <title>virtual底层实现</title>
     <url>/posts/40140329.html</url>
     <content><![CDATA[<p>在基类中，通过 virtual修饰虚函数可以实现多态的效果，下面就介绍下它的底层实现原理。</p>
@@ -887,6 +867,26 @@
       <tags>
         <tag>virtual</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>Hello World</title>
+    <url>/posts/1243066710.html</url>
+    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="quick-start"><a class="markdownIt-Anchor" href="#quick-start"></a> Quick Start</h2>
+<h3 id="create-a-new-post"><a class="markdownIt-Anchor" href="#create-a-new-post"></a> Create a new post</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (v &gt;= <span class="number">0</span> &amp;&amp; v &lt; <span class="number">10</span>)  <span class="keyword">return</span> <span class="number">0</span>; <span class="keyword">if</span> (v &gt;= <span class="number">10</span> &amp;&amp; v &lt; <span class="number">20</span>) <span class="keyword">return</span> <span class="number">1</span>; <span class="keyword">if</span> (v &gt;= <span class="number">20</span> &amp;&amp; v &lt; <span class="number">30</span>) <span class="keyword">return</span> <span class="number">2</span>; <span class="keyword">if</span> (v &gt;= <span class="number">30</span> &amp;&amp; v &lt; <span class="number">40</span>) <span class="keyword">return</span> <span class="number">3</span>; <span class="keyword">if</span> (v &gt;= <span class="number">40</span> &amp;&amp; v &lt; <span class="number">50</span>) <span class="keyword">return</span> <span class="number">4</span>; <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="run-server"><a class="markdownIt-Anchor" href="#run-server"></a> Run server</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="generate-static-files"><a class="markdownIt-Anchor" href="#generate-static-files"></a> Generate static files</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="deploy-to-remote-sites"><a class="markdownIt-Anchor" href="#deploy-to-remote-sites"></a> Deploy to remote sites</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+]]></content>
   </entry>
   <entry>
     <title>以 hello为例了解程序的执行过程</title>
