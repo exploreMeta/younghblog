@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>YounghBlog</title>
+    <link>https://younghblog.gitee.io/</link>
+    
+    <image>
+      <url>https://younghblog.gitee.io/icon.png</url>
+      <title>YounghBlog</title>
+      <link>https://younghblog.gitee.io/</link>
+    </image>
+    
+    <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
+    
+    <description>Stay hungry, stay foolish</description>
+    <pubDate>Thu, 21 Apr 2022 07:15:31 GMT</pubDate>
+    <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>Hello World</title>
+      <link>https://younghblog.gitee.io/posts/1243066710.html</link>
+      <guid>https://younghblog.gitee.io/posts/1243066710.html</guid>
+      <pubDate>Wed, 20 Apr 2022 00:38:37 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.io/docs/&quot;&gt;documentation&lt;/a&gt;</description>
+          
+        
+      
+      
+      
+      
+      
+      
+      <comments>https://younghblog.gitee.io/posts/1243066710.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>LRU缓存机制</title>
+      <link>https://younghblog.gitee.io/posts/2357652358.html</link>
+      <guid>https://younghblog.gitee.io/posts/2357652358.html</guid>
+      <pubDate>Wed, 25 Aug 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;这是 &lt;a href=&quot;https://leetcode-cn.com/problems/lru-cache/&quot;&gt;LeetCode 第 146 题&lt;/a&gt;</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/LeeCode/">LeeCode</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/LRU/">LRU</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2357652358.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>C++内存分配</title>
+      <link>https://younghblog.gitee.io/posts/1960641146.html</link>
+      <guid>https://younghblog.gitee.io/posts/1960641146.html</guid>
+      <pubDate>Wed, 11 Aug 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;h3 id=&quot;1-池化技术&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#1-池化技术&quot;&gt;&lt;/a&gt; 1. 池化技术&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;池&lt;/strong&gt;</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/C/">C++</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D/">内存分配</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/1960641146.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>virtual底层实现</title>
+      <link>https://younghblog.gitee.io/posts/40140329.html</link>
+      <guid>https://younghblog.gitee.io/posts/40140329.html</guid>
+      <pubDate>Sat, 07 Aug 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;在基类中，通过 virtual修饰虚函数可以实现多态的效果，下面就介绍下它的底层实现原理。&lt;/p&gt;
+&lt;figure class=&quot;highlight javascript&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/C/">C++</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/virtual/">virtual</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/40140329.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>C++智能指针</title>
+      <link>https://younghblog.gitee.io/posts/2579659560.html</link>
+      <guid>https://younghblog.gitee.io/posts/2579659560.html</guid>
+      <pubDate>Wed, 04 Aug 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;智能指针是用来管理指针的，主要解决两类问题：一是忘记释放内存，造成内存泄漏；二是内存提前释放，造成指针悬空。智能指针是一个类，它的行为类似于常规指针，主要区别在于它会自动释放对象。&lt;br /&gt;
+C++ 有四种智能指针：auto_ptr, unique_ptr,</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/C/">C++</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/">智能指针</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2579659560.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>CPU分支预测优化</title>
+      <link>https://younghblog.gitee.io/posts/2892503324.html</link>
+      <guid>https://younghblog.gitee.io/posts/2892503324.html</guid>
+      <pubDate>Wed, 21 Jul 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;之前介绍过CPU的分支预测功能，如果错误的分支预测经常发生，性能损失就会显著增加。因为当这样的事件发生时，CPU 需要清除所有提前完成但后来被证明是错误的推测性工作，同时还需要用来自正确分支路径的指令来填充流水线。 通常，现代 CPU 会因分支预测错误而遭受 10-20</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E5%88%86%E6%94%AF%E9%A2%84%E6%B5%8B-%E5%88%86%E6%94%AF%E6%9B%BF%E6%8D%A2/">分支预测 分支替换</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2892503324.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>CPU性能分析中的术语和指标</title>
+      <link>https://younghblog.gitee.io/posts/682752931.html</link>
+      <guid>https://younghblog.gitee.io/posts/682752931.html</guid>
+      <pubDate>Sat, 03 Jul 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;简单介绍一下 Linux 性能分析工具 &lt;code&gt;perf&lt;/code&gt; 中所使用到的基本术语和指标。&lt;/p&gt;
+&lt;h2 id=&quot;1-retired-vs-executed-instruction&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot;</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/perf-IPC-%E5%BE%AE%E6%8C%87%E4%BB%A4%E8%9E%8D%E5%90%88-slot-%E5%8A%A8%E6%80%81%E9%A2%91%E7%8E%87%E7%BC%A9%E6%94%BE/">perf IPC 微指令融合 slot 动态频率缩放</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/682752931.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>CPU微架构</title>
+      <link>https://younghblog.gitee.io/posts/2175313746.html</link>
+      <guid>https://younghblog.gitee.io/posts/2175313746.html</guid>
+      <pubDate>Fri, 02 Jul 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;简单总结一下影响软件性能的关键 CPU 架构和微架构特征。有些内容过于基础，我会只介绍重点。&lt;/p&gt;
+&lt;h2 id=&quot;1-指令集架构isa&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#1-指令集架构isa&quot;&gt;&lt;/a&gt; 1.</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/CPU%E5%BE%AE%E6%9E%B6%E6%9E%84-ISA-%E6%B5%81%E6%B0%B4%E7%BA%BF-%E6%8C%87%E4%BB%A4%E7%BA%A7%E5%B9%B6%E8%A1%8C-%E7%BA%BF%E7%A8%8B%E7%BA%A7%E5%B9%B6%E8%A1%8C-SIMD-Skylake-CPU%E5%89%8D%E5%90%8E%E7%AB%AF/">CPU微架构 ISA 流水线 指令级并行 线程级并行 SIMD Skylake CPU前后端</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2175313746.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>多发射数据通路和数据调度</title>
+      <link>https://younghblog.gitee.io/posts/3647999940.html</link>
+      <guid>https://younghblog.gitee.io/posts/3647999940.html</guid>
+      <pubDate>Thu, 24 Jun 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;介绍两种提高流水线效率（即提高 IPC）的技术： &lt;strong&gt;多发射数据通路&lt;/strong&gt; 和</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E5%A4%9A%E5%8F%91%E5%B0%84-%E5%8A%A8%E6%80%81%E8%B0%83%E5%BA%A6-%E4%BF%9D%E7%95%99%E7%AB%99-%E5%AF%84%E5%AD%98%E5%99%A8%E9%87%8D%E5%91%BD%E5%90%8D-%E7%B2%BE%E7%A1%AE%E5%BC%82%E5%B8%B8/">多发射 动态调度 保留站 寄存器重命名 精确异常</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/3647999940.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>获取数组元素的物理地址范围</title>
+      <link>https://younghblog.gitee.io/posts/3012990423.html</link>
+      <guid>https://younghblog.gitee.io/posts/3012990423.html</guid>
+      <pubDate>Sat, 01 May 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;近期由于实验需要，编写了一个获取数组元素物理地址范围的小程序。&lt;/p&gt;
+&lt;h2 id=&quot;1-获取trace&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#1-获取trace&quot;&gt;&lt;/a&gt; 1.</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80-%E6%8F%92%E6%A1%A9/">物理地址 插桩</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/3012990423.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>浅谈结构体中的数据对齐</title>
+      <link>https://younghblog.gitee.io/posts/1301175934.html</link>
+      <guid>https://younghblog.gitee.io/posts/1301175934.html</guid>
+      <pubDate>Sun, 11 Apr 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;在计算机中，CPU是按 32/64 位的大小进行存取的，为了提高CPU的执行效率，计算机系统对基本数据类型的合法地址做了一些限制，要求某种类型的地址必须是某个值（2 / 4 /</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E6%95%B0%E6%8D%AE%E5%AF%B9%E9%BD%90/">数据对齐</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/1301175934.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>CPU 缓存一致性问题</title>
+      <link>https://younghblog.gitee.io/posts/2452518558.html</link>
+      <guid>https://younghblog.gitee.io/posts/2452518558.html</guid>
+      <pubDate>Thu, 11 Mar 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;当 CPU 中的某个核要对内存中的数据进行修改时，会先将其缓存到 cache 中，然后再去修改。此时由于修改后的数据尚未写回到内存，如果其他核要去访问这个数据，就会读到修改之前的数据，这就是</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/MESI/">MESI</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2452518558.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>以 hello为例了解程序的执行过程</title>
+      <link>https://younghblog.gitee.io/posts/3718840809.html</link>
+      <guid>https://younghblog.gitee.io/posts/3718840809.html</guid>
+      <pubDate>Thu, 04 Mar 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;hello 程序的生命周期从高级 C 程序 hello.c 开始的，这实际上是一个文本文件，里面都是 0 和 1 组成的比特序列。每 8 位为一个字节，一个字节对应的整数值表示一个 ASCII 文本字符。为了在系统上运行 hello.c 程序，每条 C</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">计算机系统</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E7%A8%8B%E5%BA%8F%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B/">程序执行过程</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/3718840809.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>Ubuntu16.0 下部署 Web项目（jdk + Tomcat + SQL Server）</title>
+      <link>https://younghblog.gitee.io/posts/2510461242.html</link>
+      <guid>https://younghblog.gitee.io/posts/2510461242.html</guid>
+      <pubDate>Sun, 28 Feb 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;h2 id=&quot;安装-jdk&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#安装-jdk&quot;&gt;&lt;/a&gt; 安装 jdk&lt;/h2&gt;
+&lt;p&gt;下载 jdk需要注意的两点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;要下载 Linux版本的</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2/">项目部署</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2/">项目部署</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2510461242.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
+      <title>中标麒麟操作系统下部署 Web项目（Tongweb + DM）</title>
+      <link>https://younghblog.gitee.io/posts/663218111.html</link>
+      <guid>https://younghblog.gitee.io/posts/663218111.html</guid>
+      <pubDate>Sun, 28 Feb 2021 16:00:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;系统：中标麒麟桌面操作系统 V7.0&lt;/p&gt;
+&lt;p&gt;内核：Linux&lt;/p&gt;
+&lt;p&gt;CPU：龙芯&lt;/p&gt;
+&lt;h2 id=&quot;配置-jdk&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#配置-jdk&quot;&gt;&lt;/a&gt; 配置</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2/">项目部署</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2/">项目部署</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/663218111.html#disqus_thread</comments>
+      
+    </item>
+    
+  </channel>
+</rss>
