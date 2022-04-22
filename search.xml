@@ -45,7 +45,7 @@
 </ul>
 <p>接下来要考虑的就是怎么结合的问题。</p>
 <p>可以将 map 作为索引表，将 list 作为实际操作的对象。因此需要在 map 中保存 key 值以及对应在 list 中节点的位置，而在 list 中如果只保存 map 中的 key 所对应的 value 显然是不行的，因为对 list 操作的同时需要维护其索引表 map，比如要删除某个节点，那 map 中对应的 key 也应该删除，或者要移动某个节点，map 中对应的指向 list 节点的位置也要更新。而此时只有一个 map 指向 list 的指针，必须再维护一个 list 指向 map 的指针，只需在 list 中多保存一个 key 即可，因为 key 在 map 中是唯一字段，因此可以定位到 map。</p>
-<img src="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gttyla4fwoj30jr07maar.jpg" alt="LRU"/>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gttyla4fwoj30jr07maar.jpg" alt="LRU"/>
 <h2 id="c代码"><a class="markdownIt-Anchor" href="#c代码"></a> C++代码</h2>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">LRUCache</span> &#123;</span><br><span class="line"><span class="attr">private</span>:</span><br><span class="line">    int _capacity;</span><br><span class="line">    list&lt;pair&lt;int, int&gt;&gt; _list;</span><br><span class="line">    unordered_map&lt;int, list&lt;pair&lt;int, int&gt;&gt;::iterator&gt; _map;</span><br><span class="line">    </span><br><span class="line"><span class="attr">public</span>:</span><br><span class="line">    <span class="title class_">LRUCache</span>(int capacity) &#123;</span><br><span class="line">        _capacity = capacity;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    int <span class="title function_">get</span>(<span class="params">int key</span>) &#123;</span><br><span class="line">        auto pos = _map.<span class="title function_">find</span>(key);</span><br><span class="line">        <span class="keyword">if</span>(pos == _map.<span class="title function_">end</span>())  <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 将_list中pos-&gt;second位置的节点剪切到_list的最前端</span></span><br><span class="line">        _list.<span class="title function_">splice</span>(_list.<span class="title function_">begin</span>(), _list, pos-&gt;second);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// pos-&gt;second即为_map的value，它是指向_list中某个节点的迭代器</span></span><br><span class="line">        <span class="comment">// _list节点保存的是pair，所以再次-&gt;second即为pair所对应的value</span></span><br><span class="line">        <span class="keyword">return</span> pos-&gt;second-&gt;second;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">void</span> <span class="title function_">put</span>(<span class="params">int key, int value</span>) &#123;</span><br><span class="line">        auto pos = _map.<span class="title function_">find</span>(key);</span><br><span class="line">        <span class="comment">// 如果存在，更新_list并将其剪切到最前面</span></span><br><span class="line">        <span class="keyword">if</span>(pos != _map.<span class="title function_">end</span>()) &#123;</span><br><span class="line">            pos-&gt;second-&gt;second = value;</span><br><span class="line">            _list.<span class="title function_">splice</span>(_list.<span class="title function_">begin</span>(), _list, pos-&gt;second);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(_list.<span class="title function_">size</span>() == _capacity) &#123;</span><br><span class="line">            <span class="comment">// _map中erase的形参既可以是迭代器，也可以是key值</span></span><br><span class="line">            _map.<span class="title function_">erase</span>(_list.<span class="title function_">back</span>().<span class="property">first</span>);</span><br><span class="line">            _list.<span class="title function_">pop_back</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        ls.<span class="title function_">emplace_front</span>(key, value);</span><br><span class="line">        _map[key] = _list.<span class="title function_">begin</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
       <categories>
@@ -63,7 +63,7 @@
 <h3 id="2-内存池"><a class="markdownIt-Anchor" href="#2-内存池"></a> 2. 内存池</h3>
 <p><strong>内存池</strong> 是一种动态内存分配与管理的技术。我们通常习惯使用 malloc/free等 API进行内存的申请和释放，这样导致的后果是：当程序长时间运行时，由于所申请的内存块大小不定，导致频繁使用这些 API时会产生大量的内存碎片，从而降低空间利用率。内存池是在真正使用内存之前，先申请分配一块大内存（内存池）留作备用，之后所有对内存的申请和释放操作都在这个内存池中进行。当内存池不够用时，继续从堆中申请更大的内存来扩大内存池。</p>
 <h3 id="3-c中的内存分配技术"><a class="markdownIt-Anchor" href="#3-c中的内存分配技术"></a> 3. C++中的内存分配技术</h3>
-<img src="https://wx1.sinaimg.cn/mw690/006ept9Hgy1gthp1wn1ihj30is0gsq3r.jpg" alt="内存分配" style="zoom:70%;" />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx1.sinaimg.cn/mw690/006ept9Hgy1gthp1wn1ihj30is0gsq3r.jpg" alt="内存分配" style="zoom:70%;" />
 <p>为了减少内存碎片，C++ 通过内存池来管理内存。内存池维护了 16 个空闲链表，它们分别管理大小为 8、16、24、32、…、120、128 字节的内存，基本思路是：</p>
 <ul>
 <li>
@@ -95,7 +95,7 @@
     <content><![CDATA[<p>在基类中，通过 virtual修饰虚函数可以实现多态的效果，下面就介绍下它的底层实现原理。</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span> &#123;</span><br><span class="line"><span class="attr">public</span>:</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func1</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Base - func1()&quot;</span> &lt;&lt; endl; </span><br><span class="line">	&#125;</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func2</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Base - func2()&quot;</span> &lt;&lt; endl; </span><br><span class="line">	&#125;</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func3</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Base - func3()&quot;</span> &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 当基类的成员变量或函数被声明为虚函数后</span></span><br><span class="line"><span class="comment">// 其子类中的同名变量或函数都将自动成为虚函数（virtual关键字可省略）</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Son</span> : public <span class="title class_">Base</span> &#123;</span><br><span class="line"><span class="attr">public</span>:</span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func1</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Son  - func1()&quot;</span> &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 注意：func2() 虽然没重写，但依然继承下来了！！</span></span><br><span class="line">	virtual <span class="keyword">void</span> <span class="title function_">func3</span>(<span class="params"></span>) &#123;</span><br><span class="line">		cout &lt;&lt; <span class="string">&quot;Son  - func3()&quot;</span> &lt;&lt; endl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">func</span>(<span class="params">Base&amp; base</span>) &#123;</span><br><span class="line">    base.<span class="title function_">func1</span>();</span><br><span class="line">    base.<span class="title function_">func2</span>();</span><br><span class="line">    base.<span class="title function_">func3</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int <span class="title function_">main</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="title class_">Son</span> son;</span><br><span class="line">    <span class="title function_">func</span>(son);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>编译器见到这种继承层次结构后，就知道 Base定义了虚函数，并在 Son类中重写了虚函数，因此，编译器会为定义了虚函数的基类创建一个虚函数表（Virtual Function Table，VFT），这个虚函数表会被子类继承下去。在用 Base或 Son实例化对象时，编译器会在该对象内部创建一个隐藏的指针 VFT* 指向相应的虚函数表。虚函数表可视为一个由函数指针构成的静态数组，其中每个指针都指向相应虚函数的实现：</p>
-<p><img src="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gthondz83cj30z70mu76u.jpg" alt="virtual" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gthondz83cj30z70mu76u.jpg" alt="virtual" /></p>
 <p>在这种情况下，虽然将 son传递给了 base，进而被解读成一个 Base实例，但该实例（即 Son对象）内部的 VFT* 仍然指向 Son类的虚函数表，因此通过该虚函表执行的是 Son::func()，从而实现了多态。因此上述代码的输出结果为：</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Son  - func1()</span><br><span class="line">Base - func2()</span><br><span class="line">Son  - func3()</span><br></pre></td></tr></table></figure>
 <p>要验证虚函数表的存在其实也很简单，可以通过比较同一个类，一个包含虚函数，一个不包含，对比其大小就知道了：</p>
@@ -148,7 +148,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
 <p>一开始  pa指向 A，因此 A的引用计数为1，当 pb的成员变量 pa_也指向 A时，A的引用计数变为 2。当函数结束运行时，智能指针 pa、pb析构会使其引用计数同时减 1，但此时结果仍然不是 0，而是 1，所以结束时资源没有被释放（未调用析构函数），这就是死锁问题。解决方式是，把 class A或 B中的成员变量 shared_ptr改为弱引用 weak_ptr，此时运行结果为：</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="number">1</span>  <span class="number">1</span></span><br><span class="line"><span class="number">2</span>  <span class="number">1</span></span><br><span class="line">B is deleted</span><br><span class="line">A is deleted</span><br></pre></td></tr></table></figure>
 <p>修改后 A的成员变量 pb_对 B的引用变为弱引用，因此 B的引用计数不会增加，一直都是 1，当 pb析构时，B的引用计数变为 0，B被释放。B的释放也会使 A的引用计数减 1，同时 pa析构时使 A的计数再次减 1，最终 A的计数为 0，A 也被释放：</p>
-<img src="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gthohpi3fnj30bk07z3yj.jpg" alt="引用计数" style="zoom:60%;" />]]></content>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gthohpi3fnj30bk07z3yj.jpg" alt="引用计数" style="zoom:60%;" />]]></content>
       <categories>
         <category>C++</category>
       </categories>
@@ -255,7 +255,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
 <h2 id="5-流水线槽"><a class="markdownIt-Anchor" href="#5-流水线槽"></a> 5. 流水线槽</h2>
 <p>处理一个微指令所需的硬件资源。</p>
 <p>下图展示了一个 CPU 的执行流水线，它每个周期可以处理 4 个 uops。在图中的六个连续周期中，只有一半的可用插槽被利用。从微架构的角度来看，它的执行效率只有 50%.</p>
-<img src="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gs9ndly8dej30i60cxdjf.jpg" alt="slot" style="zoom:50%;" />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gs9ndly8dej30i60cxdjf.jpg" alt="slot" style="zoom:50%;" />
 <h2 id="6-内核周期和参考周期"><a class="markdownIt-Anchor" href="#6-内核周期和参考周期"></a> 6. 内核周期和参考周期</h2>
 <p>大多数现代 CPU，包括 Intel 和 AMD CPU，都没有固定的运行频率，而是实现了 <strong>动态频率缩放</strong>。在英特尔的 CPU 中，这项技术称为 Turbo Boost，在 AMD 的处理器中称为 Turbo Core。它允许 CPU 动态地增加和降低其频率：<strong>减小频率降低了功耗但牺牲了性能，增加频率提高了性能但牺牲了功耗</strong>。</p>
 <p><strong>内核周期</strong> 是以 CPU 内核运行的实际时钟频率计算出的时钟周期，而 <strong>参考周期</strong> 直接统计外部时钟周期，不考虑动态频率的缩放。</p>
@@ -387,17 +387,17 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
 </ul>
 <h2 id="6-虚拟内存"><a class="markdownIt-Anchor" href="#6-虚拟内存"></a> 6. 虚拟内存</h2>
 <p>虚拟地址到物理地址的转换：（为了减少地址转换时间，会引入 TLB）</p>
-<img src="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gs9mf8nexpj30n10d5dgq.jpg" alt="虚实地址转换" style="zoom:70%;" />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gs9mf8nexpj30n10d5dgq.jpg" alt="虚实地址转换" style="zoom:70%;" />
 <h2 id="7-simd多处理器"><a class="markdownIt-Anchor" href="#7-simd多处理器"></a> 7. SIMD多处理器</h2>
 <p>在一个周期内，单条指令能够同时对多个数据元素进行操作。</p>
 <p>大多数流行的 CPU 架构都具有向量指令，包括 x86、PowerPC、ARM 和 RISC-V。 1996 年，Intel 发布了新的指令集 <code>MMX</code>，这是专为多媒体应用程序设计的 SIMD 指令集。继 MMX 之后，英特尔推出了具有更多功能和更大向量大小的新指令集：<code>SSE</code>、<code>AVX</code>、<code>AVX2</code>、<code>AVX512</code>。</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">double *a, *b, *c;</span><br><span class="line"><span class="keyword">for</span> (int i = <span class="number">0</span>; i &lt; N; ++i) &#123;</span><br><span class="line">	c[i] = a[i] + b[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>对于上述代码，在 SISD 处理器中，每个周期只会处理一个数据，如左图所示。而 SIMD 多处理器会同时处理多个数据，如右图，<code>SSE</code> 每个周期能处理两个数据，而 <code>AVX-512</code> 的处理能力达到了 8 个 / 周期。</p>
-<img src="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gs9mgjef02j30sm0h2gnw.jpg" alt="SIMD" style="zoom:70%;" />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gs9mgjef02j30sm0h2gnw.jpg" alt="SIMD" style="zoom:70%;" />
 <h2 id="8-现代cpu设计"><a class="markdownIt-Anchor" href="#8-现代cpu设计"></a> 8. 现代CPU设计</h2>
 <p>2015 年，Intel 发布了第 6 代内核 Skylake 的详细信息，分为 <strong>前端</strong> 和 <strong>后端</strong>。</p>
 <p>前端主要是从内存中高效地取指和译码，并将准备好的指令提供给 CPU 后端，后者负责指令的实际执行。</p>
-<img src="https://wx2.sinaimg.cn/mw690/006ept9Hgy1gs9mgnag11j30on0hlwhm.jpg" alt="CPU前后端" style="zoom:90%;" />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx2.sinaimg.cn/mw690/006ept9Hgy1gs9mgnag11j30on0hlwhm.jpg" alt="CPU前后端" style="zoom:90%;" />
 <p>先简单看一下该架构的整体处理流程：</p>
 <p>首先 CPU 从 L1 I-cache 中取指（若发生 miss 会向 L2 发送请求），指令会先经过传统流水线 <strong>Legacy Decode Pipeline</strong> 译码成微指令，并同时发送到 <strong>IDQ</strong>与 <strong>DSB</strong>。<strong>DSB</strong> 保存了指令地址到微指令的映射，这样当再次访问时就可以直接从该缓存中取 uop 而无需再次译码。一条复杂的指令会被译码为多条微指令，当微指令数量过多超出译码器的处理能力时，就会由 <strong>MSROM</strong> 来完成。<strong>BPU</strong> 是分支预测单元，会按预测的分支方向取指和译码。</p>
 <p>此时 IDQ 中的微指令已经按顺序排列好了，下一步就会分配资源，如果微指令之间存在数据冒险还会有重命名等操作。当微指令所需资源就绪时，会由调度器发送到不同的端口执行。port-0 1 5 6 提供所有的整型、浮点型、向量的算术和逻辑运算，这些运算不需要访问内存；port-2 3用于地址的生成和加载操作，port-4 用于数据的存储操作，port-7 用于地址的生成操作。</p>
@@ -420,7 +420,7 @@ weak_ptr 主要是为了解决 shared_ptr相互引用时产生的死锁问题，
 </ul>
 <h2 id="9-性能检测单元pmu"><a class="markdownIt-Anchor" href="#9-性能检测单元pmu"></a> 9. 性能检测单元（PMU）</h2>
 <p>现代 CPU 中都提供了性能检测方法，可以帮助开发人员分析应用程序的性能，这些方法由性能检测单元 (PMU) 提供。大多数 PMU 都有一组性能监控计数器 (PMC)，可用于收集程序执行期间发生的各种性能事件。</p>
-<img src="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gs9mgsllyzj30li0cz0u1.jpg" alt="PMC" style="zoom:50%;" />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx3.sinaimg.cn/mw690/006ept9Hgy1gs9mgsllyzj30li0cz0u1.jpg" alt="PMC" style="zoom:50%;" />
 <blockquote>
 <p>以上内容参考自『Performance Analysis and Tuning on Modern CPUs』</p>
 </blockquote>
@@ -499,14 +499,14 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <p>数据对齐的基本原则是，任何 k 字节的基本对象的地址必须是 k 的倍数，同时结构体本身也要对齐，因此编译器可能需要在字段的地址空间分配时插入一些空隙以达到对齐的目的。</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">struct s1 &#123;</span><br><span class="line">    int i;</span><br><span class="line">    double d;</span><br><span class="line">    float f;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>在64位机器上，以结构体 s1 为例，当不进行数据对齐时，结构体内部各成员在内存中的分布如下：</p>
-<p><img src="https://wx4.sinaimg.cn/mw690/006ept9Hgy1grcu7oh6ioj30e902bt8i.jpg" alt="不对齐" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx4.sinaimg.cn/mw690/006ept9Hgy1grcu7oh6ioj30e902bt8i.jpg" alt="不对齐" /></p>
 <p>虽然整体只占 16 个字节，但如果要访问成员 d，需要两个周期才能完成。而当进行数据对齐后：</p>
-<p><img src="https://wx4.sinaimg.cn/mw690/006ept9Hgy1grcu7s11czj30e7033a9v.jpg" alt="对齐" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx4.sinaimg.cn/mw690/006ept9Hgy1grcu7s11czj30e7033a9v.jpg" alt="对齐" /></p>
 <p>这时结构体占了 24 个字节，但访问每个成员都只需要 1 个周期。对齐第一个成员 i 是为了使成员 d 的地址为 <code>sizeof(d)</code> 的倍数，即为了使成员 d 不分段；最后还要补 4 个字节是为了对齐结构体自身，需要以其最大成员长度为标准进行对齐，即 8 字节对齐。</p>
 <p>接下来我们可以稍稍调整一下结构体中各成员的顺序，得到结构体 s2：</p>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">struct s2 &#123;</span><br><span class="line">    int i;</span><br><span class="line">    float f;</span><br><span class="line">    double d;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这时，其内存分布为：</p>
-<p><img src="https://wx2.sinaimg.cn/mw690/006ept9Hgy1grcu7vx1haj30e702bq2q.jpg" alt="重排序" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx2.sinaimg.cn/mw690/006ept9Hgy1grcu7vx1haj30e702bq2q.jpg" alt="重排序" /></p>
 <p>可以看到，这时结构体只占 16 个字节，同时对于每个成员的访问也只需要 1 个周期，这就同时达到了节省内存空间和提高处理器执行效率的目的。</p>
 <p>当然，对齐系数也可以通过预编译命令 <code>#pragma pack(n)</code> 自己指定，其中 n 即为对齐系数，可取 1, 2, 4, 6, 8, 16，具体细节这里不做介绍。</p>
 ]]></content>
@@ -683,7 +683,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
     <content><![CDATA[<p>hello 程序的生命周期从高级 C 程序 hello.c 开始的，这实际上是一个文本文件，里面都是 0 和 1 组成的比特序列。每 8 位为一个字节，一个字节对应的整数值表示一个 ASCII 文本字符。为了在系统上运行 hello.c 程序，每条 C 语句都必须被编译器转换为一系列低级的机器语言指令，这些指令被封装为可执行目标程序 hello，并以二进制文件的形式保存在磁盘上。</p>
 <h2 id="1-程序的翻译"><a class="markdownIt-Anchor" href="#1-程序的翻译"></a> 1. 程序的翻译</h2>
 <p>从源程序到目标程序的翻译过程可分为四个阶段，执行这四个阶段的程序——预处理器、编译器、汇编器、链接器一起构成了编译系统。</p>
-<p><img src="https://wx1.sinaimg.cn/mw690/006ept9Hgy1gsgpbc16vuj30iv03gtaj.jpg" alt="编译系统" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx1.sinaimg.cn/mw690/006ept9Hgy1gsgpbc16vuj30iv03gtaj.jpg" alt="编译系统" /></p>
 <ul>
 <li><strong>预处理阶段</strong>：预处理器根据以字符 # 开头的命令修改原始程序。比如对于 #include&lt;stdio.h&gt;，编译器会读取 stdio.h 中的内容并插入到 hello 程序文本中；对于 #define MAX 100，编译器会将程序中的所有 MAX 替换为 100。这样就得到了另一个 C 程序，并保存为 hello.i 文件。</li>
 <li><strong>编译阶段</strong>：这个过程主要是进行词法分析、语法分析、语义分析等，将文本文件 hello.i 翻译成低级机器语言——汇编语言，从而为不同高级语言的不同编译器提供了通用的输出文件 hello.s（这里的通用只针对相同的平台，即只针对相同的指令集架构）。</li>
@@ -692,11 +692,11 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 </ul>
 <h2 id="2-程序的执行"><a class="markdownIt-Anchor" href="#2-程序的执行"></a> 2. 程序的执行</h2>
 <p>shell 是一个命令行解释程序。初始时，shell 程序执行它的指令，等待命令的输入。如果该命令的第一个单词不是一个内置的 shell 命令，shell就会假设这是一个可执行文件的名字。当在键盘输入字符串“./hello”之后，shell 程序将字符逐一读入寄存器，再把它存入内存中。</p>
-<p><img src="https://wx2.sinaimg.cn/mw690/006ept9Hgy1gsgpbf4e19j30dx0abgps.jpg" alt="从键盘上读取hello命令" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx2.sinaimg.cn/mw690/006ept9Hgy1gsgpbf4e19j30dx0abgps.jpg" alt="从键盘上读取hello命令" /></p>
 <p>当通过键盘输入回车时，shell 程序就知道命令输入结束，开始执行一系列指令加载保存在磁盘上的可执行文件 hello，将其中的代码和数据复制到主存。数据中包括最终要被输出的字符串 “hello, world\n”。此过程利用直接内存访问（DMA）技术，使数据能够不经过处理器直接从磁盘到达主存。</p>
-<p><img src="https://wx2.sinaimg.cn/mw690/006ept9Hgy1gsgpbiv2asj30fq0aqtda.jpg" alt="从磁盘加载可执行程序到主存" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx2.sinaimg.cn/mw690/006ept9Hgy1gsgpbiv2asj30fq0aqtda.jpg" alt="从磁盘加载可执行程序到主存" /></p>
 <p>当目标文件 hello 中的指令和数据被加载到主存后，处理器就开始执行其中 main 函数里面的机器指令，指令的执行过程即取指、译码、执行、访存、写回几个步骤，会有频繁的CPU对内存的数据访问，比如在第一步取指的时候就需要根据 PC 的值去内存中读取相应的指令。这些指令将 “hello, world\n” 字符串中的字节从主存复制到寄存器，再从寄存器复制到显示设备，最终显示在屏幕上。</p>
-<p><img src="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gsgpbm0aukj30fb0ac78x.jpg" alt="将输出字符串从存储器写到显示器" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://wx4.sinaimg.cn/mw690/006ept9Hgy1gsgpbm0aukj30fb0ac78x.jpg" alt="将输出字符串从存储器写到显示器" /></p>
 <blockquote>
 <p>以上内容参考自 Randal E.Bryant 编写的『深入理解计算机系统』</p>
 </blockquote>
@@ -722,14 +722,14 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <li>将下好的安装包从 windows传到 Linux。</li>
 </ul>
 <p>我放在了  /usr/xg/java  目录下</p>
-<p><img src="https://img-blog.csdnimg.cn/20190805183605142.png" alt="在这里插入图片描述" /></p>
+<p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805183605142.png" alt="在这里插入图片描述" /></p>
 <ul>
 <li>
 <p>进入此目录 <code>/usr/xg/java</code>，解压安装包 <code>tar xvf jdk-8u201-linux-x64.tar.gz</code></p>
 </li>
 <li>
 <p>查看解压后的目录<br />
-<img src="https://img-blog.csdnimg.cn/20190805184412843.png" alt="在这里插入图片描述" /></p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805184412843.png" alt="在这里插入图片描述" /></p>
 </li>
 <li>
 <p>配置环境变量 <code>/etc/profile</code>，在结尾处添加如下内容：</p>
@@ -737,12 +737,12 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 </ul>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="variable constant_">JAVA_HOME</span>=<span class="regexp">/usr/</span>xg/java/jdk1<span class="number">.8</span><span class="number">.0_201</span> </span><br><span class="line"><span class="variable constant_">PATH</span>=<span class="attr">$PATH</span>:$JAVA_HOME/bin</span><br><span class="line"><span class="variable constant_">CLASSPATH</span>=.:$JAVA_HOME/lib</span><br><span class="line"><span class="keyword">export</span> <span class="variable constant_">JAVA_HOME</span> <span class="variable constant_">PATH</span> <span class="variable constant_">CLASSPATH</span></span><br></pre></td></tr></table></figure>
 <p>如图：<br />
-<img src="https://img-blog.csdnimg.cn/20190805185019343.png" alt="在这里插入图片描述" /></p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805185019343.png" alt="在这里插入图片描述" /></p>
 <ul>
 <li>重新加载 <code>source /etc/profile</code>，使其生效：<br />
-<img src="https://img-blog.csdnimg.cn/201908051856325.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/201908051856325.png" alt="在这里插入图片描述" /></li>
 <li>检验是否安装成功<code>java -version</code><br />
-<img src="https://img-blog.csdnimg.cn/20190805192216388.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805192216388.png" alt="在这里插入图片描述" /></li>
 </ul>
 <h2 id="安装-tomcat"><a class="markdownIt-Anchor" href="#安装-tomcat"></a> 安装 tomcat</h2>
 <ul>
@@ -750,23 +750,23 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 </ul>
 <p>我下载的版本是：apache-tomcat-8.5.12.tar.gz<br />
 放在了  /usr/xg/tomcat 目录下<br />
-<img src="https://img-blog.csdnimg.cn/20190805190705327.png" alt="在这里插入图片描述" /></p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805190705327.png" alt="在这里插入图片描述" /></p>
 <ul>
 <li>同样的，进入目录<code>../tomcat</code>并解压安装包<code>tar xvf apache-tomcat-8.5.12.tar.gz</code><br />
-<img src="https://img-blog.csdnimg.cn/20190805191924122.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805191924122.png" alt="在这里插入图片描述" /></li>
 <li>查看解压后的目录<br />
-<img src="https://img-blog.csdnimg.cn/2019080519242831.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019080519242831.png" alt="在这里插入图片描述" /></li>
 <li>配置环境变量 <code>/etc/profile</code>，在配置 jdk环境变量的基础上添加如下内容：<br />
-<img src="https://img-blog.csdnimg.cn/20190805192933446.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805192933446.png" alt="在这里插入图片描述" /></li>
 </ul>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="variable constant_">JAVA_HOME</span>=<span class="regexp">/usr/</span>xg/java/jdk1<span class="number">.8</span><span class="number">.0_201</span> </span><br><span class="line"><span class="variable constant_">CATALINA_HOME</span>=<span class="regexp">/usr/</span>xg/tomcat/apache-tomcat-<span class="number">8.5</span><span class="number">.12</span></span><br><span class="line"><span class="variable constant_">PATH</span>=<span class="attr">$PATH</span>:$JAVA_HOME/<span class="attr">bin</span>:$CATALINA_HOME/bin</span><br><span class="line"><span class="variable constant_">CLASSPATH</span>=.:$JAVA_HOME/<span class="attr">lib</span>:$CATALINA_HOME/lib</span><br><span class="line"><span class="keyword">export</span> <span class="variable constant_">JAVA_HOME</span> <span class="variable constant_">CATALINA_HOME</span> <span class="variable constant_">PATH</span> <span class="variable constant_">CLASSPATH</span></span><br></pre></td></tr></table></figure>
 <ul>
 <li>重新加载  <code>source /etc/profile</code>，使其生效：<br />
-<img src="https://img-blog.csdnimg.cn/20190805193125653.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805193125653.png" alt="在这里插入图片描述" /></li>
 <li>进入 bin目录 <code>apache-tomcat-8.5.12/bin</code>，查看该目录下的文件<br />
-<img src="https://img-blog.csdnimg.cn/2019080519354791.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019080519354791.png" alt="在这里插入图片描述" /></li>
 <li>启动 tomcat <code>startup.sh</code><br />
-<img src="https://img-blog.csdnimg.cn/2019080519371567.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019080519371567.png" alt="在这里插入图片描述" /><br />
 启动成功！</li>
 </ul>
 <p>为了避免每次都要进入 bin目录才能进行启动，这里将其 <strong>设置为系统服务</strong>：</p>
@@ -780,7 +780,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 </ul>
 <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="variable constant_">JAVA_HOME</span>=<span class="regexp">/usr/</span>xg/java/jdk1<span class="number">.8</span><span class="number">.0_201</span> </span><br><span class="line"><span class="variable constant_">CATALINA_HOME</span>=<span class="regexp">/usr/</span>xg/tomcat/apache-tomcat-<span class="number">8.5</span><span class="number">.12</span></span><br></pre></td></tr></table></figure>
 <p>如图：<br />
-<img src="https://img-blog.csdnimg.cn/20190805195346687.png" alt="在这里插入图片描述" /></p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805195346687.png" alt="在这里插入图片描述" /></p>
 <ul>
 <li>
 <p>添加 tomcat服务：<br />
@@ -795,7 +795,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <p>启动 Tomcat：<code>service tomcat start</code><br />
 关闭 Tomcat：<code>service tomcat stop</code></p>
 <p>如图：<br />
-<img src="https://img-blog.csdnimg.cn/20190805200245321.png" alt="在这里插入图片描述" /></p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805200245321.png" alt="在这里插入图片描述" /></p>
 <h2 id="安装-sql-server-2017"><a class="markdownIt-Anchor" href="#安装-sql-server-2017"></a> 安装 SQL Server 2017</h2>
 <ul>
 <li>
@@ -821,12 +821,12 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <li>
 <p>初始化 SQL Server配置：<br />
 <code>sudo /opt/mssql/bin/mssql-conf setup</code><br />
-<img src="https://img-blog.csdnimg.cn/20190805201359977.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805201359977.png" alt="在这里插入图片描述" /><br />
 这里我选的版本是 2）</p>
 </li>
 <li>
 <p>确认 SQL Server服务的状态：<code>systemctl status mssql-server</code><br />
-<img src="https://img-blog.csdnimg.cn/20190805202404844.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805202404844.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 如果你的 Ubuntu版本是14.0，则在上一步结束时会显示安装失败或者启动失败，SQL Server 将无法运行！<br />
 这里显示 running，说明SQL Server已正常启动。</p>
 </li>
@@ -865,14 +865,14 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <p>到此为止 SQL Server已经全部安装完毕。如果需要 <strong>附加 mdf格式的数据库</strong>，继续如下操作：</p>
 <ul>
 <li>首先将 *.mdf的数据库文件和对应的 *_log.ldf文件放到 Linux目录下<br />
-<img src="https://img-blog.csdnimg.cn/20190805205418942.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805205418942.png" alt="在这里插入图片描述" /></li>
 <li>进入该目录，将这两个文件通过  <code>chmod 777 文件名</code>赋予全部权限<br />
-<img src="https://img-blog.csdnimg.cn/20190805205509739.png" alt="在这里插入图片描述" /></li>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805205509739.png" alt="在这里插入图片描述" /></li>
 <li>进入 sqlcmd， 执行如下命令：<br />
 <code>exec sp_attach_db 'patrol','/usr/xg/sqlPatrol/patrol.mdf','/usr/xg/sqlPatrol/patrol_log.ldf'</code></li>
 </ul>
 <p>其中， patrol为数据库名，执行此语句之前要先保证 patrol数据库不存在。<br />
-<img src="https://img-blog.csdnimg.cn/20190805205836163.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190805205836163.png" alt="在这里插入图片描述" /><br />
 附加成功后，执行  <code>exit</code> 可以退出 sqlcmd</p>
 <h2 id="发布-web项目"><a class="markdownIt-Anchor" href="#发布-web项目"></a> 发布 Web项目</h2>
 <ul>
@@ -906,7 +906,7 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <p>CPU：龙芯</p>
 <h2 id="配置-jdk"><a class="markdownIt-Anchor" href="#配置-jdk"></a> 配置 JDK</h2>
 <p>安装东方通之前需要先安装 JDK。检查系统是否自带了JDK：打开终端输入 <code>java -version</code><br />
-<img src="https://img-blog.csdnimg.cn/20190818151258989.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818151258989.png" alt="在这里插入图片描述" /><br />
 发现系统确实自带了JDK。查看系统环境变量  <code>cat /etc/profile</code> ，以确定是否配置了 JAVA_HOME <strong>（这一步至关重要！关系到 TongWeb能否正常工作）</strong>。可以看到，在 export 里面并没有 JAVA_HOME 的身影。那该如何对其进行配置呢？可通过如下方式一步步确定其路径：</p>
 <p>1、 输入 <code>which java</code></p>
 <p>这里显示的是 /bin/java 。将其作为下一步输入的值</p>
@@ -914,33 +914,33 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <p>将  <code>-&gt;</code>之后的信息作为下一步的值。这里显示的是 /etc/alternatives/java</p>
 <p>3、 输入 <code>ls -lrt /etc/alternatives/java</code></p>
 <p>-&gt; 之后一直到包含jdk 信息的路径即为 JAVA_HOME 的路径。此处为： /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.60-1.8.nd7.02.mips64el<br />
-<img src="https://img-blog.csdnimg.cn/20190818155722108.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818155722108.png" alt="在这里插入图片描述" /><br />
 修改环境变量： <code>/etc/profile</code></p>
 <p>在 export 之前添加 JAVA_HOME，并将 JAVA_HOME 添加至 export：<br />
-<img src="https://img-blog.csdnimg.cn/2019081815540514.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019081815540514.png" alt="在这里插入图片描述" /><br />
 保存后，输入 <code>source /etc/profile</code> 使其生效。</p>
 <h2 id="安装-tongweb"><a class="markdownIt-Anchor" href="#安装-tongweb"></a> 安装 TongWeb</h2>
 <p>将下载好的东方通 Install_TW6.0.7.0_Enterprise_Linux.zip解压，解压后其文件夹里有两个文件：</p>
 <p>安装文件（Install_TW6.0.7.0_Enterprise_Linux.bin）和证书（license.dat）。</p>
 <p>新建一个 tongweb 目录，将这两个文件全部拷贝进去。然后从终端进入 tongweb，执行以下命令进行安装：</p>
 <p>输入： <code>sh Install_TW6.0.7.0_Enterprise_Linux.bin -i console</code><br />
-<img src="https://img-blog.csdnimg.cn/20190818161316677.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818161316677.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 这里我选的是中文，之后根据提示按 <kbd>Enter</kbd> 键继续。<br />
-<img src="https://img-blog.csdnimg.cn/20190818161940719.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818161940719.png" alt="在这里插入图片描述" /><br />
 这里的安装位置建议放在刚刚新建的 tongweb 目录下（如果放在其他目录，结束时记得将证书拷贝到其根目录）<br />
-<img src="https://img-blog.csdnimg.cn/20190818162415471.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818162415471.png" alt="在这里插入图片描述" /><br />
 这里我选择了默认位置。<br />
-<img src="https://img-blog.csdnimg.cn/20190818162517419.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818162517419.png" alt="在这里插入图片描述" /><br />
 开始安装。<br />
-<img src="https://img-blog.csdnimg.cn/20190818162555971.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818162555971.png" alt="在这里插入图片描述" /><br />
 然后出现了这个，可以直接回车。<br />
-<img src="https://img-blog.csdnimg.cn/20190818162737168.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818162737168.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 之后同样可以一直回车，直到提示安装完毕。</p>
 <p>进入 bin目录，输入  <code>sh startserver.sh</code> 启动服务。<br />
-<img src="https://img-blog.csdnimg.cn/20190818163149739.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818163149739.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 最后看到启动完成，安装成功！</p>
 <p>打开浏览器，输入 <a href="localhost:9060/console/rest">localhost:9060/console/rest</a>，可以进入 TongWeb 管理控制平台。<br />
-<img src="https://img-blog.csdnimg.cn/20190818163702758.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818163702758.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 现在不急着登录，先安装达梦数据库。</p>
 <h2 id="安装配置-dm"><a class="markdownIt-Anchor" href="#安装配置-dm"></a> 安装配置 DM</h2>
 <p>根据官方文档，为了减少对系统的影响，不应该以 root 用户来安装和运行 DM。因此，在安装之前，先创建一个专门的系统用户。</p>
@@ -951,91 +951,91 @@ gem5 中自带的插桩工具是可以直接获取到物理地址的，如果要
 <p><code>useradd -g xggroup -m -d /home/gh -s /bin/bash gh</code></p>
 <p>3、初始化用户密码，根据提示进行密码设置</p>
 <p><code>passwd gh</code><br />
-<img src="https://img-blog.csdnimg.cn/2019081817034794.png" alt="在这里插入图片描述" /></p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019081817034794.png" alt="在这里插入图片描述" /></p>
 <h5 id="二-通过命令行安装-dm"><a class="markdownIt-Anchor" href="#二-通过命令行安装-dm"></a> 二、通过命令行安装 DM</h5>
 <p>下载好 DM 安装文件 DMInstall.bin ，新建 dm 目录并将安装文件拷贝进去。</p>
 <p>以新用户身份 gh 从终端进入 dm，执行以下命令进行安装：</p>
 <p>输入 <code>./DMInstall.bin -i</code><br />
-<img src="https://img-blog.csdnimg.cn/20190818171731651.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818171731651.png" alt="在这里插入图片描述" /><br />
 这里我选的是中文。之后会自动解压程序。<br />
-<img src="https://img-blog.csdnimg.cn/20190818171835499.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818171835499.png" alt="在这里插入图片描述" /><br />
 这里根据实际情况选择。<br />
-<img src="https://img-blog.csdnimg.cn/20190818171930473.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818171930473.png" alt="在这里插入图片描述" /><br />
 这里选择“是”。<br />
-<img src="https://img-blog.csdnimg.cn/20190818172002835.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818172002835.png" alt="在这里插入图片描述" /><br />
 选择21即可。<br />
-<img src="https://img-blog.csdnimg.cn/2019081817203591.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019081817203591.png" alt="在这里插入图片描述" /><br />
 这里根据个人需要选择。<br />
-<img src="https://img-blog.csdnimg.cn/20190818172152181.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818172152181.png" alt="在这里插入图片描述" /><br />
 这里我选的是默认目录。<br />
-<img src="https://img-blog.csdnimg.cn/20190818172246564.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818172246564.png" alt="在这里插入图片描述" /><br />
 由于使用非 root 系统用户进行安装，所以部分安装步骤没有相应的系统权限。这里根据提示切换到 root 用户执行该命令。<br />
-<img src="https://img-blog.csdnimg.cn/20190818172500199.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818172500199.png" alt="在这里插入图片描述" /><br />
 安装完成！</p>
 <h5 id="三-配置-dm"><a class="markdownIt-Anchor" href="#三-配置-dm"></a> 三、配置 DM</h5>
 <p>首先切换至新建的 gh 用户。<br />
-<img src="https://img-blog.csdnimg.cn/20190818173102478.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818173102478.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 登入以后可以在桌面上看到 DMDBMS 文件夹，在其子文件夹 client 中可以看到所有刚刚安装好的工具。<br />
-<img src="https://img-blog.csdnimg.cn/20190818173703497.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818173703497.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 打开数据库配置助手，选择 “创建数据库实例” ，点击 “开始” 进入下一步。可以使用默认项进行配置。<br />
-<img src="https://img-blog.csdnimg.cn/2019081818050117.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180511726.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180536749.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180543302.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180617393.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180632323.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180639759.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180647692.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/2019081818065533.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
-<img src="https://img-blog.csdnimg.cn/20190818180703327.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019081818050117.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180511726.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180536749.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180543302.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180617393.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180632323.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180639759.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180647692.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/2019081818065533.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180703327.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 这里根据需要进行选择。<br />
-<img src="https://img-blog.csdnimg.cn/20190818180734909.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180734909.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 点击 “完成”。<br />
-<img src="https://img-blog.csdnimg.cn/20190818180810276.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818180810276.png" alt="在这里插入图片描述" /><br />
 这里先点击 “确定” 继续安装，之后再作处理。<br />
-<img src="https://img-blog.csdnimg.cn/20190818181047760.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818181047760.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 根据提示执行相应命令。<br />
-<img src="https://img-blog.csdnimg.cn/20190818181219297.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818181219297.png" alt="在这里插入图片描述" /><br />
 点击 “确定”。<br />
-<img src="https://img-blog.csdnimg.cn/20190818181313727.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818181313727.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 点击 “完成” ，安装初始化数据库完成。</p>
 <p>现在解决刚刚的提示信息：<br />
-<img src="https://img-blog.csdnimg.cn/20190818181432448.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818181432448.png" alt="在这里插入图片描述" /><br />
 打开终端，以 root 身份执行一下命令：</p>
 <p>输入 <code>ulimit -a</code> ，可以看到当前 open files 为 1024。<br />
-<img src="https://img-blog.csdnimg.cn/20190818181829305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818181829305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 下面对 <code>vi /etc/security/limits.conf</code> 进行修改。</p>
 <p>在打开的文件中插入如下两条记录：<br />
-<img src="https://img-blog.csdnimg.cn/20190818182417477.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818182417477.png" alt="在这里插入图片描述" /><br />
 保存并退出，再次输入 <code>ulimit -a</code> ，可以看到 open files 已被修改为 65535。<br />
-<img src="https://img-blog.csdnimg.cn/20190818182614313.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /></p>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818182614313.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /></p>
 <h2 id="项目部署"><a class="markdownIt-Anchor" href="#项目部署"></a> 项目部署</h2>
 <p>首先把项目导出为 war 格式并拷贝到目标目录下，然后对其进行读写权限的修改。</p>
 <p><strong>这里读写权限的分配将关系到后面能否顺利部署！</strong></p>
 <p>打开之前的网址 <a href="localhost:9060/console/rest">localhost:9060/console/rest</a>进入 TongWeb 管理控制平台，默认用户名：twnt，密码：<a href="http://twnt123.com">twnt123.com</a><br />
-<img src="https://img-blog.csdnimg.cn/20190818163702758.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818163702758.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 进入 “JDBC配置” 界面，点击 “创建连接池”：<br />
-<img src="https://img-blog.csdnimg.cn/20190818185925763.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818185925763.png" alt="在这里插入图片描述" /><br />
 &quot;数据库类型” 选择达梦；<br />
 “连接url” 里将端口号修改为5236；<br />
 “密码” 填写数据库配置时设置的口令；<br />
 “连接参数” 可以不填；<br />
 “驱动路径” 在数据库的安装目录 dmdbms 下，路径为：<code>dmdbms/drivers/jdbc/</code> ，选中所有类型的 jar 包（DmJdbcDriver根据配置的 jdk 版本进行选择：16对应 jdk1.6, 17对应 jdk1.7，以此类推）<br />
-<img src="https://img-blog.csdnimg.cn/20190818190024714.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818190024714.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 点击 “下一步” ，可以看到提示 “数据库连接成功”<br />
-<img src="https://img-blog.csdnimg.cn/20190818191115764.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818191115764.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 这里可以直接点 “完成” 使用默认设置。然后进入 “应用管理” 界面，点击 “部署应用”<br />
-<img src="https://img-blog.csdnimg.cn/20190818191524825.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818191524825.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 点击 “浏览”，选择刚刚拷贝过来的项目<br />
-<img src="https://img-blog.csdnimg.cn/20190818192015478.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818192015478.png" alt="在这里插入图片描述" /><br />
 读取成功后，点击 “开始部署”<br />
-<img src="https://img-blog.csdnimg.cn/20190818192116440.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818192116440.png" alt="在这里插入图片描述" /><br />
 根据实际需要填写，然后点击 “下一步”<br />
-<img src="https://img-blog.csdnimg.cn/20190818192205916.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818192205916.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 这里可以直接点击 “完成” 使用默认设置<br />
-<img src="https://img-blog.csdnimg.cn/20190818192305181.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818192305181.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwNDUyOTA2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" /><br />
 可以看到列表中出现了刚刚部署的项目。可以点击 “http访问” 。<br />
-<img src="https://img-blog.csdnimg.cn/20190818192353178.png" alt="在这里插入图片描述" /><br />
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://img-blog.csdnimg.cn/20190818192353178.png" alt="在这里插入图片描述" /><br />
 部署完成！</p>
 <blockquote>
 <p>文章首发于<a href="https://blog.csdn.net/qq_40452906/article/details/99704762?spm=1001.2014.3001.5501">CSDN</a></p>
