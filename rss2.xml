@@ -15,14 +15,14 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Sun, 24 Apr 2022 03:38:44 GMT</pubDate>
+    <pubDate>Sun, 24 Apr 2022 04:47:44 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
       <title>Hello World</title>
       <link>https://younghblog.gitee.io/posts/1243066710.html</link>
       <guid>https://younghblog.gitee.io/posts/1243066710.html</guid>
-      <pubDate>Wed, 20 Apr 2022 00:38:37 GMT</pubDate>
+      <pubDate>Sat, 01 Jan 2022 16:00:00 GMT</pubDate>
       
         
         
@@ -37,6 +37,26 @@
       
       
       
+      
+      <category domain="https://younghblog.gitee.io/tags/tg1/">tg1</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg2/">tg2</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg3/">tg3</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg4/">tg4</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg5/">tg5</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg6/">tg6</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg7/">tg7</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg8/">tg8</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg9/">tg9</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/tg10/">tg10</category>
       
       
       <comments>https://younghblog.gitee.io/posts/1243066710.html#disqus_thread</comments>

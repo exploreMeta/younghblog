@@ -27,6 +27,8 @@
 </ol>
 <p><mark>文本高亮</mark>，<strong>加粗</strong>，<em>斜体</em>，<mark><em><strong>斜体高亮加粗</strong></em></mark>，<s>删除线</s>，<u>下划线</u>。</p>
 <figure class="highlight diff"><table><tr><td class="code"><pre><span class="line"><span class="addition">+ 新增行</span></span><br><span class="line"><span class="deletion">- 删除行</span></span><br><span class="line">其他行</span><br></pre></td></tr></table></figure>
+<h2 id="分隔线"><a class="markdownIt-Anchor" href="#分隔线"></a> 分隔线</h2>
+<hr />
 <h2 id="标签外挂"><a class="markdownIt-Anchor" href="#标签外挂"></a> 标签外挂：</h2>
 <div class="note default flat"><p>default 标签外挂</p>
 </div>
@@ -239,5 +241,17 @@
           </div>
 <h2 id="音乐"><a class="markdownIt-Anchor" href="#音乐"></a> 音乐：</h2>
 <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" src="//music.163.com/outchain/player?type=2&id=1342183925&auto=0"></iframe>]]></content>
+      <tags>
+        <tag>tg1</tag>
+        <tag>tg2</tag>
+        <tag>tg3</tag>
+        <tag>tg4</tag>
+        <tag>tg5</tag>
+        <tag>tg6</tag>
+        <tag>tg7</tag>
+        <tag>tg8</tag>
+        <tag>tg9</tag>
+        <tag>tg10</tag>
+      </tags>
   </entry>
 </search>
