@@ -7,6 +7,7 @@
 <p>Welcome to <a href="https://hexo.io/">Hexo</a>!</p>
 <h2 id="二级标题"><a class="markdownIt-Anchor" href="#二级标题"></a> 二级标题</h2>
 <h3 id="三级标题"><a class="markdownIt-Anchor" href="#三级标题"></a> 三级标题</h3>
+<h2 id="基础语法"><a class="markdownIt-Anchor" href="#基础语法"></a> 基础语法</h2>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (v &gt;= <span class="number">0</span> &amp;&amp; v &lt; <span class="number">10</span>)  <span class="keyword">return</span> <span class="number">0</span>; <span class="keyword">if</span> (v &gt;= <span class="number">10</span> &amp;&amp; v &lt; <span class="number">20</span>) <span class="keyword">return</span> <span class="number">1</span>; <span class="keyword">if</span> (v &gt;= <span class="number">20</span> &amp;&amp; v &lt; <span class="number">30</span>) <span class="keyword">return</span> <span class="number">2</span>; <span class="keyword">if</span> (v &gt;= <span class="number">30</span> &amp;&amp; v &lt; <span class="number">40</span>) <span class="keyword">return</span> <span class="number">3</span>; <span class="keyword">if</span> (v &gt;= <span class="number">40</span> &amp;&amp; v &lt; <span class="number">50</span>) <span class="keyword">return</span> <span class="number">4</span>; <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>按住<kbd>Ctrl</kbd>键<code>跳转</code></p>
 <blockquote>
@@ -24,9 +25,179 @@
 <li>有序列表1</li>
 <li>有序列表2</li>
 </ol>
-<p><mark>文本高亮</mark>，<strong>加粗</strong>，<em>斜体</em>，<mark><em><strong>斜体高亮加粗</strong></em></mark>，<s>删除线</s>，<u>下划线</u>。  <font style="background-color:#8bc34a">绿色小标签</font></p>
+<p><mark>文本高亮</mark>，<strong>加粗</strong>，<em>斜体</em>，<mark><em><strong>斜体高亮加粗</strong></em></mark>，<s>删除线</s>，<u>下划线</u>。</p>
 <figure class="highlight diff"><table><tr><td class="code"><pre><span class="line"><span class="addition">+ 新增行</span></span><br><span class="line"><span class="deletion">- 删除行</span></span><br><span class="line">其他行</span><br></pre></td></tr></table></figure>
-<p>一种常见表格样式：</p>
+<h2 id="标签外挂"><a class="markdownIt-Anchor" href="#标签外挂"></a> 标签外挂：</h2>
+<div class="note default flat"><p>default 标签外挂</p>
+</div>
+<div class="note primary flat"><p>primary 标签外挂</p>
+</div>
+<div class="note success flat"><p>success 标签外挂</p>
+</div>
+<div class="note danger flat"><p>danger 标签外挂</p>
+</div>
+<div class="note info flat"><p>info 标签外挂</p>
+</div>
+<div class="note warning flat"><p>warning 标签外挂</p>
+</div>
+<div class="note red flat"><p>red  标签外挂</p>
+</div>
+<div class="note quote flat"><p>quote  标签外挂</p>
+</div>
+<div class="tip">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip success">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip error">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip warning">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip wtgo">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip ban">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip home">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip important">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip ref">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip ffa">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip key">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<div class="tip socd">
+    <p>为简单的一句话提供的简便写法。</p>
+</div>
+<h2 id="容器"><a class="markdownIt-Anchor" href="#容器"></a> 容器：</h2>
+<div class="tabs" id="test1"><ul class="nav-tabs"><li class="tab active"><button type="button" data-href="#test1-1">test1 1</button></li><li class="tab"><button type="button" data-href="#test1-2">test1 2</button></li><li class="tab"><button type="button" data-href="#test1-3">test1 3</button></li></ul><div class="tab-contents"><div class="tab-item-content active" id="test1-1"><p><strong>This is Tab 1.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content" id="test1-2"><p><strong>This is Tab 2.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content" id="test1-3"><p><strong>This is Tab 3.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div></div></div>
+<div class="tabs" id="test2"><ul class="nav-tabs"><li class="tab"><button type="button" data-href="#test2-1">test2 1</button></li><li class="tab"><button type="button" data-href="#test2-2">test2 2</button></li><li class="tab active"><button type="button" data-href="#test2-3">test2 3</button></li></ul><div class="tab-contents"><div class="tab-item-content" id="test2-1"><p><strong>This is Tab 1.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content" id="test2-2"><p><strong>This is Tab 2.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content active" id="test2-3"><p><strong>This is Tab 3.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div></div></div>
+<div class="tabs" id="test3"><ul class="nav-tabs"><li class="tab"><button type="button" data-href="#test3-1">test3 1</button></li><li class="tab"><button type="button" data-href="#test3-2">test3 2</button></li><li class="tab"><button type="button" data-href="#test3-3">test3 3</button></li></ul><div class="tab-contents"><div class="tab-item-content" id="test3-1"><p><strong>This is Tab 1.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content" id="test3-2"><p><strong>This is Tab 2.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content" id="test3-3"><p><strong>This is Tab 3.</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div></div></div>
+<div class="tabs" id="test4"><ul class="nav-tabs"><li class="tab active"><button type="button" data-href="#test4-1">第一个Tab</button></li><li class="tab"><button type="button" data-href="#test4-2"><i class="fab fa-apple-pay" style="text-align: center;"></i></button></li><li class="tab"><button type="button" data-href="#test4-3"><i class="fas fa-bomb"></i>炸弹</button></li></ul><div class="tab-contents"><div class="tab-item-content active" id="test4-1"><p><strong>tab名字为第一个Tab</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content" id="test4-2"><p><strong>只有图标 没有Tab名字</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div><div class="tab-item-content" id="test4-3"><p><strong>名字+icon</strong></p><button type="button" class="tab-to-top" aria-label="scroll to top"><i class="fas fa-arrow-up"></i></button></div></div></div>
+<h2 id="tag-hide"><a class="markdownIt-Anchor" href="#tag-hide"></a> tag hide</h2>
+<p>哪个英文字母最酷？ <span class="hide-inline"><button type="button" class="hide-button" style="background-color: #FF7242;color: #fff">查看答案
+  </button><span class="hide-content">因为西装裤(C装酷)</span></span></p>
+<p>门里站着一个人? <span class="hide-inline"><button type="button" class="hide-button" style="">Click
+  </button><span class="hide-content">闪</span></span></p>
+<h2 id="block"><a class="markdownIt-Anchor" href="#block"></a> Block</h2>
+<div class="hide-block"><button type="button" class="hide-button" style="">查看答案
+    </button><div class="hide-content"><div class="fj-gallery"><p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://i.loli.net/2019/12/25/Fze9jchtnyJXMHN.jpg" alt="" /><br /><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://i.loli.net/2019/12/25/ryLVePaqkYm4TEK.jpg" alt="" /></p>
+          </div></div></div>
+<h2 id="toggle"><a class="markdownIt-Anchor" href="#toggle"></a> Toggle</h2>
+<details class="toggle" ><summary class="toggle-button" style="">查看代码</summary><div class="toggle-content"><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">print(<span class="string">&quot;Hello World&quot;</span>);</span><br></pre></td></tr></table></figure></div></details>
+<h2 id="按键"><a class="markdownIt-Anchor" href="#按键"></a> 按键</h2>
+<p><kbd>Ctrl </kbd>+<kbd>C </kbd> <kbd>Ctrl </kbd>+<kbd>V </kbd></p>
+<h2 id="小标签"><a class="markdownIt-Anchor" href="#小标签"></a> 小标签</h2>
+<!-- note语法示例 -->
+<p class='div-border green left right'>加粗绿色</p>
+<p class='div-border green'>绿色</p>
+<p class='div-border red'>红色</p>
+<p class='div-border yellow'>黄色</p>
+<p class='div-border grey'>灰色</p>
+<p class='div-border blue'>蓝色</p>
+<!-- 小tag标签语法示例 -->
+<span class="inline-tag red">红色小标签</span>
+<span class="inline-tag green">绿色小标签</span>
+<span class="inline-tag blue">蓝色小标签</span>
+<span class="inline-tag yellow">黄色小标签</span>
+<span class="inline-tag grey">灰色小标签</span>
+<h2 id="密码样式文本"><a class="markdownIt-Anchor" href="#密码样式文本"></a> 密码样式文本</h2>
+<p><psw>你能看见我吗？</psw></p>
+<h2 id="用markdown编写的表格样式"><a class="markdownIt-Anchor" href="#用markdown编写的表格样式"></a> 用markdown编写的表格样式：</h2>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>title</td>
+<td>【必需】文章标题</td>
+</tr>
+<tr>
+<td>date</td>
+<td>【必需】文章创建日期</td>
+</tr>
+<tr>
+<td>updated</td>
+<td>【可选】文章更新日期</td>
+</tr>
+<tr>
+<td>tags</td>
+<td>【可选】文章标籤</td>
+</tr>
+<tr>
+<td>categories</td>
+<td>【可选】文章分类</td>
+</tr>
+<tr>
+<td>keywords</td>
+<td>【可选】文章关键字</td>
+</tr>
+<tr>
+<td>description</td>
+<td>【可选】文章描述</td>
+</tr>
+<tr>
+<td>top_img</td>
+<td>【可选】文章顶部图片</td>
+</tr>
+<tr>
+<td>cover</td>
+<td>【可选】文章缩略图(如果没有设置top_img,文章页顶部将显示缩略图，可设为false/图片地址/留空)</td>
+</tr>
+<tr>
+<td>toc</td>
+<td>【可选】显示文章TOC(默认为设置中toc的enable配置)</td>
+</tr>
+<tr>
+<td>toc_number</td>
+<td>【可选】显示toc_number(默认为设置中toc的number配置)</td>
+</tr>
+<tr>
+<td>auto_open</td>
+<td>【可选】是否自动打开TOC(默认为设置中toc的auto_open配置)</td>
+</tr>
+<tr>
+<td>copyright</td>
+<td>【可选】显示文章版权模块(默认为设置中post_copyright的enable配置)</td>
+</tr>
+<tr>
+<td>mathjax</td>
+<td>【可选】显示mathjax(当设置mathjax的per_page: false时，才需要配置，默认 false)</td>
+</tr>
+<tr>
+<td>katex</td>
+<td>【可选】显示katex(当设置katex的per_page: false时，才需要配置，默认 false)</td>
+</tr>
+<tr>
+<td>aplayer</td>
+<td>【可选】在需要的页面加载aplayer的js和css,请参考文章下面的音乐 配置</td>
+</tr>
+<tr>
+<td>highlight_shrink</td>
+<td>【可选】配置代码框是否展开(true/false)(默认为设置中highlight_shrink的配置)</td>
+</tr>
+<tr>
+<td>comments</td>
+<td>【可选】显示文章评论模块(默认 true)</td>
+</tr>
+</tbody>
+</table>
+<p>另一种常见表格样式：</p>
 <div alt="three-table"> <!--alt还可取值为"notitle-table"，一种无表头的小型表格-->
 <table>
   <tr>
@@ -47,15 +218,26 @@
 </table>
 </div>
 <p><a href="#%E4%BA%8C%E7%BA%A7%E6%A0%87%E9%A2%98">跳转</a>至二级标题（锚点）</p>
-<p>上下标：X<sup>2</sup>, H<sub>2</sub>o，下标如果是多个单词或字符并以空格分隔，需要对空格进行转义，即在空格前面加<code>\</code>，（X<sub>下标1 下标2</sub>）。要显示*特殊字符等，也是通过反斜杠转义</p>
-<p>双语：<ruby>Base<rp> (</rp><rt>top</rt><rp>)</p>
+<h2 id="上下标"><a class="markdownIt-Anchor" href="#上下标"></a> 上下标：</h2>
+<p>X<sup>2</sup>, H<sub>2</sub>o，下标如果是多个单词或字符并以空格分隔，需要对空格进行转义，即在空格前面加<code>\</code>，（X<sub>下标1 下标2</sub>）。要显示*特殊字符等，也是通过反斜杠转义</p>
+<h2 id="双语"><a class="markdownIt-Anchor" href="#双语"></a> 双语：</h2>
 <ul>
-<li></rp></ruby>、<ruby>佐天泪子<rp> (</rp><rt>xiān qún kuáng mó</rt><rp>) </rp></ruby></li>
-<li><ruby>超電磁砲<rp> (</rp><rt>レールガン</rt><rp>) </rp></ruby></li>
+<li>
+<p><ruby>Base<rp> (</rp><rt>top</rt><rp>)</p>
+</li>
+<li>
+<p></rp></ruby>、<ruby>佐天泪子<rp> (</rp><rt>xiān qún kuáng mó</rt><rp>) </rp></ruby></p>
+</li>
+<li>
+<p><ruby>超電磁砲<rp> (</rp><rt>レールガン</rt><rp>) </rp></ruby></p>
+</li>
 </ul>
-<p>图片：<br />
-<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://cdn.jsdelivr.net/gh/exploreMeta/cdn/img/banner/client.jpg" style="zoom: 67%;"/></p>
-<p>音乐：</p>
+<h2 id="图片"><a class="markdownIt-Anchor" href="#图片"></a> 图片：</h2>
+<img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://cdn.jsdelivr.net/gh/exploreMeta/cdn/img/banner/client.jpg" style="zoom: 67%;"/>
+<p>Gallery 相册</p>
+<div class="fj-gallery"><p><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://i.loli.net/2019/12/25/Fze9jchtnyJXMHN.jpg" alt="" /><br /><img src="https://img.gejiba.com/images/0999217aac8ee3fee179053b9b3eefac.gif" data-original="https://i.loli.net/2019/12/25/ryLVePaqkYm4TEK.jpg" alt="" /></p>
+          </div>
+<h2 id="音乐"><a class="markdownIt-Anchor" href="#音乐"></a> 音乐：</h2>
 <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" src="//music.163.com/outchain/player?type=2&id=1342183925&auto=0"></iframe>]]></content>
   </entry>
 </search>
