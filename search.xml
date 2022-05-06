@@ -1,7 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Hello World</title>
+    <title>计算机系统漫游</title>
+    <url>/posts/4223884717.html</url>
+    <content><![CDATA[<h1 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h1>
+<p>《深入理解计算机系统-CSAPP》是计算机领域的圣经✨之前翻看过两三次，不过由于平时在实验室一直都有各种事情牵扯时间跟精力，每次阅读都近乎走马观花。</p>
+<p>最近论文送审之后终于有了充足的时间，于是便静下心来重新读了一遍。对于其中一些晦涩难懂且意义不大（个人愚见）的知识点（如浮点数的表示和运算、存储器山等等）本人并未细究，这里仅对自己之前没有完全掌握，或者易忘易混淆的知识点做个记录📝方便日后查阅。</p>
+<p>在整理了部分内容之后我发现整体架构看起来依然有些零散，没有逻辑主线💥事实上我也确实是从<code>hello.c</code>程序编译的各个过程中发散出来的小的知识点。</p>
+<p>为了使介绍能够更加聚焦，后续内容我决定采用问答的形式，然后从回答中抽取关键字来“浅挖”其原理和细节。能力一般，水平有限，所有内容仅仅是个人的一些粗浅的理解，之后我会尽量多读相关书籍来修正和完善这些内容🚩</p>
+<p>『计算机系统漫游』部分主要是对全书中我比较感兴趣的部分做一个粗略的介绍，其中每个<span class="inline-tag blue">蓝色小标签</span>中的内容（包括但不限于此）都将是后续博客中进一步展开介绍的对象~~</p>
+<h2 id="从hello-world开始"><a class="markdownIt-Anchor" href="#从hello-world开始"></a> 从Hello World开始</h2>
+<p><img src="https://img.gejiba.com/images/075fc443f96f351940d34ef5587a4367.webp" alt="Hello World编译过程" /></p>
+<h2 id="文本文件与二进制文件"><a class="markdownIt-Anchor" href="#文本文件与二进制文件"></a> 文本文件与二进制文件</h2>
+<p>我们所编写的<code>hello.c</code>程序属于文本文件，经过编译后生成的可执行文件是二进制文件。它们最终在物理内存上都是以二进制形式保存的，因此二者的主要区别是逻辑上的而不是物理上的：</p>
+<ul>
+<li>
+<p>文本文件：基于字符编码，如ASCII、Unicode等，每个值都有固定的Size。</p>
+</li>
+<li>
+<p>二进制文件：基于值编码，没有固定的Size，实际上就是把值在物理内存上的原始二进制形式。</p>
+</li>
+</ul>
+<p>比如<code>\n</code>在文本文件中是换行符，而在二进制文件中会被认为是<code>\</code>和<code>n</code>两个字符。</p>
+<h2 id="原码-反码和补码"><a class="markdownIt-Anchor" href="#原码-反码和补码"></a> 原码、反码和补码</h2>
+<p>有符号数的表示方法有三种，分别是原码、反码和补码，它们都是用最高位的<code>0</code>和<code>1</code>来区分正负。对于正数，三者的表示都是一致的，即该数的二进制表示，主要区别是在负数上。例如<code>15</code>的二进制表示为<code>0000 1111</code>，而对于<code>-15</code>：</p>
+<ul>
+<li>原码：<code>1000 1111</code> 符号位 + 二进制表示</li>
+<li>反码：<code>1111 0000</code> 在原码基础上，除符号位外全部取反</li>
+<li>补码：<code>1111 0001</code> 反码 + 1</li>
+</ul>
+<p>在计算机中，有符号数是用补码来表示的。之所以不用另外两种编码方式，是因为对于数字<code>0</code>，二者都有两种不同的编码方式，分别是<code>+0</code>和<code>-0</code>，而补码则不存在这种问题。</p>
+<h2 id="汇编程序与机器指令"><a class="markdownIt-Anchor" href="#汇编程序与机器指令"></a> 汇编程序与机器指令</h2>
+<p>高级语言编写的程序可以在很多不同的机器上编译运行，生成该机器所支持的<span class="inline-tag blue">机器指令</span>。<span class="inline-tag blue">汇编程序</span>是机器指令的文本表示，在不同指令级架构的机器上有不同的表现形式，这也就解释了为什么最终生成的可执行目标文件一般都不能跨平台执行。</p>
+<p>Java之所以能够跨平台（一次编译多次运行），是因为它并不是直接运行在CPU上的，而是生成字节码（.class）文件后由 JVM 统一执行。此时JVM有两种选择：一种是使用 Java 解释器解释执行，另一种是使用 JIT 编译器将字节码转化为本地机器指令。</p>
+<p>二者的区别在于，前者启动速度快但运行速度慢，后者启动速度慢但运行速度快。这是因为解释器不需要像 JIT 编译器一样，将所有字节码都转化为机器指令，自然就省去了优化的时间。而当 JIT 编译器完成第一次编译后会将字节码对应的机器指令保存下来，下次可以直接使用。由于机器指令的执行效率要高于 Java 解释器，所以在实际情况中，为了速度和效率，通常采用两者相结合的方式。</p>
+<h2 id="可重定位文件与可执行文件"><a class="markdownIt-Anchor" href="#可重定位文件与可执行文件"></a> 可重定位文件与可执行文件</h2>
+<p>如果想让代码运行，那么生成的目标代码中的每个符号（函数或变量）的地址都应该是确定的。事实上，在汇编阶段，只有跟源代码在同一个模块中的符号地址能确定下来，而定义在其他模块中的全局变量和函数的地址要在链接的时候才能确定。编译器在没法确定地址的情况下，会先将其置为 0，等到链接的时候再去修正它们，这个过程就是<span class="inline-tag blue">重定位</span>。因此很自然地，在链接之前（汇编阶段）生成的目标文件叫做可重定位目标文件，在链接之后生成的目标文件叫做<span class="inline-tag blue">可执行目标文件</span>。</p>
+<h2 id="静态链接与动态链接"><a class="markdownIt-Anchor" href="#静态链接与动态链接"></a> 静态链接与动态链接</h2>
+<p>链接分为<span class="inline-tag blue">静态链接</span>和<span class="inline-tag blue">动态链接</span>，二者的区别在于：静态链接会把引用到的所有目标文件全部嵌入到可执行文件中，因此生成的是完全可执行的目标文件；动态链接只会链接所引用文件的重定位和符号表信息，因此生成的是部分链接的可执行目标文件，直到运行或加载的时候，才会由动态链接器将物理内存中的共享库的地址与其链接起来。</p>
+<h2 id="cpu流水线划分"><a class="markdownIt-Anchor" href="#cpu流水线划分"></a> CPU流水线划分</h2>
+<p>CPU流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新PC寄存器。这些阶段看似简单，但有很多细节与我之前的理解存在严重偏差。比如取指阶段就只是单纯地从PC寄存器取出指令吗？译码阶段是要对取出的机器指令进行翻译吗？执行阶段好像是最简单的，就是执行我们程序逻辑中的主体运算，但就只有这一种情况吗？访存就是访问DRAM内存吗？写回是将修改后的值重新写回到内存吗？当然这些答案都是否定的，后续我会详细介绍<span class="inline-tag blue">CPU流水线</span>的这几个阶段。</p>
+<h2 id="高速缓存存储器"><a class="markdownIt-Anchor" href="#高速缓存存储器"></a> 高速缓存存储器</h2>
+<p><span class="inline-tag blue">高速缓存</span>的结构可以用<code>(S, E, B, m)</code>来表示，每个缓存行中还保存了有效位和标记位，方便快速定位目标数据，那具体工作过程是怎样的呢？另外根据<code>E</code>的不同，可以分为直接映射、组相连和全相连的高速缓存，这样划分的目的是什么？各有都有哪些优缺点？每种方式都有自己的应用场景吗？</p>
+<h2 id="物理内存和虚拟内存"><a class="markdownIt-Anchor" href="#物理内存和虚拟内存"></a> 物理内存和虚拟内存</h2>
+<p><span class="inline-tag blue">虚拟内存</span>并不是虚拟的、非真实存在的内存，而是对磁盘的虚拟化，将内存视为磁盘的高速缓存，在内存空间不足时将磁盘的一块区域划分成虚拟内存，通过与物理内存的换入换出来满足程序运行的需求。有虚拟内存自然就有<span class="inline-tag blue">虚拟地址</span>，相应地也会有物理地址，它们之间是如何完成映射的？进程的虚拟地址空间是真实存在的吗？是保存在物理内存中的吗？程序请求分配到的内存是物理内存吗？<span class="inline-tag blue">内存分配</span>后忘记释放内存会怎么样？Java不需要手动释放内存，那它的<span class="inline-tag blue">垃圾回收</span>机制是怎么实现的？这些问题我都会在后续博客中一一解答。</p>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>This is a test blog</title>
     <url>/posts/1243066710.html</url>
     <content><![CDATA[<h1 id="一级标题"><a class="markdownIt-Anchor" href="#一级标题"></a> 一级标题</h1>
 <p>Welcome to <a href="https://hexo.io/">Hexo</a>!</p>
@@ -240,57 +289,9 @@
 <div class="fj-gallery"><p><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/about.jpg" alt="" /><br /><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/donate.jpg" alt="" /></p>
           </div>
 <h2 id="音乐"><a class="markdownIt-Anchor" href="#音乐"></a> 音乐：</h2>
-<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" src="//music.163.com/outchain/player?type=2&id=1342183925&auto=0"></iframe>]]></content>
-      <categories>
-        <category>手册</category>
-      </categories>
-      <tags>
-        <tag>tg1</tag>
-        <tag>tg2</tag>
-        <tag>tg3</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>计算机系统漫游</title>
-    <url>/posts/4223884717.html</url>
-    <content><![CDATA[<h1 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h1>
-<blockquote>
-<p>《深入理解计算机系统（CSAPP）》是计算机领域的圣经，之前翻看过两三次，不过由于平时在实验室一直都有各种事情牵扯时间跟精力，每次阅读都近乎走马观花。最近论文送审之后终于有了充足的时间，于是便静下心来重新读了一遍。对于其中一些晦涩难懂且意义不大（个人愚见）的知识点（如浮点数的表示和运算、存储器山等等）本人并未细究，这里仅对自己之前没有完全掌握，或者易忘易混淆的知识点做个记录，方便日后查阅。</p>
-<p>在整理了部分内容之后我发现整体架构看起来依然有些零散，没有逻辑主线，事实上我也确实是从<code>hello.c</code>程序编译的各个过程中发散出来的小的知识点。为了使介绍能够更加聚焦，后续内容我决定采用问答的形式，然后从回答中抽取关键字来“浅挖”其原理和细节。能力一般水平有限，所有内容仅仅是个人的一些粗浅的理解，之后我会尽量多读相关书籍来修正和完善这些内容。</p>
-</blockquote>
-<p>『计算机系统漫游』部分主要是对全书中我比较感兴趣的部分做一个粗略的介绍，其中每个<span class="inline-tag blue">蓝色小标签</span>中的内容（包括但不限于此）都将是后续博客中会进一步展开介绍的对象。</p>
-<h1 id="从hello-world开始"><a class="markdownIt-Anchor" href="#从hello-world开始"></a> 从Hello World开始</h1>
-<p><img src="https://img.gejiba.com/images/075fc443f96f351940d34ef5587a4367.webp" alt="Hello World编译过程" /></p>
-<h1 id="文本文件与二进制文件"><a class="markdownIt-Anchor" href="#文本文件与二进制文件"></a> 文本文件与二进制文件</h1>
-<p>我们所编写的<code>hello.c</code>程序属于文本文件，经过编译后生成的可执行文件是二进制文件。它们最终在物理内存上都是以二进制形式保存的，因此二者的主要区别是逻辑上的而不是物理上的：</p>
-<ul>
-<li>
-<p>文本文件：基于字符编码，如ASCII、Unicode等，每个值都有固定的Size。</p>
-</li>
-<li>
-<p>二进制文件：基于值编码，没有固定的Size，实际上就是把值在物理内存上的原始二进制形式。</p>
-</li>
-</ul>
-<p>比如<code>\n</code>在文本文件中是换行符，而在二进制文件中会被认为是<code>\</code>和<code>n</code>两个字符。</p>
-<h1 id="原码-反码和补码"><a class="markdownIt-Anchor" href="#原码-反码和补码"></a> 原码、反码和补码</h1>
-<p>有符号数的表示方法有三种，分别是原码、反码和补码，它们都是用最高位的<code>0</code>和<code>1</code>来区分正负。对于正数，三者的表示都是一致的，即该数的二进制表示，主要区别是在负数上。例如<code>15</code>的二进制表示为<code>0000 1111</code>，而对于<code>-15</code>：</p>
-<ul>
-<li>原码：<code>1000 1111</code> 符号位 + 二进制表示</li>
-<li>反码：<code>1111 0000</code> 在原码基础上，除符号位外全部取反</li>
-<li>补码：<code>1111 0001</code> 反码 + 1</li>
-</ul>
-<p>在计算机中，有符号数是用补码来表示的。之所以不用另外两种编码方式，是因为对于数字<code>0</code>，二者都有两种不同的编码方式，分别是<code>+0</code>和<code>-0</code>，而补码则不存在这种问题。</p>
-<h1 id="汇编程序与机器指令"><a class="markdownIt-Anchor" href="#汇编程序与机器指令"></a> 汇编程序与机器指令</h1>
-<p>高级语言编写的程序可以在很多不同的机器上编译运行，生成该机器所支持的机器指令。<span class="inline-tag blue">汇编程序</span>是机器指令的文本表示，在不同指令级架构的机器上有不同的表现形式，这也就解释了为什么最终生成的可执行目标文件一般都不能跨平台执行。</p>
-<p>Java之所以能够跨平台（一次编译多次运行），是因为它并不是直接运行在<span class="inline-tag blue">CPU</span>上的，而是生成字节码（.class）文件后由 JVM 统一执行。此时JVM有两种选择：一种是使用 Java 解释器解释执行，另一种是使用 JIT 编译器将字节码转化为本地机器指令。</p>
-<p>二者的区别在于，前者启动速度快但运行速度慢，后者启动速度慢但运行速度快。这是因为解释器不需要像 JIT 编译器一样，将所有字节码都转化为机器指令，自然就省去了优化的时间。而当 JIT 编译器完成第一次编译后会将字节码对应的机器指令保存下来，下次可以直接使用。由于机器指令的执行效率要高于 Java 解释器，所以在实际情况中，为了速度和效率，通常采用两者相结合的方式。</p>
-<h1 id="可重定位文件与可执行文件"><a class="markdownIt-Anchor" href="#可重定位文件与可执行文件"></a> 可重定位文件与可执行文件</h1>
-<p>如果想让代码运行，那么生成的目标代码中的每个符号（函数或变量的地址）都应该是确定的。事实上，在汇编阶段，只有跟源代码在同一个模块中的符号地址能确定下来，而定义在其他模块中的全局变量和函数的地址要在链接的时候才能确定。编译器在没法确定地址的情况下，会先将其置为 0，等到链接的时候再去修正它们，这个过程就是<span class="inline-tag blue">重定位</span>。因此很自然地，在链接之前（汇编阶段）生成的目标文件叫做可重定位目标文件，在链接之后生成的目标文件叫做<span class="inline-tag blue">可执行目标文件</span>。</p>
-<h1 id="静态链接与动态链接"><a class="markdownIt-Anchor" href="#静态链接与动态链接"></a> 静态链接与动态链接</h1>
-<p>链接分为<span class="inline-tag blue">静态链接</span>和<span class="inline-tag blue">动态链接</span>，二者的区别在于：静态链接会将引用到的所有目标文件全部嵌入到可执行文件中，因此生成的是完全可执行的目标文件；动态链接只会链接所引用文件的重定位和符号表信息，因此生成的是部分链接的可执行目标文件，直到运行或加载的时候，才会由动态链接器将物理内存中的共享库的地址与其链接起来。</p>
+<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" src="//music.163.com/outchain/player?type=2&id=1342183925&auto=0"></iframe>
+<h2 id="emoji表情"><a class="markdownIt-Anchor" href="#emoji表情"></a> Emoji表情</h2>
+<p><a href="https://hub.xn--gzu630h.xn--kpry57d/SmallOyster/emoji">查询链接</a></p>
 ]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
   </entry>
 </search>

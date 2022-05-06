@@ -15,14 +15,14 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Fri, 06 May 2022 03:09:35 GMT</pubDate>
+    <pubDate>Fri, 06 May 2022 07:16:44 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
       <title>计算机系统漫游</title>
       <link>https://younghblog.gitee.io/posts/4223884717.html</link>
       <guid>https://younghblog.gitee.io/posts/4223884717.html</guid>
-      <pubDate>Tue, 03 May 2022 12:35:00 GMT</pubDate>
+      <pubDate>Fri, 06 May 2022 07:16:36 GMT</pubDate>
       
         
         
@@ -44,7 +44,7 @@
     </item>
     
     <item>
-      <title>Hello World</title>
+      <title>This is a test blog</title>
       <link>https://younghblog.gitee.io/posts/1243066710.html</link>
       <guid>https://younghblog.gitee.io/posts/1243066710.html</guid>
       <pubDate>Sat, 01 Jan 2022 16:00:00 GMT</pubDate>
@@ -62,14 +62,6 @@
       
       
       
-      <category domain="https://younghblog.gitee.io/categories/%E6%89%8B%E5%86%8C/">手册</category>
-      
-      
-      <category domain="https://younghblog.gitee.io/tags/tg1/">tg1</category>
-      
-      <category domain="https://younghblog.gitee.io/tags/tg2/">tg2</category>
-      
-      <category domain="https://younghblog.gitee.io/tags/tg3/">tg3</category>
       
       
       <comments>https://younghblog.gitee.io/posts/1243066710.html#disqus_thread</comments>
