@@ -15,8 +15,36 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Fri, 06 May 2022 07:16:44 GMT</pubDate>
+    <pubDate>Sat, 07 May 2022 11:46:16 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>看懂简单的汇编代码</title>
+      <link>https://younghblog.gitee.io/posts/3467593604.html</link>
+      <guid>https://younghblog.gitee.io/posts/3467593604.html</guid>
+      <pubDate>Sat, 07 May 2022 07:55:00 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;本文介绍的是ATT格式的汇编代码。先上表格：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp&quot; alt=&quot;整数寄存器&quot;</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E6%B1%87%E7%BC%96/">汇编</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/3467593604.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>计算机系统漫游</title>

@@ -1,6 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>看懂简单的汇编代码</title>
+    <url>/posts/3467593604.html</url>
+    <content><![CDATA[<p>本文介绍的是ATT格式的汇编代码。先上表格：</p>
+<p><img src="https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp" alt="整数寄存器" /></p>
+<p>表格记录了不同寄存器的功能。汇编指令通常都有一个或多个操作数，这些操作数有三种类型：立即数、寄存器和内存引用。</p>
+<p>常见的操作指令有：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">指令</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">mov    S, D</td>
+<td style="text-align:center">把数据从S传送到D</td>
+</tr>
+<tr>
+<td style="text-align:center">push    S</td>
+<td style="text-align:center">栈顶指针下移，S入栈</td>
+</tr>
+<tr>
+<td style="text-align:center">pop    D</td>
+<td style="text-align:center">栈顶内容赋值给D，栈顶指针上移</td>
+</tr>
+<tr>
+<td style="text-align:center">leaq    S, D</td>
+<td style="text-align:center">将S的地址（&amp;S）赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">inc/dec/neg/not    D</td>
+<td style="text-align:center">将D加1/减1/取负/取反后赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">add/sub/imul/xor/or/and    S, D</td>
+<td style="text-align:center">将D加/减/乘/异或/或/与S后赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">sal/shl/sar/shr    k, D</td>
+<td style="text-align:center">将D算术/逻辑左移/算术/逻辑右移k位后赋值给D</td>
+</tr>
+</tbody>
+</table>
+<p>接下来通过几个示例来进一步理解：</p>
+<h2 id="mov-指令"><a class="markdownIt-Anchor" href="#mov-指令"></a> mov 指令</h2>
+<p>示例代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">exchange</span><span class="params">(<span class="type">long</span> *xp, <span class="type">long</span> y)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">long</span> x = *xp;</span><br><span class="line">    *xp = y;</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 第一个参数 xp 保存在 %rdi 中，第二个参数 y 保存在 %rsi 中，返回值保存在 %rax 中</span><br><span class="line"># *xp 是对 xp 的解引用，即读取内存中地址 xp 处所存放的值，因此表示为 (%rdi)</span><br><span class="line">exchange:</span><br><span class="line">	movq	(%rdi), %rax	# 将 *xp 作为返回值</span><br><span class="line">	movq	%rsi, (%rdi)	# 将 y 赋值给 *xp</span><br><span class="line">	ret						# return</span><br></pre></td></tr></table></figure>
+<h2 id=""><a class="markdownIt-Anchor" href="#"></a> </h2>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>汇编</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>计算机系统漫游</title>
     <url>/posts/4223884717.html</url>
     <content><![CDATA[<h1 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h1>
