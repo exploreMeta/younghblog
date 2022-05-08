@@ -70,7 +70,7 @@
 <p>为了使介绍能够更加聚焦，后续内容我决定采用问答的形式，然后从回答中抽取关键字来“浅挖”其原理和细节。能力一般，水平有限，所有内容仅仅是个人的一些粗浅的理解，之后我会尽量多读相关书籍来修正和完善这些内容🚩</p>
 <p>『计算机系统漫游』部分主要是对全书中我比较感兴趣的部分做一个粗略的介绍，其中每个<span class="inline-tag blue">蓝色小标签</span>中的内容（包括但不限于此）都将是后续博客中进一步展开介绍的对象~~</p>
 <h2 id="从hello-world开始"><a class="markdownIt-Anchor" href="#从hello-world开始"></a> 从Hello World开始</h2>
-<p><img src="https://img.gejiba.com/images/075fc443f96f351940d34ef5587a4367.webp" alt="Hello World编译过程" /></p>
+<p><img src="https://img.gejiba.com/images/2df68f1e0cc0ea3c4bd7722f0b09e509.webp" alt="Hello World编译过程" /></p>
 <h2 id="文本文件与二进制文件"><a class="markdownIt-Anchor" href="#文本文件与二进制文件"></a> 文本文件与二进制文件</h2>
 <p>我们所编写的<code>hello.c</code>程序属于文本文件，经过编译后生成的可执行文件是二进制文件。它们最终在物理内存上都是以二进制形式保存的，因此二者的主要区别是逻辑上的而不是物理上的：</p>
 <ul>
