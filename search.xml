@@ -5,7 +5,7 @@
     <url>/posts/3467593604.html</url>
     <content><![CDATA[<p>本文介绍的是ATT格式的汇编代码。先上表格：</p>
 <p><img src="https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp" alt="整数寄存器" /></p>
-<p>表格记录了不同寄存器的功能。汇编指令通常都有一个或多个操作数，这些操作数有三种类型：立即数、寄存器和内存引用。</p>
+<p>表格记录了不同寄存器的功能。汇编指令通常都有一个或多个操作数，这些操作数有三种类型：立即数（$<em>Imm</em>）、寄存器（<em>r<sub>a</sub></em>）和内存引用（<em>(r<sub>a</sub>)</em>）。</p>
 <p>常见的操作指令有：</p>
 <table>
 <thead>
@@ -50,7 +50,7 @@
 <p>示例代码：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">exchange</span><span class="params">(<span class="type">long</span> *xp, <span class="type">long</span> y)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">long</span> x = *xp;</span><br><span class="line">    *xp = y;</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>汇编代码：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 第一个参数 xp 保存在 %rdi 中，第二个参数 y 保存在 %rsi 中，返回值保存在 %rax 中</span><br><span class="line"># *xp 是对 xp 的解引用，即读取内存中地址 xp 处所存放的值，因此表示为 (%rdi)</span><br><span class="line">exchange:</span><br><span class="line">	movq	(%rdi), %rax	# 将 *xp 作为返回值</span><br><span class="line">	movq	%rsi, (%rdi)	# 将 y 赋值给 *xp</span><br><span class="line">	ret						# return</span><br></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 第一个参数 xp 保存在 %rdi 中，第二个参数 y 保存在 %rsi 中，返回值保存在 %rax 中</span></span><br><span class="line"><span class="comment"># *xp 是对 xp 的解引用，即读取内存中地址 xp 处所存放的值，因此表示为 (%rdi)</span></span><br><span class="line"><span class="attr">exchange:</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">(%rdi),</span> <span class="string">%rax</span>	<span class="comment"># 将 *xp 作为返回值</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rsi,</span> <span class="string">(%rdi)</span>	<span class="comment"># 将 y 赋值给 *xp</span></span><br><span class="line">	<span class="string">ret</span>			<span class="comment"># return</span></span><br></pre></td></tr></table></figure>
 <h2 id=""><a class="markdownIt-Anchor" href="#"></a> </h2>
 ]]></content>
       <categories>
@@ -203,7 +203,7 @@
   </button><span class="hide-content">闪</span></span></p>
 <h1 id="block"><a class="markdownIt-Anchor" href="#block"></a> Block</h1>
 <div class="hide-block"><button type="button" class="hide-button" style="">查看答案
-    </button><div class="hide-content"><div class="fj-gallery"><p><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/about.jpg" alt="" /><br /><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/donate.jpg" alt="" /></p>
+    </button><div class="hide-content"><div class="fj-gallery"><p><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/about.webp" alt="" /><br /><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/donate.webp" alt="" /></p>
           </div></div></div>
 <h1 id="toggle"><a class="markdownIt-Anchor" href="#toggle"></a> Toggle</h1>
 <details class="toggle" ><summary class="toggle-button" style="">查看代码</summary><div class="toggle-content"><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">print(<span class="string">&quot;Hello World&quot;</span>);</span><br></pre></td></tr></table></figure></div></details>
@@ -348,7 +348,7 @@
 <h1 id="图片"><a class="markdownIt-Anchor" href="#图片"></a> 图片</h1>
 <img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/client.jpg" style="zoom: 67%;"/>
 <p>Gallery 相册</p>
-<div class="fj-gallery"><p><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/about.jpg" alt="" /><br /><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/donate.jpg" alt="" /></p>
+<div class="fj-gallery"><p><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/about.webp" alt="" /><br /><img src="https://cdn1.tianli0.top/gh/exploreMeta/cdn/img/banner/donate.webp" alt="" /></p>
           </div>
 <h1 id="音乐"><a class="markdownIt-Anchor" href="#音乐"></a> 音乐</h1>
 <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" src="//music.163.com/outchain/player?type=2&id=1342183925&auto=0"></iframe>
