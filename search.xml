@@ -5,7 +5,7 @@
     <url>/posts/3467593604.html</url>
     <content><![CDATA[<p>本文介绍的是ATT格式的汇编代码。先上表格：</p>
 <p><img src="https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp" alt="整数寄存器" /></p>
-<p>表格记录了不同寄存器的功能。汇编指令通常都有一个或多个操作数，这些操作数有三种类型：立即数<span class="inline-tag blue">$<em>Imm</em></span>、寄存器<span class="inline-tag blue"><em>r<sub>a</sub></em></span>和内存引用<span class="inline-tag blue">(<em>r<sub>a</sub></em>)</span>。</p>
+<p>表格记录了不同寄存器的功能。汇编指令通常都有一个或多个操作数，这些操作数有三种类型：立即数 <span class="p red">$<em>Imm</em></span>、寄存器 <span class="p red"><em>r<sub>a</sub></em></span> 和内存引用 <span class="p red">(<em>r<sub>a</sub></em>)</span>。</p>
 <p>常见的操作指令有：</p>
 <table>
 <thead>
