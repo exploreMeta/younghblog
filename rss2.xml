@@ -15,7 +15,7 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Sun, 08 May 2022 02:11:28 GMT</pubDate>
+    <pubDate>Wed, 11 May 2022 13:42:02 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
@@ -28,8 +28,8 @@
         
           
           
-      <description>&lt;p&gt;本文介绍的是ATT格式的汇编代码。先上表格：&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp&quot; alt=&quot;整数寄存器&quot;</description>
+      <description>&lt;p&gt;本文介绍的是 ATT 格式的汇编代码。先上表格：&lt;/p&gt;
+&lt;img src=&quot;https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp&quot; alt=&quot;整数寄存器&quot;</description>
           
         
       
