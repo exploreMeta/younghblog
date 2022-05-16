@@ -5,55 +5,58 @@
     <url>/posts/3931262747.html</url>
     <content><![CDATA[<p>我们在学习 CPU 处理机制的时候，为了便于理解，都会从 <strong>顺序执行</strong>（Sequential）的处理器开始介绍。对于顺序执行的 CPU，每个时钟周期都要处理一条完整的指令，这是一个漫长的过程，因此时钟频率会低到让人难以接受。为了提升 CPU 的性能，便引入了流水线技术。</p>
 <p class='div-border blue left'>可即便使用了流水线，顺序执行的 CPU 的处理效率仍然无法满足我们的现实需要，因此现代处理器都是 <b>乱序执行</b>（Out-of-Order）的。</br>乱序执行即指令的执行并非按照程序中指令的原始顺序，而是后面的指令有可能会先于前面的指令执行。当然，为了保证程序的正确性，乱序执行必须保证与顺序执行相同的执行结果。</p>
-<p>通常来说，处理一条指令包括很多操作，将它们组织成一个特殊的序列，就能设计出一个充分利用每个硬件的处理器。CPU 流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新 PC 寄存器。这些阶段看似老生常谈，但每个阶段具体都做了什么，却跟我之前的理解存在着严重的偏差。比如：</p>
+<p>通常来说，处理一条指令包括很多操作，将它们组织成一个特殊的序列，就能设计出一个充分利用每个硬件的处理器。CPU 流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新 PC 寄存器。这些阶段的划分已是老生常谈，但每个阶段具体都做了什么，却跟我之前的理解有着严重的偏差。比如：</p>
 <ul>
 <li><span class="p red">取指阶段就只是单纯地从 PC 寄存器取出指令吗？</span></li>
 <li><span class="p red">译码阶段是要对取出的机器指令进行翻译吗？</span></li>
-<li><span class="p red">执行阶段好像是最简单的，就是执行我们程序逻辑中的主体运算，但真的就只有这一种情况吗？</span></li>
+<li><span class="p red">执行阶段好像是最简单的，就是执行程序逻辑中的主体运算，但真的就只有这一种情况吗？</span></li>
 <li><span class="p red">访存就是访问 DRAM 内存吗？</span></li>
 <li><span class="p red">写回是将修改后的值重新写回到内存吗？</span></li>
 </ul>
-<p>当然这些答案都是否定的，接下来我将通过各种不同类型的指令来详细介绍 CPU 流水线的各个阶段。</p>
+<p>当然这些答案都是否定的，接下来我将通过各种类型的指令来详细介绍 CPU 流水线的各个阶段。</p>
 <p>为了彻底搞清楚 CPU 对这些指令的处理过程，首先需要了解这些 <code>Y86-64</code> 指令的编码格式：</p>
 <p><img src="https://img.gejiba.com/images/9cfcac8bb960fb57bda358842cf65826.webp" alt="Y86-64" /></p>
 <p>可以看到指令编码长度从 1 字节到 10 字节不等。其中：</p>
-<p>第 1 个字节表示操作码（icode : ifun），根据第 1 个字节就能知道指令的类型，进而知道有没有操作数，以及有几个操作数。图中 <code>fn</code> 用来表示该条指令是整数操作（Opq）、数据传送条件（cmovXX）或是分支条件（jXX）。</p>
+<p>第 1 个字节表示操作码（icode : ifun），根据第 1 个字节就能知道指令的类型，进而知道有没有操作数，以及有几个操作数。图中 <code>fn</code> 用来表示该条指令是整数操作（OPq）、数据传送条件（cmovXX）或是分支条件（jXX）。</p>
 <p>第 2 个字节表示操作数（rA : rB），对于那些只需要一个寄存器操作数的指令（irmovq、pushq 和 popq），将另一个寄存器指示符设置为十六进制数 <code>F</code>。</p>
 <p>剩余 8 个字节表示立即数（irmovq 中的 <code>V</code>）、地址偏移量（rmmovq 与 mrmovq 中的 <code>D</code>）或是目标地址（jXX 与 call 中的 <code>Dest</code>）。</p>
 <p>背景知识介绍差不多了，接下来我们就进入正题！</p>
-<h2 id="opq-rrmovq-与-irmovq"><a class="markdownIt-Anchor" href="#opq-rrmovq-与-irmovq"></a> Opq、rrmovq 与 irmovq</h2>
-<p><img src="https://img.gejiba.com/images/8f1a06dd51324402e831fdfa77d93088.webp" alt="Opq&amp;rrmovq&amp;irmovq" /></p>
+<h2 id="opq-rrmovq-与-irmovq"><a class="markdownIt-Anchor" href="#opq-rrmovq-与-irmovq"></a> OPq、rrmovq 与 irmovq</h2>
+<p><img src="https://img.gejiba.com/images/8f1a06dd51324402e831fdfa77d93088.webp" alt="OPq&amp;rrmovq&amp;irmovq" /></p>
 <p>图中 <span class="p red">M<sub>n</sub>[X]</span> 表示访问内存位置 <code>X</code> 处的 <code>n</code> 个字节，下同。</p>
-<p>可以看到，取指阶段在从 PC 寄存器中取出指令的同时，还解析出了指令的操作码和操作数，以及当前指令的长度，并且根据该长度计算出了下一条指令的地址 <code>valP</code>。</p>
-<p>译码阶段从寄存器文件中读取最多两个操作数。而 irmovq 指令是将立即数读入到寄存器，不涉及对寄存器的读取，因此该指令在译码阶段不执行任何操作。</p>
-<p>执行阶段由 ALU 执行指令指明的操作，当只有一个操作数时，将第二个操作数设为 0。这个过程可能需要设置条件码（<code>set CC</code>）。</p>
-<p>由于这三类指令均未涉及到内存操作，因此在访存阶段不执行任何操作。</p>
-<p>写回阶段将执行阶段得到的结果写回到目的寄存器，最后更新 PC 寄存器。</p>
+<p>可以看到，<strong>取指阶段</strong> 根据 PC 寄存器中所保存的地址从内存中取出指令，同时还解析出了指令的操作码和操作数，以及当前指令的长度，并且根据该长度计算出了下一条指令的地址 <code>valP</code>。</p>
+<p><strong>译码阶段</strong> 从寄存器文件中读取最多两个操作数。而 irmovq 指令是将立即数读入到寄存器，不涉及对寄存器的读取，因此该指令在译码阶段不执行任何操作。</p>
+<p><strong>执行阶段</strong> 由 ALU 执行指令指明的操作，当只有一个操作数时，将第二个操作数设为 0。这个过程可能需要设置条件码（<code>set CC</code>）。</p>
+<p>由于这三类指令均未涉及到内存操作，因此在 <strong>访存阶段</strong> 不执行任何操作。</p>
+<p><strong>写回阶段</strong> 将执行阶段得到的结果写回到目的寄存器，最后 <strong>更新 PC 寄存器</strong>。</p>
 <h2 id="rmmovq-与-mrmovq"><a class="markdownIt-Anchor" href="#rmmovq-与-mrmovq"></a> rmmovq 与 mrmovq</h2>
 <p><img src="https://img.gejiba.com/images/186a2f5d3d11a529447ab9046504c0dc.webp" alt="rmmovq&amp;mrmovq" /></p>
 <p>这里的 <code>D</code> 表示地址偏移量，例如 <code>rmmovq %rsp,100(%rbx)</code>，表示将 %rsp 寄存器中的值放到内存中，内存地址是 %rbx 寄存器中的值加上 100。</p>
-<p>这里的执行阶段计算的是内存地址。</p>
-<p>访存阶段将值写入内存或者从内存中读出某个值。</p>
-<p>由于 rmmovq 的不涉及到对目的寄存器的写，因此在写回阶段该指令不执行任何操作。</p>
+<p>这里的 <strong>执行阶段</strong> 计算的是内存地址。</p>
+<p><strong>访存阶段</strong> 将值写入内存或者从内存中读出某个值。</p>
+<p>由于 rmmovq 的不涉及到对目的寄存器的写，因此在 <strong>写回阶段</strong> 该指令不执行任何操作。</p>
 <p>其余阶段中相同的操作这里不再赘述，下同。</p>
 <h2 id="pushq-与-popq"><a class="markdownIt-Anchor" href="#pushq-与-popq"></a> pushq 与 popq</h2>
 <p><img src="https://img.gejiba.com/images/0ed95a00e91e504ff8ee2a6b780504eb.webp" alt="pushq&amp;popq" /></p>
-<p>译码阶段除了要读取指定寄存器中的操作数，还要读取栈顶指针的值。</p>
-<p>执行阶段计算栈顶指针移动后的地址，该地址就是将要访问的内存地址。</p>
-<p>写回阶段除了将结果写回目的寄存器外，还要更新栈顶指针的值。</p>
+<p><strong>译码阶段</strong> 除了要读取指定寄存器中的操作数，还要读取栈顶指针的值。</p>
+<p><strong>执行阶段</strong> 计算栈顶指针移动后的地址，该地址就是将要访问的内存地址。</p>
+<p><strong>写回阶段</strong> 除了将结果写回目的寄存器外，还要更新栈顶指针的位置。</p>
+<img src="https://img.gejiba.com/images/944e92c68fc061803e0017ae75b7e13e.webp" alt="pushpop" style="zoom:80%;" />
 <h2 id="jxx-call-与-ret"><a class="markdownIt-Anchor" href="#jxx-call-与-ret"></a> jXX、call 与 ret</h2>
 <p><img src="https://img.gejiba.com/images/6f15acef0a82abde1779d52ca2104e86.webp" alt="jXX&amp;call&amp;ret" /></p>
-<p>call 和 ret 指令类似于 pushq 和 popq。call 指令会将下一条指令的地址压入栈中（访存），然后将调用的目的地址 <code>valC</code> 作为下一条执行的指令（更新 PC）。ret 指令将从栈顶弹出的地址所对应的值 <code>valM</code> 作为下一条执行的指令（更新 PC），并且由 call 可知，这条指令其实就是 call 指令后面紧跟的那条指令，表示在函数调用返回后继续往下执行。</p>
-<p>jXX 指令在执行阶段会计算是否满足跳转条件。</p>
-<p>更新 PC 阶段将根据分支条件设置下一条指令的地址。</p>
+<p>call 和 ret 指令类似于 pushq 和 popq。call 指令会将下一条指令的地址压入栈中（<strong>访存</strong>），然后将调用的目的地址 <code>valC</code> 作为下一条执行的指令（<strong>更新 PC</strong>）。ret 指令将从栈顶弹出的地址所对应的值 <code>valM</code> 作为下一条执行的指令（<strong>更新 PC</strong>），并且由 call 可知，这条指令其实就是 call 指令后面紧跟的那条指令，表示在函数调用返回后继续往下执行。</p>
+<p>jXX 指令在 <strong>执行阶段</strong> 会计算是否满足跳转条件。</p>
+<p><strong>更新 PC 阶段</strong> 将根据分支条件设置下一条指令的地址。</p>
+<p><img src="https://img.gejiba.com/images/e3492a3a945ffa8638842c82d99b6f9e.webp" alt="callret" /></p>
 <h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>处理一条指令可以划分成以下几个阶段，这些阶段不一定都会执行，与具体的指令类型有关。</p>
 <ul>
-<li>取指（Fetch）：</li>
-<li>译码（Decode）：</li>
-<li>执行（Execute）：</li>
-<li>访存（Memory）：</li>
-<li>写回（Write back）：</li>
-<li>更新 PC（PC update）：</li>
+<li><strong>取指</strong>（Fetch）：从内存中读取指令，地址为 PC 寄存器的值。同时还会解析指令的操作码（指令类型）和操作数（寄存器指示符 rA/rB，可能还有常数），并计算出顺序执行时下一条指令的地址，该地址等于 PC 的值加上当前指令的长度。</li>
+<li><strong>译码</strong>（Decode）：根据寄存器指示符从相应的寄存器文件中读入最多两个操作数，有时候需要读取 %rsp 寄存器所保存的地址。</li>
+<li><strong>执行</strong>（Execute）：根据操作码类型，这个阶段可能执行的操作包括：执行指令指明的操作（可能还会设置条件码）；计算内存引用的有效地址；增加或减少栈指针；检验条件码和传送条件是否成立（条件传送指令 cmovXX）；决定是否选择分支（跳转指令）。</li>
+<li><strong>访存</strong>（Memory）：从内存读取数据，或者将数据写入内存。</li>
+<li><strong>写回</strong>（Write back）：最多可以将两个结果写到寄存器文件，包括写回指令中指定的目的寄存器，以及 %rsp 寄存器（更新栈顶指针的位置）。</li>
+<li><strong>更新 PC</strong>（PC update）：将 PC 寄存器设置成下一条指令的地址。</li>
 </ul>
 ]]></content>
       <categories>
