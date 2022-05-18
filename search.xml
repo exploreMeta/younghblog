@@ -1,53 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>计算机系统漫游</title>
-    <url>/posts/4223884717.html</url>
-    <content><![CDATA[<h1 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h1>
-<p>《深入理解计算机系统-CSAPP》是计算机领域的圣经✨之前翻看过两三次，不过由于平时在实验室一直都有各种事情牵扯时间跟精力，每次阅读都近乎走马观花。</p>
-<p>最近论文送审之后终于有了充足的时间，于是便静下心来重新读了一遍。对于其中一些晦涩难懂且意义不大（个人愚见）的知识点（如浮点数的表示和运算、存储器山等等）本人并未细究，这里仅对自己之前没有完全掌握，或者易忘易混淆的知识点做个记录📝方便日后查阅。</p>
-<p>在整理了部分内容之后我发现整体架构看起来依然有些零散，没有逻辑主线💥事实上我也确实是从 <code>hello.c</code> 程序编译的各个过程中发散出来的小的知识点。</p>
-<p>为了使介绍能够更加聚焦，后续内容我决定采用问答的形式，然后从回答中抽取关键字来“浅挖”其原理和细节。能力一般，水平有限，所有内容仅仅是个人的一些粗浅的理解，之后我会尽量多读相关书籍来修正和完善这些内容🚩</p>
-<p>『计算机系统漫游』部分主要是对全书中我比较感兴趣的部分做一个粗略的介绍，其中每个 <span class="inline-tag blue">蓝色小标签</span> 中的内容（包括但不限于此）都将是后续博客中进一步展开介绍的对象~~</p>
-<h2 id="从hello-world开始"><a class="markdownIt-Anchor" href="#从hello-world开始"></a> 从Hello World开始</h2>
-<p><img src="https://img.gejiba.com/images/2df68f1e0cc0ea3c4bd7722f0b09e509.webp" alt="Hello World编译过程" /></p>
-<h2 id="文本文件与二进制文件"><a class="markdownIt-Anchor" href="#文本文件与二进制文件"></a> 文本文件与二进制文件</h2>
-<p>我们所编写的 <code>hello.c</code> 程序属于文本文件，经过编译后生成的可执行文件是二进制文件。它们最终在物理内存上都是以二进制形式保存的，因此二者的主要区别是逻辑上的而不是物理上的：</p>
+    <title>如何摆脱CPU分支预测错误</title>
+    <url>/posts/2875321003.html</url>
+    <content><![CDATA[<p>现在我们已经知道，CPU 引入流水线的目的就是为了保证每个时钟周期都能发射一条新的指令，从而提升其性能。要做到这一点，就必须在取出当前指令后立马确定下一条指令的位置。</p>
+<p>根据 <a href="https://younghblog.gitee.io/posts/3931262747.html" target="_blank">上一篇</a> 博文可知，大多数指令都可以在取指阶段确定下一条指令的地址，比如对于 call 和 jmp（无条件跳转）指令来说，下一条指令的地址就是指令中的常数字 <code>valC</code>，而对于其他指令来说则是 <code>valP</code>。</p>
+<p>但不幸的是，如果取出的指令是条件转移指令 cmovXX，则必须等到执行阶段完成才能确定下一条指令的地址。类似地，如果取出的指令是返回指令 ret，则要等到访存结束后才能确定下一条指令的地址。</p>
+<p>CPU 对于 ret 的处理比较简单，即 <span class="p red">流水线必须暂停直到 ret 指令访存结束。</span>而对于 cmovXX，则会进行分支预测以提高 CPU 的执行效率。</p>
+<h2 id="cpu-分支预测"><a class="markdownIt-Anchor" href="#cpu-分支预测"></a> CPU 分支预测</h2>
+<p>具体来说，CPU 既可以预测选择了分支，也可以预测没有选择分支，然后按照所预测的方向继续往下执行。当然，预测终归只是预测，必然会有错误的情况发生。如果错误的分支预测经常发生，那么性能损失就会显著增加。因为当这样的事件发生时，CPU 已经取出并执行了部分错误的指令，因此需要清除掉所有这些错误的指令，同时还需要用来自正确分支的指令填充流水线。 <span class="p red">通常，现代 CPU 会因分支预测错误而遭受 10-20 个周期的惩罚。</span></p>
+<p>如今，处理器非常擅长预测分支结果，不仅可以遵循静态预测规则，还可以检测动态模式。通常，分支预测器会采用后者。</p>
+<p class='div-border blue left'> <b>静态分支预测</b>：由编译器来决定哪个分支可能被 CPU 命中。一般会选择第一个分支，即 if 后面的逻辑，而不是 else 后面的逻辑。</br><b>动态分支预测</b>：在运行期间决定预测结果。它会在 CPU 硬件中开辟一块缓存，专门记录每个分支最近几次的命中情况，然后做出预测。</p>
+<p>通用来说，应用程序的错误预测率在 5%-10% 的范围是正常的，如果该指标高于 10% 就要引起注意了。</p>
+<h2 id="摆脱分支预测错误的方式"><a class="markdownIt-Anchor" href="#摆脱分支预测错误的方式"></a> 摆脱分支预测错误的方式</h2>
+<p><span class="p red">为了摆脱分支预测错误，最直接的方法就是摆脱分支本身。</span>接下来就介绍两种摆脱分支的方式。</p>
+<h3 id="1-用查找表替换分支"><a class="markdownIt-Anchor" href="#1-用查找表替换分支"></a> 1. 用查找表替换分支</h3>
+<p>通过查找表可以避免频繁的分支。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">0</span> &amp;&amp; v &lt; <span class="number">10</span>)	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">10</span> &amp;&amp; v &lt; <span class="number">20</span>)	<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">20</span> &amp;&amp; v &lt; <span class="number">30</span>)	<span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">30</span> &amp;&amp; v &lt; <span class="number">40</span>)	<span class="keyword">return</span> <span class="number">3</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">40</span> &amp;&amp; v &lt; <span class="number">50</span>)	<span class="keyword">return</span> <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码中存在许多分支，这些分支可能具有很高的错误预测率。</p>
+<p>我们可以使用数组查找来重写该函数，这样函数的汇编代码应该只有一个分支而不是多个分支。此外，buckets 数组相对较小，因此我们可以期望它驻留在 CPU 缓存中，从而能够对其进行快速访问：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 查找表版本</span></span><br><span class="line"><span class="type">int</span> buckets[<span class="number">256</span>] = &#123;</span><br><span class="line">     <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,</span><br><span class="line">     <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,</span><br><span class="line">     <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,</span><br><span class="line">     <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,</span><br><span class="line">     <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,</span><br><span class="line">    <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>,</span><br><span class="line">    <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>,</span><br><span class="line">    ... &#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(v &lt; (<span class="keyword">sizeof</span>(buckets) / <span class="keyword">sizeof</span>(<span class="type">int</span>)))</span><br><span class="line">    	<span class="keyword">return</span> buckets[v];</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果我们需要映射更大范围的值，分配一个非常大的数组是不切实际的。在这种情况下，可以使用 interval map 数据结构，以使用更少的内存和对数级的查找复杂度来实现该目标。</p>
+<h3 id="2-用谓词替换分支"><a class="markdownIt-Anchor" href="#2-用谓词替换分支"></a> 2. 用谓词替换分支</h3>
+<p>通过执行分支的两个部分，然后选择正确的结果，可以有效地消除一些分支。 如果 if 分支有非常多的错误预测，可以尝试通过这种方式来消除分支。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 原始版本</span></span><br><span class="line"><span class="type">int</span> a;</span><br><span class="line"><span class="keyword">if</span>(cond) &#123; <span class="comment">// 假设分支有较高的错误预测率</span></span><br><span class="line">    a = computeX();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    a = computeY();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 原始汇编版本</span></span><br><span class="line"><span class="attr">400504:</span> 	<span class="string">test</span>	<span class="string">%edi,</span> <span class="string">%edi</span>	<span class="comment"># 要在执行阶段完成后才能知道结果</span></span><br><span class="line"><span class="attr">400506:</span> 	<span class="string">je</span>		<span class="string">$400514</span></span><br><span class="line"><span class="attr">400508:</span> 	<span class="string">mov</span>		<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">40050d:</span> 	<span class="string">call</span>	<span class="string">&lt;computeX&gt;</span></span><br><span class="line"><span class="attr">400512:</span> 	<span class="string">jmp</span>		<span class="string">$40051e</span></span><br><span class="line"><span class="attr">400514:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">400519:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeY&gt;</span></span><br><span class="line"><span class="attr">40051e:</span> 	<span class="string">mov</span> 	<span class="string">%eax,</span> <span class="string">%edi</span></span><br></pre></td></tr></table></figure>
+<p>用谓词替换分支后：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 无分支版本</span></span><br><span class="line"><span class="type">int</span> x = computeX();</span><br><span class="line"><span class="type">int</span> y = computeY();</span><br><span class="line"><span class="type">int</span> a = cond ? x : y;</span><br></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 无分支汇编版本</span></span><br><span class="line"><span class="attr">400537:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">40053c:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeX&gt;</span></span><br><span class="line"><span class="attr">400541:</span> 	<span class="string">mov</span> 	<span class="string">%eax,</span> <span class="string">%ebp</span></span><br><span class="line"><span class="attr">400543:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">400548:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeY&gt;</span></span><br><span class="line"><span class="attr">40054d:</span> 	<span class="string">test</span> 	<span class="string">%ebx,</span> <span class="string">%ebx</span></span><br><span class="line"><span class="attr">40054f:</span> 	<span class="string">cmovne</span>	<span class="string">%ebp,</span> <span class="string">%eax</span>	<span class="comment"># 要在执行阶段完成后才能知道结果</span></span><br></pre></td></tr></table></figure>
+<p>在无分支版本中，编译器能够去除分支并生成 cmovne 指令来替代。</p>
+<blockquote>
+<p>这里大家可能会有疑问：无分支汇编版本中的 <code>cmovne</code>（第 8 行）跟原始汇编版本中的 <code>test</code>（第 2 行）一样，都是要等到执行阶段完成后才能确定下一条指令的地址，那为什么无分支版本的效率会更高呢？</p>
+<p>在当前示例中，<code>test</code> 后面还有很多依赖其结果的指令，它们都会阻塞起来等待其执行完成；而 <code>cmovne</code> 并没有阻塞后续指令，因此它的执行效率会更高。</p>
+</blockquote>
+<h2 id="消除分支的负面影响"><a class="markdownIt-Anchor" href="#消除分支的负面影响"></a> 消除分支的负面影响</h2>
+<p>在上述无分支版本的示例中，x 和 y 都是独立计算的，然后只选择其中一个值。<span class="p red">虽然这种转换消除了分支错误预测的惩罚，但它会比原始代码做更多的工作。</span></p>
+<p>在这种情况下，性能改进在很大程度上取决于 computeX() 和 computeY() 函数的特性。如果函数很小并且编译器能够内联它们，它可能会带来显著的性能优势；但 <span class="p red">如果函数很大，两个函数都去执行的开销就会比分支预测错误的开销更大。</span></p>
+<p>此外，<span class="p red">消除分支还会限制 CPU 的并行执行能力。</span></p>
+<p>对于原始版本中的代码片段，CPU 可以根据分支预测器选择 if 分支，并使用 <code>a = computeX()</code> 来推测执行。如果后续有指令要用 <code>a</code> 来索引数组元素，那么在知道 if 分支的真实结果之前就可以发出此加载（即直接使用分支预测所计算出的 <code>a</code> 的值。因为分支预测只需选择一个分支然后向下执行即可，而不需要计算出所有情况）。</p>
+<p>而对于无分支版本中的代码，这种推测是不可能的，因为 CPU 无法在 <code>cmovne</code> 指令完成之前发出使用 <code>a</code> 的加载（无分支版本需要计算出所有情况，并且在最终执行完 <code>cmovne</code> 指令后才能确定 <code>a</code> 的值到底属于哪种情况）。</p>
+<h2 id="何时选择无分支版本"><a class="markdownIt-Anchor" href="#何时选择无分支版本"></a> 何时选择无分支版本</h2>
+<p>在代码的原始版本和无分支版本之间进行权衡的典型例子是 <strong>二分查找</strong>。</p>
 <ul>
 <li>
-<p>文本文件：基于字符编码，如ASCII、Unicode等，每个值都有固定的Size。</p>
+<p><span class="p red">对于不适合 CPU 缓存的大型数组的查找，基于分支的二分查找版本的性能更好。</span>因为与内存访问的延迟（cache 未命中会导致较高的延迟，无分支版本可能会有更多的 cache 不命中）相比，分支预测错误的代价较低。由于存在分支，CPU 可以推测它们的结果，从而同时加载当前迭代和下一次迭代中的数组元素。</p>
 </li>
 <li>
-<p>二进制文件：基于值编码，没有固定的Size，实际上就是把值在物理内存上的原始二进制形式。</p>
+<p><span class="p red">对于适合 CPU 缓存的小型数组的查找，情况则正好相反。</span>由于数组适合 CPU 缓存，因此加载延迟很小（只有几个周期）。而基于分支的二分查找可能会遭受持续的错误预测（对于二分查找一旦预测错误，后续所有的预测一定都是错的），惩罚约为 20 个周期。在这种情况下，错误预测的代价远远大于内存访问的代价，从而大大削弱了推测执行的优势。在这种情况下，无分支版本通常会更快。</p>
 </li>
 </ul>
-<p>比如 <code>\n</code> 在文本文件中是换行符，而在二进制文件中会被认为是 <code>\</code> 和 <code>n</code> 两个字符。</p>
-<h2 id="原码-反码和补码"><a class="markdownIt-Anchor" href="#原码-反码和补码"></a> 原码、反码和补码</h2>
-<p>有符号数的表示方法有三种，分别是原码、反码和补码，它们都是用最高位的 <code>0</code> 和 <code>1</code> 来区分正负。对于正数，三者的表示都是一致的，即该数的二进制表示，主要区别是在负数上。例如 <code>15</code> 的二进制表示为 <code>0000 1111</code>，而对于 <code>-15</code>：</p>
+<p>二分查找是一个很好的例子，说明了如何在基础版本和无分支版本之间进行选择。但现实情况可能很难分析，因此，需要通过测试来确定在特定场景中替换分支是否有益。</p>
+<h2 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h2>
 <ul>
-<li>原码：<code>1000 1111</code> 符号位 + 二进制表示</li>
-<li>反码：<code>1111 0000</code> 在原码基础上，除符号位外全部取反</li>
-<li>补码：<code>1111 0001</code> 反码 + 1</li>
+<li>现代处理器非常擅长预测分支结果，因此 <strong>建议仅在错误预测率较高时再去修复分支错误预测的工作</strong>。</li>
+<li>当 CPU 分支预测错误率较高时，应用程序的性能可能会受到影响。在这种情况下，算法的无分支版本可能会更好，因此可以考虑通过 <strong>查找表</strong> 和 <strong>谓词</strong> 来替换分支。</li>
+<li><strong>无分支算法并非总是有益的</strong>，要通过测试来确定是否适合特定场景。</li>
 </ul>
-<p>在计算机中，有符号数是用补码来表示的。之所以不用另外两种编码方式，是因为对于数字 <code>0</code>，二者都有两种不同的编码方式，分别是 <code>+0</code> 和 <code>-0</code>，而补码则不存在这种问题。</p>
-<h2 id="汇编程序与机器指令"><a class="markdownIt-Anchor" href="#汇编程序与机器指令"></a> 汇编程序与机器指令</h2>
-<p>高级语言编写的程序可以在很多不同的机器上编译运行，生成该机器所支持的 <span class="inline-tag blue">机器指令</span>。 <span class="inline-tag blue">汇编程序</span> 是机器指令的文本表示，在不同指令级架构的机器上有不同的表现形式，这也就解释了为什么最终生成的可执行目标文件一般都不能跨平台执行。</p>
-<p>Java之所以能够跨平台（一次编译多次运行），是因为它并不是直接运行在CPU上的，而是生成字节码（.class）文件后由 JVM 统一执行。此时JVM有两种选择：一种是使用 Java 解释器解释执行，另一种是使用 JIT 编译器将字节码转化为本地机器指令。</p>
-<p>二者的区别在于，前者启动速度快但运行速度慢，后者启动速度慢但运行速度快。这是因为解释器不需要像 JIT 编译器一样，将所有字节码都转化为机器指令，自然就省去了优化的时间。而当 JIT 编译器完成第一次编译后会将字节码对应的机器指令保存下来，下次可以直接使用。由于机器指令的执行效率要高于 Java 解释器，所以在实际情况中，为了速度和效率，通常采用两者相结合的方式。</p>
-<h2 id="可重定位文件与可执行文件"><a class="markdownIt-Anchor" href="#可重定位文件与可执行文件"></a> 可重定位文件与可执行文件</h2>
-<p>如果想让代码运行，那么生成的目标代码中的每个符号（函数或变量）的地址都应该是确定的。事实上，在汇编阶段，只有跟源代码在同一个模块中的符号地址能确定下来，而定义在其他模块中的全局变量和函数的地址要在链接的时候才能确定。编译器在没法确定地址的情况下，会先将其置为 0，等到链接的时候再去修正它们，这个过程就是<span class="inline-tag blue">重定位</span>。因此很自然地，在链接之前（汇编阶段）生成的目标文件叫做可重定位目标文件，在链接之后生成的目标文件叫做 <span class="inline-tag blue">可执行目标文件</span>。</p>
-<h2 id="静态链接与动态链接"><a class="markdownIt-Anchor" href="#静态链接与动态链接"></a> 静态链接与动态链接</h2>
-<p>链接分为 <span class="inline-tag blue">静态链接</span> 和 <span class="inline-tag blue">动态链接</span>，二者的区别在于：静态链接会把引用到的所有目标文件全部嵌入到可执行文件中，因此生成的是完全可执行的目标文件；动态链接只会链接所引用文件的重定位和符号表信息，因此生成的是部分链接的可执行目标文件，直到运行或加载的时候，才会由动态链接器将物理内存中的共享库的地址与其链接起来。</p>
-<h2 id="cpu流水线划分"><a class="markdownIt-Anchor" href="#cpu流水线划分"></a> CPU流水线划分</h2>
-<p>CPU流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新PC寄存器。这些阶段看似简单，但有很多细节与我之前的理解存在严重偏差。比如取指阶段就只是单纯地从PC寄存器取出指令吗？译码阶段是要对取出的机器指令进行翻译吗？执行阶段好像是最简单的，就是执行我们程序逻辑中的主体运算，但就只有这一种情况吗？访存就是访问DRAM内存吗？写回是将修改后的值重新写回到内存吗？当然这些答案都是否定的，后续我会详细介绍 <span class="inline-tag blue">CPU流水线</span> 的这几个阶段。</p>
-<h2 id="高速缓存存储器"><a class="markdownIt-Anchor" href="#高速缓存存储器"></a> 高速缓存存储器</h2>
-<p><span class="inline-tag blue">高速缓存</span> 的结构可以用<code>(S, E, B, m)</code>来表示，每个缓存行中还保存了有效位和标记位，方便快速定位目标数据，那具体工作过程是怎样的呢？另外根据<code>E</code>的不同，可以分为直接映射、组相连和全相连的高速缓存，这样划分的目的是什么？各有都有哪些优缺点？每种方式都有自己的应用场景吗？</p>
-<h2 id="物理内存和虚拟内存"><a class="markdownIt-Anchor" href="#物理内存和虚拟内存"></a> 物理内存和虚拟内存</h2>
-<p><span class="inline-tag blue">虚拟内存</span> 并不是虚拟的、非真实存在的内存，而是对磁盘的虚拟化，将内存视为磁盘的高速缓存，在内存空间不足时将磁盘的一块区域划分成虚拟内存，通过与物理内存的换入换出来满足程序运行的需求。有虚拟内存自然就有 <span class="inline-tag blue">虚拟地址</span>，相应地也会有物理地址，它们之间是如何完成映射的？进程的虚拟地址空间是真实存在的吗？是保存在物理内存中的吗？程序请求分配到的内存是物理内存吗？<span class="inline-tag blue">内存分配</span> 后忘记释放内存会怎么样？Java不需要手动释放内存，那它的 <span class="inline-tag blue">垃圾回收</span> 机制是怎么实现的？这些问题我都会在后续博客中一一解答。</p>
-]]></content>
+</br>
+<div class="note info flat"><p><span class="p blue">以上内容主要参考自『Performance Analysis and Tuning on Modern CPUs』</span></p>
+</div>]]></content>
       <categories>
         <category>读书笔记 - CSAPP</category>
       </categories>
+      <tags>
+        <tag>分支预测</tag>
+        <tag>分支消除</tag>
+      </tags>
   </entry>
   <entry>
     <title>CPU流水线的各个阶段到底做了什么</title>
@@ -112,8 +130,266 @@
         <category>读书笔记 - CSAPP</category>
       </categories>
       <tags>
-        <tag>CPU流水线</tag>
+        <tag>流水线</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>看懂简单的汇编代码</title>
+    <url>/posts/3467593604.html</url>
+    <content><![CDATA[<p>本文介绍的是 AT&amp;T 格式的汇编代码。先上表格：</p>
+<img src="https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp" alt="整数寄存器" style="zoom:80%;" />
+<p>表格记录了不同寄存器的功能。汇编指令通常都有一个或多个操作数，有的指令没有操作数，这些操作数有三种类型：立即数 <span class="p red">$<em>Imm</em></span>、寄存器 <span class="p red"><em>r<sub>a</sub></em></span> 和内存引用 <span class="p red">(<em>r<sub>a</sub></em>)</span>。</p>
+<p>常见的操作指令有：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">指令</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">mov    S, D</td>
+<td style="text-align:center">把数据从S传送到D</td>
+</tr>
+<tr>
+<td style="text-align:center">push    S</td>
+<td style="text-align:center">栈顶指针下移，S入栈</td>
+</tr>
+<tr>
+<td style="text-align:center">pop    D</td>
+<td style="text-align:center">栈顶内容赋值给D，栈顶指针上移</td>
+</tr>
+<tr>
+<td style="text-align:center">lea    S, D</td>
+<td style="text-align:center">将S的地址（&amp;S）赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">inc/dec/neg/not    D</td>
+<td style="text-align:center">将D<code>加1/减1/取负/取反</code>后赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">add/sub/imul/xor/or/and    S, D</td>
+<td style="text-align:center">将D<code>加/减/乘/异或/或/与</code>S后赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">sal/shl/sar/shr    k, D</td>
+<td style="text-align:center">将D<code>算术/逻辑左移</code>/<code>算术/逻辑右移</code>k位后赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">leaq    S, D</td>
+<td style="text-align:center">将S的地址赋值给D或者对S算术运算后赋值给D</td>
+</tr>
+<tr>
+<td style="text-align:center">cmp/test    S1, S2</td>
+<td style="text-align:center">根据<code>S2-S1或S2&amp;S1</code>的结果设置条件码</td>
+</tr>
+<tr>
+<td style="text-align:center">cltq</td>
+<td style="text-align:center">将 %eax 符号扩展到 %rax</td>
+</tr>
+</tbody>
+</table>
+<p>接下来通过几个示例来进一步理解。</p>
+<h2 id="mov-指令"><a class="markdownIt-Anchor" href="#mov-指令"></a> mov 指令</h2>
+<p>示例代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">exchange</span><span class="params">(<span class="type">long</span> *xp, <span class="type">long</span> y)</span> &#123;</span><br><span class="line">    <span class="type">long</span> x = *xp;</span><br><span class="line">    *xp = y;</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 第一个参数 xp 保存在 %rdi 中，第二个参数 y 保存在 %rsi 中，返回值保存在 %rax 中</span></span><br><span class="line"><span class="comment"># *xp 是对 xp 的解引用，即读取内存中地址 xp 处所存放的值，因此表示为 (%rdi)</span></span><br><span class="line"><span class="attr">exchange:</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">(%rdi),</span> <span class="string">%rax</span>	<span class="comment"># 将 *xp 作为返回值</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rsi,</span> <span class="string">(%rdi)</span>	<span class="comment"># 将 y 赋值给 *xp</span></span><br><span class="line">	<span class="string">ret</span>			<span class="comment"># return</span></span><br></pre></td></tr></table></figure>
+<h2 id="lea-指令"><a class="markdownIt-Anchor" href="#lea-指令"></a> lea 指令</h2>
+<p>lea（load effective address）表示加载有效地址，虽然形式上是内存引用，但实际上并没有引用内存，而是将一个内存地址直接赋值给目的操作数；mov 则是将地址处的数据赋值给目的操作数。例如：</p>
+<p><code>leaq 8(%rbx), %rax</code>  表示将 <code>%rbx+8</code> 这个地址直接赋值给 <code>%rax</code>，而不是把该地址处所对应的数据赋值给 <code>%rax</code>。mov 指令则恰恰相反：</p>
+<p><code>movq 8(%rbx), %rax</code> 表示将 <code>%rbx+8</code> 这个地址处所对应的数据赋值给 <code>%rax</code>。</p>
+<p>lea 的用法比较灵活，除了加载有效地址，还可以进行算术运算。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">scale</span><span class="params">(<span class="type">long</span> x, <span class="type">long</span> y, <span class="type">long</span> z)</span> &#123;</span><br><span class="line">    <span class="type">long</span> t = x + <span class="number">4</span> * y + <span class="number">12</span> * z;</span><br><span class="line">    <span class="keyword">return</span> t;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># x in %rdi, y in %rsi, z in %rdx</span></span><br><span class="line"><span class="attr">scale:</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rdi,</span> <span class="string">%rsi,</span> <span class="number">4</span><span class="string">),</span> <span class="string">%rax</span>	<span class="comment"># 将 x + 4y 放入 %rax</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rdx,</span> <span class="string">%rdx,</span> <span class="number">2</span><span class="string">),</span> <span class="string">%rdx</span>	<span class="comment"># z = z + 2z = 3z</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rax,</span> <span class="string">%rdx,</span> <span class="number">4</span><span class="string">),</span> <span class="string">%rax</span>	<span class="comment"># 将 (x + 4y) + 3z * 4 作为返回值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
+<p>对于后两条 <code>leaq</code> 指令，之所以没有直接合并成 <code>leaq (%rax, %rdx, 12), %rax</code>，是因为对于变址寻址中的比例因子只能取 1、2、4、8，因此需要对 12 分解。</p>
+<p>比例因子的取值与源代码中定义的数组类型相关，编译器会据此来确定比例因子的数值。比如对于 char 类型的数组，其比例因子是 1；short 类型的比例因子是 2；int 类型是 4；double 类型是 8 等等。</p>
+<blockquote>
+<p>判断 lea 是加载地址还是算术运算，可以根据所操作的寄存器的功能。如果是保存参数的普通寄存器一般表示算术运算，而其他特殊的寄存器则表示加载有效地址（个人观察，有待查证）。</p>
+</blockquote>
+<h2 id="算术指令"><a class="markdownIt-Anchor" href="#算术指令"></a> 算术指令</h2>
+<p>示例代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">arith</span><span class="params">(<span class="type">long</span> x, <span class="type">long</span> y, <span class="type">long</span> z)</span> &#123;</span><br><span class="line">    <span class="type">long</span> t1 = x ^ y;</span><br><span class="line">    <span class="type">long</span> t2 = z * <span class="number">48</span>;</span><br><span class="line">    <span class="type">long</span> t3 = t1 &amp; <span class="number">0x0F0F0F0F</span>;</span><br><span class="line">    <span class="type">long</span> t4 = t2 - t3;</span><br><span class="line">    <span class="keyword">return</span> t4;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># x in %rdi, y in %rsi, z in %rdx</span></span><br><span class="line"><span class="attr">arith:</span></span><br><span class="line">	<span class="string">xorq</span>	<span class="string">%rsi,</span> <span class="string">%rdi</span>		<span class="comment"># x = x ^ y</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rdx,</span> <span class="string">%rdx,</span> <span class="number">2</span><span class="string">),</span> <span class="string">%rax</span>	<span class="comment"># 将 z + 2z = 3z 放入 %rax</span></span><br><span class="line">	<span class="string">salq</span>	<span class="string">$4,</span> <span class="string">%rax</span>		<span class="comment"># 将 3z 左移 4 位，即 3z * 16 = 48z 作为返回值</span></span><br><span class="line">	<span class="string">andl</span>	<span class="string">$252645135,</span> <span class="string">%edi</span>	<span class="comment"># 该立即数有 8 * 4 = 32 位，因此只取前 32 位进行与运算</span></span><br><span class="line">	<span class="string">subq</span>	<span class="string">%rdi,</span> <span class="string">%rax</span>		<span class="comment"># 将 48z - t3 的值作为返回值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
+<p>对于源程序第 3 行代码中的乘法操作，被编译成了 leaq 和左移两条指令。编译器之所以没有直接使用乘法指令来实现，是因为乘法指令的执行时间更长，因此编译器会优先选择更高效的方式。</p>
+<h2 id="控制指令"><a class="markdownIt-Anchor" href="#控制指令"></a> 控制指令</h2>
+<h3 id="条件码"><a class="markdownIt-Anchor" href="#条件码"></a> 条件码</h3>
+<p>除了整数寄存器，CPU 还维护着一组单个比特位的条件码寄存器，可以通过检测这些寄存器来执行条件分支指令。常用的条件码：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">条件码</th>
+<th style="text-align:center">全称</th>
+<th style="text-align:center">含义</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">CF</td>
+<td style="text-align:center">Carry  Flag</td>
+<td style="text-align:center">进位标志</td>
+<td style="text-align:center">最高位产生了进位</td>
+</tr>
+<tr>
+<td style="text-align:center">ZF</td>
+<td style="text-align:center">Zero  Flag</td>
+<td style="text-align:center">零标志位</td>
+<td style="text-align:center">操作结果为零</td>
+</tr>
+<tr>
+<td style="text-align:center">SF</td>
+<td style="text-align:center">Sign  Flag</td>
+<td style="text-align:center">符号标志</td>
+<td style="text-align:center">操作结果为负</td>
+</tr>
+<tr>
+<td style="text-align:center">OF</td>
+<td style="text-align:center">Overflow  Flag</td>
+<td style="text-align:center">溢出标志</td>
+<td style="text-align:center">操作结果溢出</td>
+</tr>
+</tbody>
+</table>
+<p>算术和逻辑运算指令会改变条件码寄存器的内容（<code>leaq</code> 不会），还有两类指令专门用来设置条件码而不改变其它任何寄存器：<code>cmp</code> 和 <code>test</code>。</p>
+<p><code>cmp S1, S2</code> 会根据 <code>S2 - S1</code> 的结果来设置条件码；</p>
+<p><code>test S1, S2</code> 会根据 <code>S2 &amp; S1</code> 的结果来设置条件码。</p>
+<p><code>test</code> 指令的典型用法是两个操作数相同，用来判断该操作数是正数，零，还是负数。对于这样的指令，如 <code>testq %rax,%rax</code>，它与 <code>cmpq $0, %rax</code> 是等价的。</p>
+<p>接下来通过示例看一下对条件码的访问。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">comp</span><span class="params">(<span class="type">long</span> a, <span class="type">long</span> b)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a &lt; b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a in %rdi, b in %rsi</span></span><br><span class="line"><span class="attr">comp:</span></span><br><span class="line">	<span class="string">cmpq</span>	<span class="string">%rsi,</span> <span class="string">%rdi</span>	<span class="comment"># 根据 a - b 的结果设置条件码寄存器</span></span><br><span class="line">	<span class="string">setl</span>	<span class="string">%al</span>		<span class="comment"># 如果 a &lt; b，将 al 寄存器设置为 1；否则设置为 0</span></span><br><span class="line">	<span class="string">movzbl</span>	<span class="string">%al,</span> <span class="string">%eax</span>	<span class="comment"># movz 表示零扩展，将 al 寄存器从 byte 扩展到 long word</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
+<h3 id="循环"><a class="markdownIt-Anchor" href="#循环"></a> 循环</h3>
+<p>示例代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">fact_do</span><span class="params">(<span class="type">long</span> n)</span> &#123;</span><br><span class="line">    <span class="type">long</span> result = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        result *= n;</span><br><span class="line">        n = n - <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">while</span>(n &gt; <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># n in %rdi</span></span><br><span class="line"><span class="attr">fact_do:</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$1,</span> <span class="string">%eax</span>	<span class="comment"># 将 1 放入 %eax</span></span><br><span class="line"><span class="string">.L2:</span></span><br><span class="line">	<span class="string">imulq</span>	<span class="string">%rdi,</span> <span class="string">%rax</span>	<span class="comment"># 将 %rax 中的值更新为自身乘以 n</span></span><br><span class="line">	<span class="string">subq</span>	<span class="string">$1,</span> <span class="string">%rdi</span>	<span class="comment"># n = n - 1</span></span><br><span class="line">	<span class="string">cmpq</span>	<span class="string">$1,</span> <span class="string">%rdi</span>	<span class="comment"># 根据 n - 1 的结果设置条件码寄存器</span></span><br><span class="line">	<span class="string">jg</span>		<span class="string">.L2</span>	<span class="comment"># 如果 n &gt; 1 则跳转到 .L2 处执行</span></span><br><span class="line">	<span class="string">rep;</span> <span class="string">ret</span>		<span class="comment"># rep 是空操作，可以直接无视它</span></span><br></pre></td></tr></table></figure>
+<p><code>imul</code> 表示有符号整数乘法，<code>mul</code> 则表示无符号整数乘法。</p>
+<h2 id="函数调用"><a class="markdownIt-Anchor" href="#函数调用"></a> 函数调用</h2>
+<h3 id="函数栈帧"><a class="markdownIt-Anchor" href="#函数栈帧"></a> 函数栈帧</h3>
+<p>当函数需要的存储空间超出寄存器所能存放的大小时，就会在栈上分配空间，这块存储空间称为该函数的 <strong>栈帧</strong>。例如，在本文最开始给出的表格中可以发现，对于前 6 个参数，每一个都有相对应的寄存器进行保存，而从第 7 个参数开始，则被保存到了栈里面。另外，还有两种常见的情况需要为函数分配栈帧，一种是对一个局部变量使用取地址符，因此必须能为它产生一个地址；另一种是当局部变量是数组或结构体。</p>
+<p>当函数 P 调用函数 Q 时，其栈帧结构如下：</p>
+<img src="https://img.gejiba.com/images/e89ffa3aefa3462d8eb41ee9777ead4c.webp" alt="P调用Q的栈帧结构" style="zoom:16%;" />
+<p>当前正在执行的函数的栈帧总是保存在栈顶，当 P 调用 Q 时，call 指令会把返回地址压入栈中，该地址指明了当 Q 返回时，要从 P 的哪个位置继续执行。下面看一个例子：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">proc</span><span class="params">(<span class="type">long</span>  a1, <span class="type">long</span>  *a1p,</span></span><br><span class="line"><span class="params">          <span class="type">int</span>   a2, <span class="type">int</span>   *a2p,</span></span><br><span class="line"><span class="params">          <span class="type">short</span> a3, <span class="type">short</span> *a3p,</span></span><br><span class="line"><span class="params">          <span class="type">char</span>  a4, <span class="type">char</span>  *a4p)</span> &#123;</span><br><span class="line">    *a1p += a1;</span><br><span class="line">    *a2p += a2;</span><br><span class="line">    *a3p += a3;</span><br><span class="line">    *a4p += a4;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">long</span> <span class="title function_">call_proc</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">long</span>  x1 = <span class="number">1</span>; <span class="type">int</span>  x2 = <span class="number">2</span>;</span><br><span class="line">    <span class="type">short</span> x3 = <span class="number">3</span>; <span class="type">char</span> x4 = <span class="number">4</span>;</span><br><span class="line">    proc(x1, &amp;x1, x2, &amp;x2, x3, &amp;x3, x4, &amp;x4);</span><br><span class="line">    <span class="keyword">return</span> (x1 + x2) * (x3 - x4);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>proc 的汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a1 in %rdi, a1p in %rsi</span></span><br><span class="line"><span class="comment"># a2 in %edx, a2p in %rcx</span></span><br><span class="line"><span class="comment"># a3 in %r8w, a3p in %r9</span></span><br><span class="line"><span class="comment"># %rsp 指向栈顶</span></span><br><span class="line"><span class="comment"># a4 in %rsp+8, a4p in %rsp+16</span></span><br><span class="line"><span class="attr">proc:</span></span><br><span class="line">	<span class="string">movq</span>	<span class="number">16</span><span class="string">(%rsp),</span> <span class="string">%rax</span>	<span class="comment"># 将 a4p 放入 %rax</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">%rdi,</span> <span class="string">(%rsi)</span>	<span class="comment"># *a1p += a1</span></span><br><span class="line">	<span class="string">addl</span>	<span class="string">%edx,</span> <span class="string">(%rcx)</span>	<span class="comment"># *a2p += a2</span></span><br><span class="line">	<span class="string">addw</span>	<span class="string">%r8w,</span> <span class="string">(%r9)</span>	<span class="comment"># *a3p += a3</span></span><br><span class="line">	<span class="string">movl</span>	<span class="number">8</span><span class="string">(%rsp),</span> <span class="string">%edx</span>	<span class="comment"># 将 a4 放入 %edx</span></span><br><span class="line">	<span class="string">addb</span>	<span class="string">%dl,</span> <span class="string">(%rax)</span>	<span class="comment"># *a4p += a4</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
+<p>有几点需要注意：</p>
+<ul>
+<li>虽然从第 7 个参数开始都被保存到了栈中，但是当指令需要对这些参数操作时，仍然需要先从栈读入到寄存器中。</li>
+<li>通过栈传递参数时，所有数据都需要 8 字节对齐，所以 a4 即便只有 1 个字节，仍然为其分配了 8 个字节的存储空间。<span class="p red">注意：只有借助栈传递参数时才需要 8 字节对齐，如果只是在栈中存放局部变量，比如使用了取地址运算符的局部变量（必须存放在栈中），它们是不需要对齐的。</span></li>
+<li>a4 是从 %rsp+8 的位置开始存放的，而不是 %rsp 指向的位置，说明返回地址占据了栈顶位置。函数 proc 的栈帧如图所示：</li>
+</ul>
+<img src="https://img.gejiba.com/images/3dc0f287b4a191a0053e3de978a4726a.webp" alt="proc 的栈帧" style="zoom:45%;" />
+<p>call_proc 的汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">call_proc:</span></span><br><span class="line">	<span class="string">subq</span>	<span class="string">$32,</span> <span class="string">%rsp</span>	<span class="comment"># %rsp - 32，分配 32 字节大小的栈帧</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">$1,</span> <span class="number">24</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 1 放到栈帧 %rsp + 24 处</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$2,</span> <span class="number">20</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 2 放到栈帧 %rsp + 20 处</span></span><br><span class="line">	<span class="string">movw</span>	<span class="string">$3,</span> <span class="number">18</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 3 放到栈帧 %rsp + 18 处</span></span><br><span class="line">	<span class="string">movb</span>	<span class="string">$4,</span> <span class="number">17</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 4 放到栈帧 %rsp + 17 处</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">17</span><span class="string">(%rsp),</span> <span class="string">%rax</span>	<span class="comment"># 将 &amp;x4 放入 %rax</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rax,</span> <span class="number">8</span><span class="string">(%rsp)</span>	<span class="comment"># 将 &amp;x4 放到栈帧 %rsp + 8 处作为第 8 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$4,</span> <span class="string">(%rsp)</span>	<span class="comment"># 将立即数 4 放到栈帧 %rsp 处作为第 7 个参数</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">18</span><span class="string">(%rsp),</span> <span class="string">%r9</span>	<span class="comment"># 将 &amp;x3 作为第 6 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$3,</span> <span class="string">%r8d</span>	<span class="comment"># 将立即数 3 作为第 5 个参数</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">20</span><span class="string">(%rsp),</span> <span class="string">%rcx</span>	<span class="comment"># 将 &amp;x2 作为第 4 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$2,</span> <span class="string">%edx</span>	<span class="comment"># 将立即数 2 作为第 3 个参数</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">24</span><span class="string">(%rsp),</span> <span class="string">%rsi</span>	<span class="comment"># 将 &amp;x1 作为第 2 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$1,</span> <span class="string">%edi</span>	<span class="comment"># 将立即数 1 作为第 1 个参数</span></span><br><span class="line">	<span class="comment"># 调用函数 proc</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">proc</span></span><br><span class="line">	<span class="string">movslq</span>	<span class="number">20</span><span class="string">(%rsp),</span> <span class="string">%rdx</span>	<span class="comment"># 将 x2 符号扩展为四字放入 %rdx</span></span><br><span class="line">	<span class="string">addq</span>	<span class="number">24</span><span class="string">(%rsp),</span> <span class="string">%rdx</span>	<span class="comment"># 将 x2 + x1 放入 %rdx</span></span><br><span class="line">	<span class="string">movswl</span>	<span class="number">18</span><span class="string">(%rsp),</span> <span class="string">%eax</span>	<span class="comment"># 将 x3 符号扩展为双字放入 %eax</span></span><br><span class="line">	<span class="string">movsbl</span>	<span class="number">17</span><span class="string">(%rsp),</span> <span class="string">%ecx</span>	<span class="comment"># 将 x4 符号扩展为双字放入 %ecx</span></span><br><span class="line">	<span class="string">subl</span>	<span class="string">%ecx,</span> <span class="string">%eax</span>	<span class="comment"># 将 x3 - x4 放入 %eax</span></span><br><span class="line">	<span class="string">cltq</span>			<span class="comment"># 将 %eax 符号扩展到 %rax</span></span><br><span class="line">	<span class="string">imulq</span>	<span class="string">%rdx,</span> <span class="string">%rax</span>	<span class="comment"># 将 (x3 - x4) * (x2 + x1) 作为返回值</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">$32,</span> <span class="string">%rsp</span>	<span class="comment"># %rsp + 32，释放 32 字节大小的栈帧</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
+<p>函数 call_proc 的栈帧如图所示：</p>
+<img src="https://img.gejiba.com/images/64c8434dd3f2a16518fbd172400264e8.webp" alt="call_proc 的栈帧" style="zoom:45%;" />
+<h3 id="被调用者保存寄存器"><a class="markdownIt-Anchor" href="#被调用者保存寄存器"></a> [被]调用者保存寄存器</h3>
+<p>在程序执行的过程中，寄存器是被所有函数共享的，因此为了确保在使用过程中寄存器内的数据不被覆盖，处理器采用了一组统一的寄存器使用惯例，所有函数都必须遵守。</p>
+<p>根据惯例，对于 16 个通用寄存器，除了 %rsp 之外，其余 15 个寄存器被划分为调用者保存和被调用者保存。其中，%rbx、%rbp、%r12~%r15 被划分为 <strong>被调用者保存寄存器</strong>，剩余的被划分为 <strong>调用者保存寄存器</strong>。下面以一个例子说明其使用方法：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">P</span><span class="params">(<span class="type">long</span> x, <span class="type">long</span> y)</span> &#123;</span><br><span class="line">    <span class="type">long</span> u = Q(y);</span><br><span class="line">    <span class="type">long</span> v = Q(x);</span><br><span class="line">    <span class="keyword">return</span> u + v;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># x in %rdi, y in %rsi</span></span><br><span class="line"><span class="attr">P:</span></span><br><span class="line">	<span class="string">pushq</span>	<span class="string">%rbp</span>		<span class="comment"># 保存 %rbp 中的值</span></span><br><span class="line">	<span class="string">pushq</span>	<span class="string">%rbx</span>		<span class="comment"># 保存 %rbx 中的值</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rdi,</span> <span class="string">%rbp</span>	<span class="comment"># 将 %rdi 中的值 x 保存到 %rbp 中</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rsi,</span> <span class="string">%rdi</span>	<span class="comment"># 将 y 放入 %rdi 作为第一个参数</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">Q</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rax,</span> <span class="string">%rbx</span>	<span class="comment"># 将 Q 的返回结果 u 保存到 %rbx 中</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rbp,</span> <span class="string">%rdi</span>	<span class="comment"># 将 x 放入 %rdi 作为第一个参数</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">Q</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">%rbx,</span> <span class="string">%rax</span>	<span class="comment"># 将 v + u 作为返回值</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">$8,</span> <span class="string">%rsp</span>	<span class="comment"># 释放 8 个字节的栈帧</span></span><br><span class="line">	<span class="string">popq</span>	<span class="string">%rbx</span>		<span class="comment"># 恢复 %rbx 中的值</span></span><br><span class="line">	<span class="string">popq</span>	<span class="string">%rbp</span>		<span class="comment"># 恢复 %rbp 中的值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
+<p>在函数 P 中，x 保存在 %rdi 中，当在第 7 行调用函数 Q 时，由于 Q 有一个参数，因此也会使用 %rdi。为了防止 P 中的 %rdi 值被覆盖，需要先将其保存到一个其他无关的寄存器 %rbp 中（第 6 行），而为了防止原本 %rbp 中的内容被覆盖，在此之前还需将其中的内容压入栈中保存起来（第 3 行）。</p>
+<p>同样的道理，当第一次调用 Q 结束时，结果会被保存在 %rax 中返回；而当第二次调用函数 Q 时，其返回结果仍然会保存在 %rax 中。为了防止第一次返回的结果被覆盖，需要先将其保存到一个其他无关的寄存器 %rbx 中（第 8 行），而为了防止原本 %rbx 中的内容被覆盖，在此之前还需将其中的内容压入栈中保存起来（第 4 行）。</p>
+<blockquote>
+<p>这里介绍一下 push 这条指令所进行的操作。实际上，执行一次 <code>pushq S</code>，等价于以下两条操作指令：<code>subq $8,%rsp</code> 与 <code>movq S,(%rsp)</code>，因此两次 push 之后 %rsp 依然指向栈顶。</p>
+<p>相应地，<code>popq D</code> 也等价于两条指令：<code>movq (%rsp),D</code> 和 <code>addq $8,%rsp</code>。</p>
+</blockquote>
+<p>在函数 P 结束之前，按照栈后进先出的顺序出栈，依次恢复 %rbx 和 %rbp 中的内容。</p>
+<h3 id="函数递归调用"><a class="markdownIt-Anchor" href="#函数递归调用"></a> 函数递归调用</h3>
+<p>示例代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">rfact</span><span class="params">(<span class="type">long</span> n)</span> &#123;</span><br><span class="line">    <span class="type">long</span> result;</span><br><span class="line">    <span class="keyword">if</span>(n &lt;= <span class="number">1</span>)</span><br><span class="line">        result = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        result = n * rfact(n - <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>汇编代码：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># n in %rdi</span></span><br><span class="line"><span class="attr">rfact:</span></span><br><span class="line">	<span class="string">pushq</span>	<span class="string">%rbx</span>			<span class="comment"># 保存 %rbx 中的值</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rdi,</span> <span class="string">%rbx</span>		<span class="comment"># 将 n 放入 %rbx</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$1,</span> <span class="string">%eax</span>		<span class="comment"># 将 1 放入 %rax</span></span><br><span class="line">	<span class="string">cmpq</span>	<span class="string">$1,</span> <span class="string">%rdi</span>		<span class="comment"># 根据 n - 1 的值设置条件码寄存器</span></span><br><span class="line">	<span class="string">jle</span>	<span class="string">.L35</span>			<span class="comment"># 如果 n &lt;= 1，跳转到 .L35</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">-1</span><span class="string">(%rdi),</span> <span class="string">%rdi</span>		<span class="comment"># 将 n = n - 1 作为第一个参数</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">rfact</span>			<span class="comment"># 调用函数 rfact</span></span><br><span class="line">	<span class="string">imulq</span>	<span class="string">%rbx,</span> <span class="string">%rax</span>		<span class="comment"># 将 rfact(n - 1) * n 的值放入 %rax</span></span><br><span class="line"><span class="string">.L35:</span></span><br><span class="line">	<span class="string">popq</span>	<span class="string">%rbx</span>			<span class="comment"># 恢复 %rbx 中的值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
+<h2 id="数组和指针"><a class="markdownIt-Anchor" href="#数组和指针"></a> 数组和指针</h2>
+<p>数组在内存中是连续存放的，每个元素所占内存的大小由数组类型决定，如图所示：</p>
+<img src="https://img.gejiba.com/images/e3d43bd460b0c20d24ce0fd3018b4f7b.webp" alt="array" style="zoom:62%;" />
+<p>对指针进行运算时，计算结果会根据指针类型进行相应的伸缩。为方便理解，将内存抽象成一个很大的数组，假设初始时指针 p 和 q 都指向 0x100 处，现分别对两个指针进行加 1 操作，由于指针类型不同，指针 p + 1 会前进 1 个字节，而指针 q + 1 会前进 4 个字节，如图所示：</p>
+<img src="https://img.gejiba.com/images/fb5a7e558f74a7c9c29816a82405f68a.webp" alt="padd" style="zoom:70%;" />
+<p>而数组名正是指向该数组首元素的指针，因此对于数组 <code>int arr[5]</code> 中的每一个元素，均有两种表示方式，如图所示：</p>
+<img src="https://img.gejiba.com/images/38e1cc7b41ea67d443c837bebf6bbe95.webp" alt="parr" style="zoom:75%;" />
+<p>对于二维数组，在内存中是按照行优先的顺序存储的：</p>
+<img src="https://img.gejiba.com/images/af9f4f55dd7d45b4c94e582e69595f8c.webp" alt="2D-array" style="zoom:70%;" />
+<h2 id="结构体和联合体"><a class="markdownIt-Anchor" href="#结构体和联合体"></a> 结构体和联合体</h2>
+<p>CPU 是按 32/64 位的大小进行存取的，为了提高 CPU 的执行效率，计算机系统对基本数据类型的合法地址做了一些限制，要求某种类型的地址必须是某个值（2 / 4 / 8）的倍数，这就是 <strong>数据对齐</strong>。数据对齐会由编译器自动实现，但了解其实现方法还是很有必要的，可以优化代码结构，达到节省空间和提高效率（减少访存次数）的目的。</p>
+<p>数据对齐的基本原则是：<span class="p red">任何 K 字节的基本对象的地址必须是 K 的倍数</span>。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">S1</span> &#123;</span></span><br><span class="line">    <span class="type">int</span>  i;</span><br><span class="line">    <span class="type">char</span> c;</span><br><span class="line">    <span class="type">int</span>  j;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>如果不进行数据对齐（以 64 位机器为例），结构体 S1 在内存中的分布如图 (a) 所示。</p>
+<p>虽然整体只占了 9 个字节，但要访问成员 j，需要访问两次内存才行，这样效率并不高。而如果进行了数据对齐，则访问所有成员都只需访问一次内存即可，如图 (b)。其中在 c 后面插入 3 个字节，是因为 j 占 4 个字节，所以它的起始地址必须是 4 的倍数。</p>
+<p>另外，在结构体的末尾，可能也需要一些填充。比如假设结构体 S1 中没有成员 j，那所有元素都是满足对齐要求的，但是当该结构体声明为数组时（比如 <code>struct S1 arr[2]</code>），对齐原则就无法保证了，因此需要在末尾进行填充以满足结构体数组的对齐原则，如图 (c)。</p>
+<img src="https://img.gejiba.com/images/56afaf0f2107e96c0d3562725c18e2be.webp" alt="align" style="zoom:50%;" />
+<p>与结构体不同，联合体中的所有字段共享同一存储区域，因此联合体的大小取决于其最大字段的大小。如果我们事先知道两个不同字段的使用是互斥的，那么就可以将这两个字段声明为一个联合体，从而达到节省内存空间的目的。</p>
+<p>此外，联合体还可以用来访问不同数据类型的位模式，比如判断机器的大小端：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="type">int</span> i;</span><br><span class="line">        <span class="type">char</span> c;</span><br><span class="line">    &#125; temp;</span><br><span class="line">    temp.i = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(temp.c == <span class="number">1</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Little Endian\n&quot;</span>);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Big Endian\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中 i 占 4 个字节，c 占 1 个字节，二者共享同一段内存，因此只需为 temp 分配 4 字节的空间。当为联合体中的 i 赋值后（第 6 行），为 temp 分配的四个字节都填满了，此时访问其中的 c 成员，其实就是访问这段内存的第 1 个字节，即低地址处的第 1 个字节。</p>
+<p>对于 4 字节的整型 1，其十六进制表示为 <code>0x0000 0001</code>。若机器是小端，则低位放低地址处，高位放高地址处，地址从低到高依次为 <code>0x01 0x00 0x00 0x00</code>；若机器是大端，则低位放高地址处，高位放低地址处，地址从低到高依次为 <code>0x00 0x00 0x00 0x01</code>。</p>
+<p>此时只需判断 c 的值是 <code>0x01</code> 还是 <code>0x00</code>，即可判断机器是小端还是大端。</p>
+<p>再比如，可以用如下方法来获取 double 类型的二进制位表示。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">double2bits</span><span class="params">(<span class="type">double</span> d)</span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="type">double</span> d;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span> u;</span><br><span class="line">    &#125; temp; <span class="comment">// 以一种类型存储，以另一种类型访问</span></span><br><span class="line">    temp.d = d;</span><br><span class="line">    <span class="keyword">return</span> temp.u;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>double</code> 与 <code>unsigned long</code> 所占的字节相同，因此当为 d 赋值后，d 和 u 就共同拥有了相同大小的内存空间，此时对 u 的访问即是 d 的二进制位的十进制表示。</p>
+]]></content>
+      <categories>
+        <category>读书笔记 - CSAPP</category>
+      </categories>
+      <tags>
+        <tag>汇编</tag>
+        <tag>栈帧</tag>
+        <tag>数据对齐</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>计算机系统漫游</title>
+    <url>/posts/4223884717.html</url>
+    <content><![CDATA[<h1 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h1>
+<p>《深入理解计算机系统-CSAPP》是计算机领域的圣经✨之前翻看过两三次，不过由于平时在实验室一直都有各种事情牵扯时间跟精力，每次阅读都近乎走马观花。</p>
+<p>最近论文送审之后终于有了充足的时间，于是便静下心来重新读了一遍。对于其中一些晦涩难懂且意义不大（个人愚见）的知识点（如浮点数的表示和运算、存储器山等等）本人并未细究，这里仅对自己之前没有完全掌握，或者易忘易混淆的知识点做个记录📝方便日后查阅。</p>
+<p>在整理了部分内容之后我发现整体架构看起来依然有些零散，没有逻辑主线💥事实上我也确实是从 <code>hello.c</code> 程序编译的各个过程中发散出来的小的知识点。</p>
+<p>为了使介绍能够更加聚焦，后续内容我决定采用问答的形式，然后从回答中抽取关键字来“浅挖”其原理和细节。能力一般，水平有限，所有内容仅仅是个人的一些粗浅的理解，之后我会尽量多读相关书籍来修正和完善这些内容🚩</p>
+<p>『计算机系统漫游』部分主要是对全书中我比较感兴趣的部分做一个粗略的介绍，其中每个 <span class="inline-tag blue">蓝色小标签</span> 中的内容（包括但不限于此）都将是后续博客中进一步展开介绍的对象~~</p>
+<h2 id="从hello-world开始"><a class="markdownIt-Anchor" href="#从hello-world开始"></a> 从Hello World开始</h2>
+<p><img src="https://img.gejiba.com/images/2df68f1e0cc0ea3c4bd7722f0b09e509.webp" alt="Hello World编译过程" /></p>
+<h2 id="文本文件与二进制文件"><a class="markdownIt-Anchor" href="#文本文件与二进制文件"></a> 文本文件与二进制文件</h2>
+<p>我们所编写的 <code>hello.c</code> 程序属于文本文件，经过编译后生成的可执行文件是二进制文件。它们最终在物理内存上都是以二进制形式保存的，因此二者的主要区别是逻辑上的而不是物理上的：</p>
+<ul>
+<li>
+<p>文本文件：基于字符编码，如ASCII、Unicode等，每个值都有固定的Size。</p>
+</li>
+<li>
+<p>二进制文件：基于值编码，没有固定的Size，实际上就是把值在物理内存上的原始二进制形式。</p>
+</li>
+</ul>
+<p>比如 <code>\n</code> 在文本文件中是换行符，而在二进制文件中会被认为是 <code>\</code> 和 <code>n</code> 两个字符。</p>
+<h2 id="原码-反码和补码"><a class="markdownIt-Anchor" href="#原码-反码和补码"></a> 原码、反码和补码</h2>
+<p>有符号数的表示方法有三种，分别是原码、反码和补码，它们都是用最高位的 <code>0</code> 和 <code>1</code> 来区分正负。对于正数，三者的表示都是一致的，即该数的二进制表示，主要区别是在负数上。例如 <code>15</code> 的二进制表示为 <code>0000 1111</code>，而对于 <code>-15</code>：</p>
+<ul>
+<li>原码：<code>1000 1111</code> 符号位 + 二进制表示</li>
+<li>反码：<code>1111 0000</code> 在原码基础上，除符号位外全部取反</li>
+<li>补码：<code>1111 0001</code> 反码 + 1</li>
+</ul>
+<p>在计算机中，有符号数是用补码来表示的。之所以不用另外两种编码方式，是因为对于数字 <code>0</code>，二者都有两种不同的编码方式，分别是 <code>+0</code> 和 <code>-0</code>，而补码则不存在这种问题。</p>
+<h2 id="汇编程序与机器指令"><a class="markdownIt-Anchor" href="#汇编程序与机器指令"></a> 汇编程序与机器指令</h2>
+<p>高级语言编写的程序可以在很多不同的机器上编译运行，生成该机器所支持的 <span class="inline-tag blue">机器指令</span>。 <span class="inline-tag blue">汇编程序</span> 是机器指令的文本表示，在不同指令级架构的机器上有不同的表现形式，这也就解释了为什么最终生成的可执行目标文件一般都不能跨平台执行。</p>
+<p>Java之所以能够跨平台（一次编译多次运行），是因为它并不是直接运行在CPU上的，而是生成字节码（.class）文件后由 JVM 统一执行。此时JVM有两种选择：一种是使用 Java 解释器解释执行，另一种是使用 JIT 编译器将字节码转化为本地机器指令。</p>
+<p>二者的区别在于，前者启动速度快但运行速度慢，后者启动速度慢但运行速度快。这是因为解释器不需要像 JIT 编译器一样，将所有字节码都转化为机器指令，自然就省去了优化的时间。而当 JIT 编译器完成第一次编译后会将字节码对应的机器指令保存下来，下次可以直接使用。由于机器指令的执行效率要高于 Java 解释器，所以在实际情况中，为了速度和效率，通常采用两者相结合的方式。</p>
+<h2 id="可重定位文件与可执行文件"><a class="markdownIt-Anchor" href="#可重定位文件与可执行文件"></a> 可重定位文件与可执行文件</h2>
+<p>如果想让代码运行，那么生成的目标代码中的每个符号（函数或变量）的地址都应该是确定的。事实上，在汇编阶段，只有跟源代码在同一个模块中的符号地址能确定下来，而定义在其他模块中的全局变量和函数的地址要在链接的时候才能确定。编译器在没法确定地址的情况下，会先将其置为 0，等到链接的时候再去修正它们，这个过程就是<span class="inline-tag blue">重定位</span>。因此很自然地，在链接之前（汇编阶段）生成的目标文件叫做可重定位目标文件，在链接之后生成的目标文件叫做 <span class="inline-tag blue">可执行目标文件</span>。</p>
+<h2 id="静态链接与动态链接"><a class="markdownIt-Anchor" href="#静态链接与动态链接"></a> 静态链接与动态链接</h2>
+<p>链接分为 <span class="inline-tag blue">静态链接</span> 和 <span class="inline-tag blue">动态链接</span>，二者的区别在于：静态链接会把引用到的所有目标文件全部嵌入到可执行文件中，因此生成的是完全可执行的目标文件；动态链接只会链接所引用文件的重定位和符号表信息，因此生成的是部分链接的可执行目标文件，直到运行或加载的时候，才会由动态链接器将物理内存中的共享库的地址与其链接起来。</p>
+<h2 id="cpu流水线划分"><a class="markdownIt-Anchor" href="#cpu流水线划分"></a> CPU流水线划分</h2>
+<p>CPU流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新PC寄存器。这些阶段看似简单，但有很多细节与我之前的理解存在严重偏差。比如取指阶段就只是单纯地从PC寄存器取出指令吗？译码阶段是要对取出的机器指令进行翻译吗？执行阶段好像是最简单的，就是执行我们程序逻辑中的主体运算，但就只有这一种情况吗？访存就是访问DRAM内存吗？写回是将修改后的值重新写回到内存吗？当然这些答案都是否定的，后续我会详细介绍 <span class="inline-tag blue">CPU流水线</span> 的这几个阶段。</p>
+<h2 id="高速缓存存储器"><a class="markdownIt-Anchor" href="#高速缓存存储器"></a> 高速缓存存储器</h2>
+<p><span class="inline-tag blue">高速缓存</span> 的结构可以用<code>(S, E, B, m)</code>来表示，每个缓存行中还保存了有效位和标记位，方便快速定位目标数据，那具体工作过程是怎样的呢？另外根据<code>E</code>的不同，可以分为直接映射、组相连和全相连的高速缓存，这样划分的目的是什么？各有都有哪些优缺点？每种方式都有自己的应用场景吗？</p>
+<h2 id="物理内存和虚拟内存"><a class="markdownIt-Anchor" href="#物理内存和虚拟内存"></a> 物理内存和虚拟内存</h2>
+<p><span class="inline-tag blue">虚拟内存</span> 并不是虚拟的、非真实存在的内存，而是对磁盘的虚拟化，将内存视为磁盘的高速缓存，在内存空间不足时将磁盘的一块区域划分成虚拟内存，通过与物理内存的换入换出来满足程序运行的需求。有虚拟内存自然就有 <span class="inline-tag blue">虚拟地址</span>，相应地也会有物理地址，它们之间是如何完成映射的？进程的虚拟地址空间是真实存在的吗？是保存在物理内存中的吗？程序请求分配到的内存是物理内存吗？<span class="inline-tag blue">内存分配</span> 后忘记释放内存会怎么样？Java不需要手动释放内存，那它的 <span class="inline-tag blue">垃圾回收</span> 机制是怎么实现的？这些问题我都会在后续博客中一一解答。</p>
+]]></content>
+      <categories>
+        <category>读书笔记 - CSAPP</category>
+      </categories>
   </entry>
   <entry>
     <title>This is a test blog</title>
@@ -361,214 +637,5 @@
 <h1 id="emoji表情"><a class="markdownIt-Anchor" href="#emoji表情"></a> Emoji表情</h1>
 <p><a href="https://hub.xn--gzu630h.xn--kpry57d/SmallOyster/emoji">查询链接</a></p>
 ]]></content>
-  </entry>
-  <entry>
-    <title>看懂简单的汇编代码</title>
-    <url>/posts/3467593604.html</url>
-    <content><![CDATA[<p>本文介绍的是 AT&amp;T 格式的汇编代码。先上表格：</p>
-<img src="https://img.gejiba.com/images/2ec02466ed8dac1bfe60bab88be7fa76.webp" alt="整数寄存器" style="zoom:80%;" />
-<p>表格记录了不同寄存器的功能。汇编指令通常都有一个或多个操作数，有的指令没有操作数，这些操作数有三种类型：立即数 <span class="p red">$<em>Imm</em></span>、寄存器 <span class="p red"><em>r<sub>a</sub></em></span> 和内存引用 <span class="p red">(<em>r<sub>a</sub></em>)</span>。</p>
-<p>常见的操作指令有：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">指令</th>
-<th style="text-align:center">描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">mov    S, D</td>
-<td style="text-align:center">把数据从S传送到D</td>
-</tr>
-<tr>
-<td style="text-align:center">push    S</td>
-<td style="text-align:center">栈顶指针下移，S入栈</td>
-</tr>
-<tr>
-<td style="text-align:center">pop    D</td>
-<td style="text-align:center">栈顶内容赋值给D，栈顶指针上移</td>
-</tr>
-<tr>
-<td style="text-align:center">lea    S, D</td>
-<td style="text-align:center">将S的地址（&amp;S）赋值给D</td>
-</tr>
-<tr>
-<td style="text-align:center">inc/dec/neg/not    D</td>
-<td style="text-align:center">将D<code>加1/减1/取负/取反</code>后赋值给D</td>
-</tr>
-<tr>
-<td style="text-align:center">add/sub/imul/xor/or/and    S, D</td>
-<td style="text-align:center">将D<code>加/减/乘/异或/或/与</code>S后赋值给D</td>
-</tr>
-<tr>
-<td style="text-align:center">sal/shl/sar/shr    k, D</td>
-<td style="text-align:center">将D<code>算术/逻辑左移</code>/<code>算术/逻辑右移</code>k位后赋值给D</td>
-</tr>
-<tr>
-<td style="text-align:center">leaq    S, D</td>
-<td style="text-align:center">将S的地址赋值给D或者对S算术运算后赋值给D</td>
-</tr>
-<tr>
-<td style="text-align:center">cmp/test    S1, S2</td>
-<td style="text-align:center">根据<code>S2-S1或S2&amp;S1</code>的结果设置条件码</td>
-</tr>
-<tr>
-<td style="text-align:center">cltq</td>
-<td style="text-align:center">将 %eax 符号扩展到 %rax</td>
-</tr>
-</tbody>
-</table>
-<p>接下来通过几个示例来进一步理解。</p>
-<h2 id="mov-指令"><a class="markdownIt-Anchor" href="#mov-指令"></a> mov 指令</h2>
-<p>示例代码：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">exchange</span><span class="params">(<span class="type">long</span> *xp, <span class="type">long</span> y)</span> &#123;</span><br><span class="line">    <span class="type">long</span> x = *xp;</span><br><span class="line">    *xp = y;</span><br><span class="line">    <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 第一个参数 xp 保存在 %rdi 中，第二个参数 y 保存在 %rsi 中，返回值保存在 %rax 中</span></span><br><span class="line"><span class="comment"># *xp 是对 xp 的解引用，即读取内存中地址 xp 处所存放的值，因此表示为 (%rdi)</span></span><br><span class="line"><span class="attr">exchange:</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">(%rdi),</span> <span class="string">%rax</span>	<span class="comment"># 将 *xp 作为返回值</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rsi,</span> <span class="string">(%rdi)</span>	<span class="comment"># 将 y 赋值给 *xp</span></span><br><span class="line">	<span class="string">ret</span>			<span class="comment"># return</span></span><br></pre></td></tr></table></figure>
-<h2 id="lea-指令"><a class="markdownIt-Anchor" href="#lea-指令"></a> lea 指令</h2>
-<p>lea（load effective address）表示加载有效地址，虽然形式上是内存引用，但实际上并没有引用内存，而是将一个内存地址直接赋值给目的操作数；mov 则是将地址处的数据赋值给目的操作数。例如：</p>
-<p><code>leaq 8(%rbx), %rax</code>  表示将 <code>%rbx+8</code> 这个地址直接赋值给 <code>%rax</code>，而不是把该地址处所对应的数据赋值给 <code>%rax</code>。mov 指令则恰恰相反：</p>
-<p><code>movq 8(%rbx), %rax</code> 表示将 <code>%rbx+8</code> 这个地址处所对应的数据赋值给 <code>%rax</code>。</p>
-<p>lea 的用法比较灵活，除了加载有效地址，还可以进行算术运算。例如：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">scale</span><span class="params">(<span class="type">long</span> x, <span class="type">long</span> y, <span class="type">long</span> z)</span> &#123;</span><br><span class="line">    <span class="type">long</span> t = x + <span class="number">4</span> * y + <span class="number">12</span> * z;</span><br><span class="line">    <span class="keyword">return</span> t;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># x in %rdi, y in %rsi, z in %rdx</span></span><br><span class="line"><span class="attr">scale:</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rdi,</span> <span class="string">%rsi,</span> <span class="number">4</span><span class="string">),</span> <span class="string">%rax</span>	<span class="comment"># 将 x + 4y 放入 %rax</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rdx,</span> <span class="string">%rdx,</span> <span class="number">2</span><span class="string">),</span> <span class="string">%rdx</span>	<span class="comment"># z = z + 2z = 3z</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rax,</span> <span class="string">%rdx,</span> <span class="number">4</span><span class="string">),</span> <span class="string">%rax</span>	<span class="comment"># 将 (x + 4y) + 3z * 4 作为返回值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
-<p>对于后两条 <code>leaq</code> 指令，之所以没有直接合并成 <code>leaq (%rax, %rdx, 12), %rax</code>，是因为对于变址寻址中的比例因子只能取 1、2、4、8，因此需要对 12 分解。</p>
-<p>比例因子的取值与源代码中定义的数组类型相关，编译器会据此来确定比例因子的数值。比如对于 char 类型的数组，其比例因子是 1；short 类型的比例因子是 2；int 类型是 4；double 类型是 8 等等。</p>
-<blockquote>
-<p>判断 lea 是加载地址还是算术运算，可以根据所操作的寄存器的功能。如果是保存参数的普通寄存器一般表示算术运算，而其他特殊的寄存器则表示加载有效地址（个人观察，有待查证）。</p>
-</blockquote>
-<h2 id="算术指令"><a class="markdownIt-Anchor" href="#算术指令"></a> 算术指令</h2>
-<p>示例代码：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">arith</span><span class="params">(<span class="type">long</span> x, <span class="type">long</span> y, <span class="type">long</span> z)</span> &#123;</span><br><span class="line">    <span class="type">long</span> t1 = x ^ y;</span><br><span class="line">    <span class="type">long</span> t2 = z * <span class="number">48</span>;</span><br><span class="line">    <span class="type">long</span> t3 = t1 &amp; <span class="number">0x0F0F0F0F</span>;</span><br><span class="line">    <span class="type">long</span> t4 = t2 - t3;</span><br><span class="line">    <span class="keyword">return</span> t4;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># x in %rdi, y in %rsi, z in %rdx</span></span><br><span class="line"><span class="attr">arith:</span></span><br><span class="line">	<span class="string">xorq</span>	<span class="string">%rsi,</span> <span class="string">%rdi</span>		<span class="comment"># x = x ^ y</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="string">(%rdx,</span> <span class="string">%rdx,</span> <span class="number">2</span><span class="string">),</span> <span class="string">%rax</span>	<span class="comment"># 将 z + 2z = 3z 放入 %rax</span></span><br><span class="line">	<span class="string">salq</span>	<span class="string">$4,</span> <span class="string">%rax</span>		<span class="comment"># 将 3z 左移 4 位，即 3z * 16 = 48z 作为返回值</span></span><br><span class="line">	<span class="string">andl</span>	<span class="string">$252645135,</span> <span class="string">%edi</span>	<span class="comment"># 该立即数有 8 * 4 = 32 位，因此只取前 32 位进行与运算</span></span><br><span class="line">	<span class="string">subq</span>	<span class="string">%rdi,</span> <span class="string">%rax</span>		<span class="comment"># 将 48z - t3 的值作为返回值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
-<p>对于源程序第 3 行代码中的乘法操作，被编译成了 leaq 和左移两条指令。编译器之所以没有直接使用乘法指令来实现，是因为乘法指令的执行时间更长，因此编译器会优先选择更高效的方式。</p>
-<h2 id="控制指令"><a class="markdownIt-Anchor" href="#控制指令"></a> 控制指令</h2>
-<h3 id="条件码"><a class="markdownIt-Anchor" href="#条件码"></a> 条件码</h3>
-<p>除了整数寄存器，CPU 还维护着一组单个比特位的条件码寄存器，可以通过检测这些寄存器来执行条件分支指令。常用的条件码：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">条件码</th>
-<th style="text-align:center">全称</th>
-<th style="text-align:center">含义</th>
-<th style="text-align:center">描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">CF</td>
-<td style="text-align:center">Carry  Flag</td>
-<td style="text-align:center">进位标志</td>
-<td style="text-align:center">最高位产生了进位</td>
-</tr>
-<tr>
-<td style="text-align:center">ZF</td>
-<td style="text-align:center">Zero  Flag</td>
-<td style="text-align:center">零标志位</td>
-<td style="text-align:center">操作结果为零</td>
-</tr>
-<tr>
-<td style="text-align:center">SF</td>
-<td style="text-align:center">Sign  Flag</td>
-<td style="text-align:center">符号标志</td>
-<td style="text-align:center">操作结果为负</td>
-</tr>
-<tr>
-<td style="text-align:center">OF</td>
-<td style="text-align:center">Overflow  Flag</td>
-<td style="text-align:center">溢出标志</td>
-<td style="text-align:center">操作结果溢出</td>
-</tr>
-</tbody>
-</table>
-<p>算术和逻辑运算指令会改变条件码寄存器的内容（<code>leaq</code> 不会），还有两类指令专门用来设置条件码而不改变其它任何寄存器：<code>cmp</code> 和 <code>test</code>。</p>
-<p><code>cmp S1, S2</code> 会根据 <code>S2 - S1</code> 的结果来设置条件码；</p>
-<p><code>test S1, S2</code> 会根据 <code>S2 &amp; S1</code> 的结果来设置条件码。</p>
-<p><code>test</code> 指令的典型用法是两个操作数相同，用来判断该操作数是正数，零，还是负数。对于这样的指令，如 <code>testq %rax,%rax</code>，它与 <code>cmpq $0, %rax</code> 是等价的。</p>
-<p>接下来通过示例看一下对条件码的访问。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">comp</span><span class="params">(<span class="type">long</span> a, <span class="type">long</span> b)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a &lt; b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a in %rdi, b in %rsi</span></span><br><span class="line"><span class="attr">comp:</span></span><br><span class="line">	<span class="string">cmpq</span>	<span class="string">%rsi,</span> <span class="string">%rdi</span>	<span class="comment"># 根据 a - b 的结果设置条件码寄存器</span></span><br><span class="line">	<span class="string">setl</span>	<span class="string">%al</span>		<span class="comment"># 如果 a &lt; b，将 al 寄存器设置为 1；否则设置为 0</span></span><br><span class="line">	<span class="string">movzbl</span>	<span class="string">%al,</span> <span class="string">%eax</span>	<span class="comment"># movz 表示零扩展，将 al 寄存器从 byte 扩展到 long word</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
-<h3 id="循环"><a class="markdownIt-Anchor" href="#循环"></a> 循环</h3>
-<p>示例代码：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">fact_do</span><span class="params">(<span class="type">long</span> n)</span> &#123;</span><br><span class="line">    <span class="type">long</span> result = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        result *= n;</span><br><span class="line">        n = n - <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">while</span>(n &gt; <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># n in %rdi</span></span><br><span class="line"><span class="attr">fact_do:</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$1,</span> <span class="string">%eax</span>	<span class="comment"># 将 1 放入 %eax</span></span><br><span class="line"><span class="string">.L2:</span></span><br><span class="line">	<span class="string">imulq</span>	<span class="string">%rdi,</span> <span class="string">%rax</span>	<span class="comment"># 将 %rax 中的值更新为自身乘以 n</span></span><br><span class="line">	<span class="string">subq</span>	<span class="string">$1,</span> <span class="string">%rdi</span>	<span class="comment"># n = n - 1</span></span><br><span class="line">	<span class="string">cmpq</span>	<span class="string">$1,</span> <span class="string">%rdi</span>	<span class="comment"># 根据 n - 1 的结果设置条件码寄存器</span></span><br><span class="line">	<span class="string">jg</span>		<span class="string">.L2</span>	<span class="comment"># 如果 n &gt; 1 则跳转到 .L2 处执行</span></span><br><span class="line">	<span class="string">rep;</span> <span class="string">ret</span>		<span class="comment"># rep 是空操作，可以直接无视它</span></span><br></pre></td></tr></table></figure>
-<p><code>imul</code> 表示有符号整数乘法，<code>mul</code> 则表示无符号整数乘法。</p>
-<h2 id="函数调用"><a class="markdownIt-Anchor" href="#函数调用"></a> 函数调用</h2>
-<h3 id="函数栈帧"><a class="markdownIt-Anchor" href="#函数栈帧"></a> 函数栈帧</h3>
-<p>当函数需要的存储空间超出寄存器所能存放的大小时，就会在栈上分配空间，这块存储空间称为该函数的 <strong>栈帧</strong>。例如，在本文最开始给出的表格中可以发现，对于前 6 个参数，每一个都有相对应的寄存器进行保存，而从第 7 个参数开始，则被保存到了栈里面。另外，还有两种常见的情况需要为函数分配栈帧，一种是对一个局部变量使用取地址符，因此必须能为它产生一个地址；另一种是当局部变量是数组或结构体。</p>
-<p>当函数 P 调用函数 Q 时，其栈帧结构如下：</p>
-<img src="https://img.gejiba.com/images/e89ffa3aefa3462d8eb41ee9777ead4c.webp" alt="P调用Q的栈帧结构" style="zoom:16%;" />
-<p>当前正在执行的函数的栈帧总是保存在栈顶，当 P 调用 Q 时，call 指令会把返回地址压入栈中，该地址指明了当 Q 返回时，要从 P 的哪个位置继续执行。下面看一个例子：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">proc</span><span class="params">(<span class="type">long</span>  a1, <span class="type">long</span>  *a1p,</span></span><br><span class="line"><span class="params">          <span class="type">int</span>   a2, <span class="type">int</span>   *a2p,</span></span><br><span class="line"><span class="params">          <span class="type">short</span> a3, <span class="type">short</span> *a3p,</span></span><br><span class="line"><span class="params">          <span class="type">char</span>  a4, <span class="type">char</span>  *a4p)</span> &#123;</span><br><span class="line">    *a1p += a1;</span><br><span class="line">    *a2p += a2;</span><br><span class="line">    *a3p += a3;</span><br><span class="line">    *a4p += a4;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">long</span> <span class="title function_">call_proc</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">long</span>  x1 = <span class="number">1</span>; <span class="type">int</span>  x2 = <span class="number">2</span>;</span><br><span class="line">    <span class="type">short</span> x3 = <span class="number">3</span>; <span class="type">char</span> x4 = <span class="number">4</span>;</span><br><span class="line">    proc(x1, &amp;x1, x2, &amp;x2, x3, &amp;x3, x4, &amp;x4);</span><br><span class="line">    <span class="keyword">return</span> (x1 + x2) * (x3 - x4);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>proc 的汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a1 in %rdi, a1p in %rsi</span></span><br><span class="line"><span class="comment"># a2 in %edx, a2p in %rcx</span></span><br><span class="line"><span class="comment"># a3 in %r8w, a3p in %r9</span></span><br><span class="line"><span class="comment"># %rsp 指向栈顶</span></span><br><span class="line"><span class="comment"># a4 in %rsp+8, a4p in %rsp+16</span></span><br><span class="line"><span class="attr">proc:</span></span><br><span class="line">	<span class="string">movq</span>	<span class="number">16</span><span class="string">(%rsp),</span> <span class="string">%rax</span>	<span class="comment"># 将 a4p 放入 %rax</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">%rdi,</span> <span class="string">(%rsi)</span>	<span class="comment"># *a1p += a1</span></span><br><span class="line">	<span class="string">addl</span>	<span class="string">%edx,</span> <span class="string">(%rcx)</span>	<span class="comment"># *a2p += a2</span></span><br><span class="line">	<span class="string">addw</span>	<span class="string">%r8w,</span> <span class="string">(%r9)</span>	<span class="comment"># *a3p += a3</span></span><br><span class="line">	<span class="string">movl</span>	<span class="number">8</span><span class="string">(%rsp),</span> <span class="string">%edx</span>	<span class="comment"># 将 a4 放入 %edx</span></span><br><span class="line">	<span class="string">addb</span>	<span class="string">%dl,</span> <span class="string">(%rax)</span>	<span class="comment"># *a4p += a4</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
-<p>有几点需要注意：</p>
-<ul>
-<li>虽然从第 7 个参数开始都被保存到了栈中，但是当指令需要对这些参数操作时，仍然需要先从栈读入到寄存器中。</li>
-<li>通过栈传递参数时，所有数据都需要 8 字节对齐，所以 a4 即便只有 1 个字节，仍然为其分配了 8 个字节的存储空间。<span class="p red">注意：只有借助栈传递参数时才需要 8 字节对齐，如果只是在栈中存放局部变量，比如使用了取地址运算符的局部变量（必须存放在栈中），它们是不需要对齐的。</span></li>
-<li>a4 是从 %rsp+8 的位置开始存放的，而不是 %rsp 指向的位置，说明返回地址占据了栈顶位置。函数 proc 的栈帧如图所示：</li>
-</ul>
-<img src="https://img.gejiba.com/images/3dc0f287b4a191a0053e3de978a4726a.webp" alt="proc 的栈帧" style="zoom:45%;" />
-<p>call_proc 的汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">call_proc:</span></span><br><span class="line">	<span class="string">subq</span>	<span class="string">$32,</span> <span class="string">%rsp</span>	<span class="comment"># %rsp - 32，分配 32 字节大小的栈帧</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">$1,</span> <span class="number">24</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 1 放到栈帧 %rsp + 24 处</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$2,</span> <span class="number">20</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 2 放到栈帧 %rsp + 20 处</span></span><br><span class="line">	<span class="string">movw</span>	<span class="string">$3,</span> <span class="number">18</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 3 放到栈帧 %rsp + 18 处</span></span><br><span class="line">	<span class="string">movb</span>	<span class="string">$4,</span> <span class="number">17</span><span class="string">(%rsp)</span>	<span class="comment"># 将立即数 4 放到栈帧 %rsp + 17 处</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">17</span><span class="string">(%rsp),</span> <span class="string">%rax</span>	<span class="comment"># 将 &amp;x4 放入 %rax</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rax,</span> <span class="number">8</span><span class="string">(%rsp)</span>	<span class="comment"># 将 &amp;x4 放到栈帧 %rsp + 8 处作为第 8 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$4,</span> <span class="string">(%rsp)</span>	<span class="comment"># 将立即数 4 放到栈帧 %rsp 处作为第 7 个参数</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">18</span><span class="string">(%rsp),</span> <span class="string">%r9</span>	<span class="comment"># 将 &amp;x3 作为第 6 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$3,</span> <span class="string">%r8d</span>	<span class="comment"># 将立即数 3 作为第 5 个参数</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">20</span><span class="string">(%rsp),</span> <span class="string">%rcx</span>	<span class="comment"># 将 &amp;x2 作为第 4 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$2,</span> <span class="string">%edx</span>	<span class="comment"># 将立即数 2 作为第 3 个参数</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">24</span><span class="string">(%rsp),</span> <span class="string">%rsi</span>	<span class="comment"># 将 &amp;x1 作为第 2 个参数</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$1,</span> <span class="string">%edi</span>	<span class="comment"># 将立即数 1 作为第 1 个参数</span></span><br><span class="line">	<span class="comment"># 调用函数 proc</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">proc</span></span><br><span class="line">	<span class="string">movslq</span>	<span class="number">20</span><span class="string">(%rsp),</span> <span class="string">%rdx</span>	<span class="comment"># 将 x2 符号扩展为四字放入 %rdx</span></span><br><span class="line">	<span class="string">addq</span>	<span class="number">24</span><span class="string">(%rsp),</span> <span class="string">%rdx</span>	<span class="comment"># 将 x2 + x1 放入 %rdx</span></span><br><span class="line">	<span class="string">movswl</span>	<span class="number">18</span><span class="string">(%rsp),</span> <span class="string">%eax</span>	<span class="comment"># 将 x3 符号扩展为双字放入 %eax</span></span><br><span class="line">	<span class="string">movsbl</span>	<span class="number">17</span><span class="string">(%rsp),</span> <span class="string">%ecx</span>	<span class="comment"># 将 x4 符号扩展为双字放入 %ecx</span></span><br><span class="line">	<span class="string">subl</span>	<span class="string">%ecx,</span> <span class="string">%eax</span>	<span class="comment"># 将 x3 - x4 放入 %eax</span></span><br><span class="line">	<span class="string">cltq</span>			<span class="comment"># 将 %eax 符号扩展到 %rax</span></span><br><span class="line">	<span class="string">imulq</span>	<span class="string">%rdx,</span> <span class="string">%rax</span>	<span class="comment"># 将 (x3 - x4) * (x2 + x1) 作为返回值</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">$32,</span> <span class="string">%rsp</span>	<span class="comment"># %rsp + 32，释放 32 字节大小的栈帧</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
-<p>函数 call_proc 的栈帧如图所示：</p>
-<img src="https://img.gejiba.com/images/64c8434dd3f2a16518fbd172400264e8.webp" alt="call_proc 的栈帧" style="zoom:45%;" />
-<h3 id="被调用者保存寄存器"><a class="markdownIt-Anchor" href="#被调用者保存寄存器"></a> [被]调用者保存寄存器</h3>
-<p>在程序执行的过程中，寄存器是被所有函数共享的，因此为了确保在使用过程中寄存器内的数据不被覆盖，处理器采用了一组统一的寄存器使用惯例，所有函数都必须遵守。</p>
-<p>根据惯例，对于 16 个通用寄存器，除了 %rsp 之外，其余 15 个寄存器被划分为调用者保存和被调用者保存。其中，%rbx、%rbp、%r12~%r15 被划分为 <strong>被调用者保存寄存器</strong>，剩余的被划分为 <strong>调用者保存寄存器</strong>。下面以一个例子说明其使用方法：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">P</span><span class="params">(<span class="type">long</span> x, <span class="type">long</span> y)</span> &#123;</span><br><span class="line">    <span class="type">long</span> u = Q(y);</span><br><span class="line">    <span class="type">long</span> v = Q(x);</span><br><span class="line">    <span class="keyword">return</span> u + v;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># x in %rdi, y in %rsi</span></span><br><span class="line"><span class="attr">P:</span></span><br><span class="line">	<span class="string">pushq</span>	<span class="string">%rbp</span>		<span class="comment"># 保存 %rbp 中的值</span></span><br><span class="line">	<span class="string">pushq</span>	<span class="string">%rbx</span>		<span class="comment"># 保存 %rbx 中的值</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rdi,</span> <span class="string">%rbp</span>	<span class="comment"># 将 %rdi 中的值 x 保存到 %rbp 中</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rsi,</span> <span class="string">%rdi</span>	<span class="comment"># 将 y 放入 %rdi 作为第一个参数</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">Q</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rax,</span> <span class="string">%rbx</span>	<span class="comment"># 将 Q 的返回结果 u 保存到 %rbx 中</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rbp,</span> <span class="string">%rdi</span>	<span class="comment"># 将 x 放入 %rdi 作为第一个参数</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">Q</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">%rbx,</span> <span class="string">%rax</span>	<span class="comment"># 将 v + u 作为返回值</span></span><br><span class="line">	<span class="string">addq</span>	<span class="string">$8,</span> <span class="string">%rsp</span>	<span class="comment"># 释放 8 个字节的栈帧</span></span><br><span class="line">	<span class="string">popq</span>	<span class="string">%rbx</span>		<span class="comment"># 恢复 %rbx 中的值</span></span><br><span class="line">	<span class="string">popq</span>	<span class="string">%rbp</span>		<span class="comment"># 恢复 %rbp 中的值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
-<p>在函数 P 中，x 保存在 %rdi 中，当在第 7 行调用函数 Q 时，由于 Q 有一个参数，因此也会使用 %rdi。为了防止 P 中的 %rdi 值被覆盖，需要先将其保存到一个其他无关的寄存器 %rbp 中（第 6 行），而为了防止原本 %rbp 中的内容被覆盖，在此之前还需将其中的内容压入栈中保存起来（第 3 行）。</p>
-<p>同样的道理，当第一次调用 Q 结束时，结果会被保存在 %rax 中返回；而当第二次调用函数 Q 时，其返回结果仍然会保存在 %rax 中。为了防止第一次返回的结果被覆盖，需要先将其保存到一个其他无关的寄存器 %rbx 中（第 8 行），而为了防止原本 %rbx 中的内容被覆盖，在此之前还需将其中的内容压入栈中保存起来（第 4 行）。</p>
-<blockquote>
-<p>这里介绍一下 push 这条指令所进行的操作。实际上，执行一次 <code>pushq S</code>，等价于以下两条操作指令：<code>subq $8,%rsp</code> 与 <code>movq S,(%rsp)</code>，因此两次 push 之后 %rsp 依然指向栈顶。</p>
-<p>相应地，<code>popq D</code> 也等价于两条指令：<code>movq (%rsp),D</code> 和 <code>addq $8,%rsp</code>。</p>
-</blockquote>
-<p>在函数 P 结束之前，按照栈后进先出的顺序出栈，依次恢复 %rbx 和 %rbp 中的内容。</p>
-<h3 id="函数递归调用"><a class="markdownIt-Anchor" href="#函数递归调用"></a> 函数递归调用</h3>
-<p>示例代码：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">rfact</span><span class="params">(<span class="type">long</span> n)</span> &#123;</span><br><span class="line">    <span class="type">long</span> result;</span><br><span class="line">    <span class="keyword">if</span>(n &lt;= <span class="number">1</span>)</span><br><span class="line">        result = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        result = n * rfact(n - <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>汇编代码：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># n in %rdi</span></span><br><span class="line"><span class="attr">rfact:</span></span><br><span class="line">	<span class="string">pushq</span>	<span class="string">%rbx</span>			<span class="comment"># 保存 %rbx 中的值</span></span><br><span class="line">	<span class="string">movq</span>	<span class="string">%rdi,</span> <span class="string">%rbx</span>		<span class="comment"># 将 n 放入 %rbx</span></span><br><span class="line">	<span class="string">movl</span>	<span class="string">$1,</span> <span class="string">%eax</span>		<span class="comment"># 将 1 放入 %rax</span></span><br><span class="line">	<span class="string">cmpq</span>	<span class="string">$1,</span> <span class="string">%rdi</span>		<span class="comment"># 根据 n - 1 的值设置条件码寄存器</span></span><br><span class="line">	<span class="string">jle</span>	<span class="string">.L35</span>			<span class="comment"># 如果 n &lt;= 1，跳转到 .L35</span></span><br><span class="line">	<span class="string">leaq</span>	<span class="number">-1</span><span class="string">(%rdi),</span> <span class="string">%rdi</span>		<span class="comment"># 将 n = n - 1 作为第一个参数</span></span><br><span class="line">	<span class="string">call</span>	<span class="string">rfact</span>			<span class="comment"># 调用函数 rfact</span></span><br><span class="line">	<span class="string">imulq</span>	<span class="string">%rbx,</span> <span class="string">%rax</span>		<span class="comment"># 将 rfact(n - 1) * n 的值放入 %rax</span></span><br><span class="line"><span class="string">.L35:</span></span><br><span class="line">	<span class="string">popq</span>	<span class="string">%rbx</span>			<span class="comment"># 恢复 %rbx 中的值</span></span><br><span class="line">	<span class="string">ret</span></span><br></pre></td></tr></table></figure>
-<h2 id="数组和指针"><a class="markdownIt-Anchor" href="#数组和指针"></a> 数组和指针</h2>
-<p>数组在内存中是连续存放的，每个元素所占内存的大小由数组类型决定，如图所示：</p>
-<img src="https://img.gejiba.com/images/e3d43bd460b0c20d24ce0fd3018b4f7b.webp" alt="array" style="zoom:62%;" />
-<p>对指针进行运算时，计算结果会根据指针类型进行相应的伸缩。为方便理解，将内存抽象成一个很大的数组，假设初始时指针 p 和 q 都指向 0x100 处，现分别对两个指针进行加 1 操作，由于指针类型不同，指针 p + 1 会前进 1 个字节，而指针 q + 1 会前进 4 个字节，如图所示：</p>
-<img src="https://img.gejiba.com/images/fb5a7e558f74a7c9c29816a82405f68a.webp" alt="padd" style="zoom:70%;" />
-<p>而数组名正是指向该数组首元素的指针，因此对于数组 <code>int arr[5]</code> 中的每一个元素，均有两种表示方式，如图所示：</p>
-<img src="https://img.gejiba.com/images/38e1cc7b41ea67d443c837bebf6bbe95.webp" alt="parr" style="zoom:75%;" />
-<p>对于二维数组，在内存中是按照行优先的顺序存储的：</p>
-<img src="https://img.gejiba.com/images/af9f4f55dd7d45b4c94e582e69595f8c.webp" alt="2D-array" style="zoom:70%;" />
-<h2 id="结构体和联合体"><a class="markdownIt-Anchor" href="#结构体和联合体"></a> 结构体和联合体</h2>
-<p>CPU 是按 32/64 位的大小进行存取的，为了提高 CPU 的执行效率，计算机系统对基本数据类型的合法地址做了一些限制，要求某种类型的地址必须是某个值（2 / 4 / 8）的倍数，这就是 <strong>数据对齐</strong>。数据对齐会由编译器自动实现，但了解其实现方法还是很有必要的，可以优化代码结构，达到节省空间和提高效率（减少访存次数）的目的。</p>
-<p>数据对齐的基本原则是：<span class="p red">任何 K 字节的基本对象的地址必须是 K 的倍数</span>。例如：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">S1</span> &#123;</span></span><br><span class="line">    <span class="type">int</span>  i;</span><br><span class="line">    <span class="type">char</span> c;</span><br><span class="line">    <span class="type">int</span>  j;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>如果不进行数据对齐（以 64 位机器为例），结构体 S1 在内存中的分布如图 (a) 所示。</p>
-<p>虽然整体只占了 9 个字节，但要访问成员 j，需要访问两次内存才行，这样效率并不高。而如果进行了数据对齐，则访问所有成员都只需访问一次内存即可，如图 (b)。其中在 c 后面插入 3 个字节，是因为 j 占 4 个字节，所以它的起始地址必须是 4 的倍数。</p>
-<p>另外，在结构体的末尾，可能也需要一些填充。比如假设结构体 S1 中没有成员 j，那所有元素都是满足对齐要求的，但是当该结构体声明为数组时（比如 <code>struct S1 arr[2]</code>），对齐原则就无法保证了，因此需要在末尾进行填充以满足结构体数组的对齐原则，如图 (c)。</p>
-<img src="https://img.gejiba.com/images/56afaf0f2107e96c0d3562725c18e2be.webp" alt="align" style="zoom:50%;" />
-<p>与结构体不同，联合体中的所有字段共享同一存储区域，因此联合体的大小取决于其最大字段的大小。如果我们事先知道两个不同字段的使用是互斥的，那么就可以将这两个字段声明为一个联合体，从而达到节省内存空间的目的。</p>
-<p>此外，联合体还可以用来访问不同数据类型的位模式，比如判断机器的大小端：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="type">int</span> i;</span><br><span class="line">        <span class="type">char</span> c;</span><br><span class="line">    &#125; temp;</span><br><span class="line">    temp.i = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(temp.c == <span class="number">1</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Little Endian\n&quot;</span>);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Big Endian\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>其中 i 占 4 个字节，c 占 1 个字节，二者共享同一段内存，因此只需为 temp 分配 4 字节的空间。当为联合体中的 i 赋值后（第 6 行），为 temp 分配的四个字节都填满了，此时访问其中的 c 成员，其实就是访问这段内存的第 1 个字节，即低地址处的第 1 个字节。</p>
-<p>对于 4 字节的整型 1，其十六进制表示为 <code>0x0000 0001</code>。若机器是小端，则低位放低地址处，高位放高地址处，地址从低到高依次为 <code>0x01 0x00 0x00 0x00</code>；若机器是大端，则低位放高地址处，高位放低地址处，地址从低到高依次为 <code>0x00 0x00 0x00 0x01</code>。</p>
-<p>此时只需判断 c 的值是 <code>0x01</code> 还是 <code>0x00</code>，即可判断机器是小端还是大端。</p>
-<p>再比如，可以用如下方法来获取 double 类型的二进制位表示。</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">double2bits</span><span class="params">(<span class="type">double</span> d)</span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="type">double</span> d;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span> u;</span><br><span class="line">    &#125; temp; <span class="comment">// 以一种类型存储，以另一种类型访问</span></span><br><span class="line">    temp.d = d;</span><br><span class="line">    <span class="keyword">return</span> temp.u;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>double</code> 与 <code>unsigned long</code> 所占的字节相同，因此当为 d 赋值后，d 和 u 就共同拥有了相同大小的内存空间，此时对 u 的访问即是 d 的二进制位的十进制表示。</p>
-]]></content>
-      <categories>
-        <category>读书笔记 - CSAPP</category>
-      </categories>
-      <tags>
-        <tag>汇编</tag>
-        <tag>栈帧</tag>
-        <tag>数据对齐</tag>
-      </tags>
   </entry>
 </search>
