@@ -15,7 +15,7 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Sat, 21 May 2022 08:36:36 GMT</pubDate>
+    <pubDate>Sat, 21 May 2022 08:39:55 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
@@ -39,7 +39,9 @@
       <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-CSAPP/">读书笔记 - CSAPP</category>
       
       
-      <category domain="https://younghblog.gitee.io/tags/Cache%E7%BB%93%E6%9E%84/">Cache结构</category>
+      <category domain="https://younghblog.gitee.io/tags/cache%E7%BB%93%E6%9E%84/">cache结构</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/cache%E7%B1%BB%E5%9E%8B/">cache类型</category>
       
       
       <comments>https://younghblog.gitee.io/posts/2065420180.html#disqus_thread</comments>
