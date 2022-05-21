@@ -15,8 +15,36 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Thu, 19 May 2022 11:49:34 GMT</pubDate>
+    <pubDate>Sat, 21 May 2022 08:36:36 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>高速缓存的访存方式</title>
+      <link>https://younghblog.gitee.io/posts/2065420180.html</link>
+      <guid>https://younghblog.gitee.io/posts/2065420180.html</guid>
+      <pubDate>Sat, 21 May 2022 08:31:20 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;高速缓存有三种类型，每种类型的访存方式有所差异。不同类型的高速缓存是根据其组织结构划分的，因此有必要先了解一下高速缓存的组织结构。&lt;/p&gt;
+&lt;h2 id=&quot;cache-的组织结构&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot;</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-CSAPP/">读书笔记 - CSAPP</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/Cache%E7%BB%93%E6%9E%84/">Cache结构</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2065420180.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>如何摆脱CPU分支预测错误</title>
