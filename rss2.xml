@@ -49,6 +49,33 @@
     </item>
     
     <item>
+      <title>如何保证CPU的缓存一致性</title>
+      <link>https://younghblog.gitee.io/posts/921523538.html</link>
+      <guid>https://younghblog.gitee.io/posts/921523538.html</guid>
+      <pubDate>Fri, 20 May 2022 10:20:56 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;当 CPU 中的某个核要对内存中的数据进行修改时，会先将其缓存到 cache 中，然后再去修改。此时由于修改后的数据尚未写回到内存，如果其他核要去访问这个数据，就会读到修改之前的数据，这就是</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-CSAPP/">读书笔记 - CSAPP</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/MESI/">MESI</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/921523538.html#disqus_thread</comments>
+      
+    </item>
+    
+    <item>
       <title>如何摆脱CPU分支预测错误</title>
       <link>https://younghblog.gitee.io/posts/2875321003.html</link>
       <guid>https://younghblog.gitee.io/posts/2875321003.html</guid>
