@@ -575,7 +575,7 @@
       </tags>
   </entry>
   <entry>
-    <title>高速缓存的访存方式</title>
+    <title>高速缓存是如何查找数据的</title>
     <url>/posts/2065420180.html</url>
     <content><![CDATA[<p>高速缓存有三种类型，每种类型的访存方式有所差异。不同类型的高速缓存是根据其组织结构划分的，因此有必要先了解一下高速缓存的组织结构。</p>
 <h2 id="cache-的组织结构"><a class="markdownIt-Anchor" href="#cache-的组织结构"></a> Cache 的组织结构</h2>
