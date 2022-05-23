@@ -1,53 +1,343 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>计算机系统漫游</title>
-    <url>/posts/4223884717.html</url>
-    <content><![CDATA[<h1 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h1>
-<p>《深入理解计算机系统-CSAPP》是计算机领域的圣经✨之前翻看过两三次，不过由于平时在实验室一直都有各种事情牵扯时间跟精力，每次阅读都近乎走马观花。</p>
-<p>最近论文送审之后终于有了充足的时间，于是便静下心来重新读了一遍。对于其中一些晦涩难懂且意义不大（个人愚见）的知识点（如浮点数的表示和运算、存储器山等等）本人并未细究，这里仅对自己之前没有完全掌握，或者易忘易混淆的知识点做个记录📝方便日后查阅。</p>
-<p>在整理了部分内容之后我发现整体架构看起来依然有些零散，没有逻辑主线💥事实上我也确实是从 <code>hello.c</code> 程序编译的各个过程中发散出来的小的知识点。</p>
-<p>为了使介绍能够更加聚焦，后续内容我决定采用问答的形式，然后从回答中抽取关键字来“浅挖”其原理和细节。能力一般，水平有限，所有内容仅仅是个人的一些粗浅的理解，之后我会尽量多读相关书籍来修正和完善这些内容🚩</p>
-<p>『计算机系统漫游』部分主要是对全书中我比较感兴趣的部分做一个粗略的介绍，其中每个 <span class="inline-tag blue">蓝色小标签</span> 中的内容（包括但不限于此）都将是后续博客中进一步展开介绍的对象~~</p>
-<h2 id="从hello-world开始"><a class="markdownIt-Anchor" href="#从hello-world开始"></a> 从Hello World开始</h2>
-<p><img src="https://img.gejiba.com/images/2df68f1e0cc0ea3c4bd7722f0b09e509.webp" alt="Hello World编译过程" /></p>
-<h2 id="文本文件与二进制文件"><a class="markdownIt-Anchor" href="#文本文件与二进制文件"></a> 文本文件与二进制文件</h2>
-<p>我们所编写的 <code>hello.c</code> 程序属于文本文件，经过编译后生成的可执行文件是二进制文件。它们最终在物理内存上都是以二进制形式保存的，因此二者的主要区别是逻辑上的而不是物理上的：</p>
+    <title>高速缓存是如何查找数据的</title>
+    <url>/posts/2065420180.html</url>
+    <content><![CDATA[<p>高速缓存有三种类型，每种类型的访存方式有所差异。不同类型的高速缓存是根据其组织结构划分的，因此有必要先了解一下高速缓存的组织结构。</p>
+<h2 id="cache-的组织结构"><a class="markdownIt-Anchor" href="#cache-的组织结构"></a> Cache 的组织结构</h2>
+<p>高速缓存可以看成由缓存行（cache line）组成的数组，每个缓存行分为三个部分，其中：</p>
 <ul>
 <li>
-<p>文本文件：基于字符编码，如ASCII、Unicode等，每个值都有固定的Size。</p>
+<p><strong>有效位</strong> 指明了当前行所存储的数据是否有效，大小为 1 个 bit；</p>
 </li>
 <li>
-<p>二进制文件：基于值编码，没有固定的Size，实际上就是把值在物理内存上的原始二进制形式。</p>
+<p><strong>标记位</strong> 唯一地标识了存储在缓存行中的信息；</p>
+</li>
+<li>
+<p><strong>数据块</strong>（Block） 则是部分内存数据的副本。</p>
 </li>
 </ul>
-<p>比如 <code>\n</code> 在文本文件中是换行符，而在二进制文件中会被认为是 <code>\</code> 和 <code>n</code> 两个字符。</p>
-<h2 id="原码-反码和补码"><a class="markdownIt-Anchor" href="#原码-反码和补码"></a> 原码、反码和补码</h2>
-<p>有符号数的表示方法有三种，分别是原码、反码和补码，它们都是用最高位的 <code>0</code> 和 <code>1</code> 来区分正负。对于正数，三者的表示都是一致的，即该数的二进制表示，主要区别是在负数上。例如 <code>15</code> 的二进制表示为 <code>0000 1111</code>，而对于 <code>-15</code>：</p>
-<ul>
-<li>原码：<code>1000 1111</code> 符号位 + 二进制表示</li>
-<li>反码：<code>1111 0000</code> 在原码基础上，除符号位外全部取反</li>
-<li>补码：<code>1111 0001</code> 反码 + 1</li>
-</ul>
-<p>在计算机中，有符号数是用补码来表示的。之所以不用另外两种编码方式，是因为对于数字 <code>0</code>，二者都有两种不同的编码方式，分别是 <code>+0</code> 和 <code>-0</code>，而补码则不存在这种问题。</p>
-<h2 id="汇编程序与机器指令"><a class="markdownIt-Anchor" href="#汇编程序与机器指令"></a> 汇编程序与机器指令</h2>
-<p>高级语言编写的程序可以在很多不同的机器上编译运行，生成该机器所支持的 <span class="inline-tag blue">机器指令</span>。 <span class="inline-tag blue">汇编程序</span> 是机器指令的文本表示，在不同指令级架构的机器上有不同的表现形式，这也就解释了为什么最终生成的可执行目标文件一般都不能跨平台执行。</p>
-<p>Java之所以能够跨平台（一次编译多次运行），是因为它并不是直接运行在CPU上的，而是生成字节码（.class）文件后由 JVM 统一执行。此时JVM有两种选择：一种是使用 Java 解释器解释执行，另一种是使用 JIT 编译器将字节码转化为本地机器指令。</p>
-<p>二者的区别在于，前者启动速度快但运行速度慢，后者启动速度慢但运行速度快。这是因为解释器不需要像 JIT 编译器一样，将所有字节码都转化为机器指令，自然就省去了优化的时间。而当 JIT 编译器完成第一次编译后会将字节码对应的机器指令保存下来，下次可以直接使用。由于机器指令的执行效率要高于 Java 解释器，所以在实际情况中，为了速度和效率，通常采用两者相结合的方式。</p>
-<h2 id="可重定位文件与可执行文件"><a class="markdownIt-Anchor" href="#可重定位文件与可执行文件"></a> 可重定位文件与可执行文件</h2>
-<p>如果想让代码运行，那么生成的目标代码中的每个符号（函数或变量）的地址都应该是确定的。事实上，在汇编阶段，只有跟源代码在同一个模块中的符号地址能确定下来，而定义在其他模块中的全局变量和函数的地址要在链接的时候才能确定。编译器在没法确定地址的情况下，会先将其置为 0，等到链接的时候再去修正它们，这个过程就是<span class="inline-tag blue">重定位</span>。因此很自然地，在链接之前（汇编阶段）生成的目标文件叫做可重定位目标文件，在链接之后生成的目标文件叫做 <span class="inline-tag blue">可执行目标文件</span>。</p>
-<h2 id="静态链接与动态链接"><a class="markdownIt-Anchor" href="#静态链接与动态链接"></a> 静态链接与动态链接</h2>
-<p>链接分为 <span class="inline-tag blue">静态链接</span> 和 <span class="inline-tag blue">动态链接</span>，二者的区别在于：静态链接会把引用到的所有目标文件全部嵌入到可执行文件中，因此生成的是完全可执行的目标文件；动态链接只会链接所引用文件的重定位和符号表信息，因此生成的是部分链接的可执行目标文件，直到运行或加载的时候，才会由动态链接器将物理内存中的共享库的地址与其链接起来。</p>
-<h2 id="cpu流水线划分"><a class="markdownIt-Anchor" href="#cpu流水线划分"></a> CPU流水线划分</h2>
-<p>CPU流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新PC寄存器。这些阶段看似简单，但有很多细节与我之前的理解存在严重偏差。比如取指阶段就只是单纯地从PC寄存器取出指令吗？译码阶段是要对取出的机器指令进行翻译吗？执行阶段好像是最简单的，就是执行我们程序逻辑中的主体运算，但就只有这一种情况吗？访存就是访问DRAM内存吗？写回是将修改后的值重新写回到内存吗？当然这些答案都是否定的，后续我会详细介绍 <span class="inline-tag blue">CPU流水线</span> 的这几个阶段。</p>
-<h2 id="高速缓存存储器"><a class="markdownIt-Anchor" href="#高速缓存存储器"></a> 高速缓存存储器</h2>
-<p><span class="inline-tag blue">高速缓存</span> 的结构可以用<code>(S, E, B, m)</code>来表示，每个缓存行中还保存了有效位和标记位，方便快速定位目标数据，那具体工作过程是怎样的呢？另外根据<code>E</code>的不同，可以分为直接映射、组相连和全相连的高速缓存，这样划分的目的是什么？各有都有哪些优缺点？每种方式都有自己的应用场景吗？</p>
-<h2 id="物理内存和虚拟内存"><a class="markdownIt-Anchor" href="#物理内存和虚拟内存"></a> 物理内存和虚拟内存</h2>
-<p><span class="inline-tag blue">虚拟内存</span> 并不是虚拟的、非真实存在的内存，而是对磁盘的虚拟化，将内存视为磁盘的高速缓存，在内存空间不足时将磁盘的一块区域划分成虚拟内存，通过与物理内存的换入换出来满足程序运行的需求。有虚拟内存自然就有 <span class="inline-tag blue">虚拟地址</span>，相应地也会有物理地址，它们之间是如何完成映射的？进程的虚拟地址空间是真实存在的吗？是保存在物理内存中的吗？程序请求分配到的内存是物理内存吗？<span class="inline-tag blue">内存分配</span> 后忘记释放内存会怎么样？Java不需要手动释放内存，那它的 <span class="inline-tag blue">垃圾回收</span> 机制是怎么实现的？这些问题我都会在后续博客中一一解答。</p>
+<p>高速缓存的组织结构可以用元组 <code>(S, E, B, m)</code> 表示，<code>m</code> 是主存物理地址的位数。</p>
+<img src="https://img.gejiba.com/images/86f467a47a83e338e941edf133d73fc5.webp" alt="cachestruct" style="zoom:45%;" />
+<p>高速缓存的大小（Capacity）指的是所有数据块的大小之和，并不包含有效位和标记位，因此可以通过 <code>C = B x E x S</code> 计算得到。</p>
+<p>相应地，对高速缓存访问的 <code>m</code> 位的地址被划分成了如下结构：</p>
+<img src="https://img.gejiba.com/images/85db219b099cce3ea5c5a13f86de723f.webp" alt="cacheaddr" style="zoom:70%;" />
+<p>当某个地址向高速缓存发出访问后，首先根据组索引位 <code>s</code> 确定索要访问的数据在哪个组，然后根据标记位 <code>t</code> 确定组中的哪一行与之匹配，当且仅当有效位为 1 并且标记位也匹配时才算访存命中。此时，根据块偏移位 <code>b</code> 就可以从 B 个字节的数据块中抽取出所访问的数据。</p>
+<h2 id="cache-的分类"><a class="markdownIt-Anchor" href="#cache-的分类"></a> Cache 的分类</h2>
+<p>根据每个组高速缓存行的行数 <code>E</code>，高速缓存可以分为三种类型：</p>
+<h3 id="直接映射高速缓存"><a class="markdownIt-Anchor" href="#直接映射高速缓存"></a> 直接映射高速缓存</h3>
+<p><code>E == 1</code>：</p>
+<img src="https://img.gejiba.com/images/9828e5344d0fdc7b3d6b1754c5bfac0f.webp" alt="directmap" style="zoom:30%;" />
+<p>由于每个组只有 1 个缓存行，因此访存时确定了所属组之后就只需访问一行，通过比较标记位和判断有效位来确定是否命中。若不命中，则从内存中取出相应数据直接替换掉当前行。</p>
+<h3 id="组相连高速缓存"><a class="markdownIt-Anchor" href="#组相连高速缓存"></a> 组相连高速缓存</h3>
+<p><code>1 &lt; E &lt; C/B</code>：</p>
+<img src="https://img.gejiba.com/images/8ac0edf84c919e9c95998d17fe2aab75.webp" alt="二路组相连cache" style="zoom:43%;" />
+<p>每个组包含不止一个缓存行，通常也叫 <strong>E路组相连</strong> 高速缓存。</p>
+<p>访存时确定了所属组之后，必须检查多个缓存行的标记位和有效位，因为组中的每一行都可以包含任何映射到这个组中的内存块，就相当于将所有哈希值相同的数据都放在同一个组中。</p>
+<p>当访存不命中时，需要从内存中取出包含这个数据的块。此时，若该组中有空行，自然将取回的数据放入空行；如果没有，则需要选择其中一行进行替换。常见的缓存替换策略有 LFU（Least Frequently Used，最不经常使用）、LRU（Least Recently Used，最近最少使用）、随机替换等等。</p>
+<h3 id="全相连高速缓存"><a class="markdownIt-Anchor" href="#全相连高速缓存"></a> 全相连高速缓存</h3>
+<p><code>E == C/B</code>：</p>
+<img src="https://img.gejiba.com/images/945c8168db1fd891a288777fd799a8b2.webp" alt="fullyassociativecache" style="zoom:45%;" />
+<p>高速缓存只有一个组，包含了所有行。因此地址中不再需要组索引位，只包含标记位和块偏移。</p>
+<p>此时的访存操作必须并行地比对很多标记位，构造一个又大又快的全相连高速缓存困难且昂贵，因此这种方式只适合做小的高速缓存，例如 TLB。</p>
 ]]></content>
       <categories>
         <category>读书笔记 - CSAPP</category>
       </categories>
+      <tags>
+        <tag>cache</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>多核CPU如何保证缓存一致性</title>
+    <url>/posts/921523538.html</url>
+    <content><![CDATA[<p>当 CPU 中的某个核要对内存中的数据进行修改时，会先将其缓存到 cache 中，然后再去修改。此时由于修改后的数据尚未写回到内存，如果其他核要去访问这个数据，就会读到修改之前的数据，这就是 <strong>缓存一致性问题</strong>。对此有两种解决方式：</p>
+<h2 id="对总线加锁"><a class="markdownIt-Anchor" href="#对总线加锁"></a> 对总线加锁</h2>
+<p>CPU 和其他组件都是通过 <strong>总线</strong>（数据总线、控制总线、地址总线）进行通信的，因此通过对总线加锁就可以保证只有一个核获取到锁，而其他核都处于阻塞状态。这样虽然保证了数据的一致性，但也严重影响了 CPU 的执行效率。</p>
+<h2 id="使用缓存一致性协议-mesi"><a class="markdownIt-Anchor" href="#使用缓存一致性协议-mesi"></a> 使用缓存一致性协议 MESI</h2>
+<p>该协议只对单个缓存行加锁，因此不会影响到内存中其他数据的读写，这样就可以保证执行效率。</p>
+<p><strong>MESI</strong> 每个字母对应一种状态：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">状态</th>
+<th style="text-align:center">含义</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">M（Modified）</td>
+<td style="text-align:center">修改</td>
+<td style="text-align:center">缓存行中的数据已被修改，与内存中的数据不一致，并且该数据只存在于本地 cache 中（即只存在于当前核的 cache 中）</td>
+</tr>
+<tr>
+<td style="text-align:center">E（Exclusive）</td>
+<td style="text-align:center">独享、互斥</td>
+<td style="text-align:center">缓存行中的数据与内存中的数据一致，并且该数据只存在于本地 cache 中</td>
+</tr>
+<tr>
+<td style="text-align:center">S（Shared）</td>
+<td style="text-align:center">共享</td>
+<td style="text-align:center">缓存行中的数据与内存中的数据一致，并且该数据存在于多个 cache 中（即存在于多个核的 cache 中）</td>
+</tr>
+<tr>
+<td style="text-align:center">I（Invalid）</td>
+<td style="text-align:center">无效</td>
+<td style="text-align:center">当前缓存行无效</td>
+</tr>
+</tbody>
+</table>
+<p>MESI 的状态转移过程：</p>
+<p class='div-border blue left'>local read/write：当前核读写本地 cache 中的缓存行数据。</br>remote read/write：其它核读写内存中的数据，该数据已被缓存到某个核的 cache 中。</p>
+<table style="width:100%">
+    <tr>
+        <th align="center" bgcolor="#f5f6f8">当前<br/>状态</th> 
+        <th align="center" bgcolor="#f5f6f8">事件</th> 
+        <th align="center" bgcolor="#f5f6f8">行为</th> 
+        <th align="center" width="8%" bgcolor="#f5f6f8">下个<br/>状态</th> 
+   </tr>
+    <tr>
+        <td rowspan="5" align="center" style="font-size:50px; font-weight:bold">M</td>
+    </tr>
+    <tr>
+        <td align="center">local read</td>
+        <td align="left">从 cache 中读，状态不变</td>
+        <td align="center">M</td>
+    </tr>
+    <tr>
+        <td align="center">local write</td>
+        <td align="left">修改 cache 数据，状态不变</td>
+        <td align="center">M</td>
+    </tr>
+    <tr>
+        <td align="center">remote read</td>
+        <td align="left">将数据写回内存，使其它核能够获取到最新数据，状态变为 S</td>
+        <td align="center">S</td>    
+    </tr>
+    <tr>
+        <td align="center">remote write</td>
+        <td align="left">将数据写回内存，使其它核能够获取到最新数据，状态变为 I</td>
+        <td align="center">I</td>    
+    </tr>
+    <tr>
+        <td rowspan="5" align="center" style="font-size:50px; font-weight:bold">E</td>    
+    </tr>
+    <tr>
+        <td align="center">local read</td>
+        <td align="left">从 cache 中读，状态不变</td>
+        <td align="center">E</td>
+    </tr>
+    <tr>
+        <td align="center">local write</td>
+        <td align="left">修改 cache 数据，状态变为 M</td>
+        <td align="center">M</td>
+    </tr>
+    <tr>
+        <td align="center">remote read</td>
+        <td align="left">数据与其它核共享，状态变为 S</td>
+        <td align="center">S</td>    
+    </tr>
+    <tr>
+        <td align="center">remote write</td>
+        <td align="left">数据被修改，状态变为 I</td>
+        <td align="center">I</td>    
+    </tr>
+    <tr>
+        <td rowspan="5" align="center" style="font-size:50px; font-weight:bold">S</td>    
+    </tr>
+    <tr>
+        <td align="center">local read</td>
+        <td align="left">从 cache 中读，状态不变</td>
+        <td align="center">S</td>
+    </tr>
+    <tr>
+        <td align="center">local write</td>
+        <td align="left">先将其它核的状态变为 I，再将本地状态变为 M</td>
+        <td align="center">M</td>
+    </tr>
+    <tr>
+        <td align="center">remote read</td>
+        <td align="left">数据与其它核共享，状态不变</td>
+        <td align="center">S</td>    
+    </tr>
+    <tr>
+        <td align="center">remote write</td>
+        <td align="left">数据被修改，状态变为 I</td>
+        <td align="center">I</td>    
+    </tr>
+    <tr>
+        <td rowspan="9" align="center" style="font-size:50px; font-weight:bold">I</td>    
+    </tr>
+    <tr>
+        <td rowspan="3" align="center">local read</td>
+        <td align="left">若其它核中没数据，则将内存中的数据缓存到本地 cache，状态变为 E</td>
+        <td rowspan="3" align="center">E/S</td>
+    </tr>
+    <tr>
+        <td align="left">若其它核中有数据，且状态为 M，则先将数据写回内存，然后将内存中的数据缓存到本地 cache，二者状态均变为 S</td>
+    </tr>
+    <tr>
+        <td align="left">若其它核中有数据，且状态为 E 或 S，则将内存中的数据缓存到本地 cache，并将它们的状态均变为 S</td>
+    </tr>
+    <tr>
+        <td rowspan="3" align="center">local write</td>
+        <td align="left">若其它核中没数据，则将内存中的数据缓存到本地 cache，状态变为 M</td>
+        <td rowspan="3" align="center">M</td>
+    </tr>
+    <tr>
+        <td align="left">若其它核中有数据，且状态为 M，则先将数据写回内存，状态变为 I，然后将内存中的数据缓存到本地 cache，状态变为 M</td>
+    </tr>
+    <tr>
+        <td align="left">若其它核中有数据，且状态为 E 或 S，则将它们的状态变为 I，然后将内存中的数据缓存到本地 cache，状态变为 M</td>
+    </tr>
+    <tr>
+        <td align="center">remote read</td>
+        <td align="left">本地数据已失效，不受其它核操作的影响</td>
+        <td align="center">I</td>    
+    </tr>
+    <tr>
+        <td align="center">remote write</td>
+        <td align="left">本地数据已失效，不受其它核操作的影响</td>
+        <td align="center">I</td>    
+    </tr>
+</table>]]></content>
+      <categories>
+        <category>读书笔记 - CSAPP</category>
+      </categories>
+      <tags>
+        <tag>MESI</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>如何摆脱CPU分支预测错误</title>
+    <url>/posts/2875321003.html</url>
+    <content><![CDATA[<p>现在我们已经知道，CPU 引入流水线的目的就是为了保证每个时钟周期都能发射一条新的指令，从而提升其性能。要做到这一点，就必须在取出当前指令后立马确定下一条指令的位置。</p>
+<p>根据 <a href="https://younghblog.gitee.io/posts/3931262747.html" target="_blank">上一篇</a> 博文可知，大多数指令都可以在取指阶段确定下一条指令的地址，比如对于 call 和 jmp（无条件跳转）指令来说，下一条指令的地址就是指令中的常数字 <code>valC</code>，而对于其他指令来说则是 <code>valP</code>。</p>
+<p>但不幸的是，如果取出的指令是条件转移指令 cmovXX，则必须等到执行阶段完成才能确定下一条指令的地址。类似地，如果取出的指令是返回指令 ret，则要等到访存结束后才能确定下一条指令的地址。</p>
+<p>CPU 对于 ret 的处理比较简单，即 <span class="p red">流水线必须暂停直到 ret 指令访存结束。</span>而对于 cmovXX，则会进行分支预测以提高 CPU 的执行效率。</p>
+<h2 id="cpu-分支预测"><a class="markdownIt-Anchor" href="#cpu-分支预测"></a> CPU 分支预测</h2>
+<p>具体来说，CPU 既可以预测选择了分支，也可以预测没有选择分支，然后按照所预测的方向继续往下执行。当然，预测终归只是预测，必然会有错误的情况发生。如果错误的分支预测经常发生，那么性能损失就会显著增加。因为当这样的事件发生时，CPU 已经取出并执行了部分错误的指令，因此需要清除掉所有这些错误的指令，同时还需要用来自正确分支的指令填充流水线。 <span class="p red">通常，现代 CPU 会因分支预测错误而遭受 10-20 个周期的惩罚。</span></p>
+<p>如今，处理器非常擅长预测分支结果，不仅可以遵循静态预测规则，还可以检测动态模式。通常，分支预测器会采用后者。</p>
+<p class='div-border blue left'> <b>静态分支预测</b>：由编译器来决定哪个分支可能被 CPU 命中。一般会选择第一个分支，即 if 后面的逻辑，而不是 else 后面的逻辑。</br><b>动态分支预测</b>：在运行期间决定预测结果。它会在 CPU 硬件中开辟一块缓存，专门记录每个分支最近几次的命中情况，然后做出预测。</p>
+<p>通用来说，应用程序的错误预测率在 5%-10% 的范围是正常的，如果该指标高于 10% 就要引起注意了。</p>
+<h2 id="摆脱分支预测错误的方式"><a class="markdownIt-Anchor" href="#摆脱分支预测错误的方式"></a> 摆脱分支预测错误的方式</h2>
+<p><span class="p red">为了摆脱分支预测错误，最直接的方法就是摆脱分支本身。</span>接下来就介绍两种摆脱分支的方式。</p>
+<h3 id="1-用查找表替换分支"><a class="markdownIt-Anchor" href="#1-用查找表替换分支"></a> 1. 用查找表替换分支</h3>
+<p>通过查找表可以避免频繁的分支。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">0</span> &amp;&amp; v &lt; <span class="number">10</span>)   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">10</span> &amp;&amp; v &lt; <span class="number">20</span>)  <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">20</span> &amp;&amp; v &lt; <span class="number">30</span>)  <span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">30</span> &amp;&amp; v &lt; <span class="number">40</span>)  <span class="keyword">return</span> <span class="number">3</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">40</span> &amp;&amp; v &lt; <span class="number">50</span>)  <span class="keyword">return</span> <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码中存在许多分支，这些分支可能具有很高的错误预测率。</p>
+<p>我们可以使用数组查找来重写该函数，这样函数的汇编代码应该只有一个分支而不是多个分支。此外，buckets 数组相对较小，因此我们可以期望它驻留在 CPU 缓存中，从而能够对其进行快速访问：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 查找表版本</span></span><br><span class="line"><span class="type">int</span> buckets[<span class="number">256</span>] = &#123;</span><br><span class="line">     <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,</span><br><span class="line">     <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,</span><br><span class="line">     <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,</span><br><span class="line">     <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,</span><br><span class="line">     <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,</span><br><span class="line">    <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>,</span><br><span class="line">    <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>,</span><br><span class="line">    ... &#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(v &lt; (<span class="keyword">sizeof</span>(buckets) / <span class="keyword">sizeof</span>(<span class="type">int</span>)))</span><br><span class="line">    	<span class="keyword">return</span> buckets[v];</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果我们需要映射更大范围的值，分配一个非常大的数组是不切实际的。在这种情况下，可以使用 interval map 数据结构，以使用更少的内存和对数级的查找复杂度来实现该目标。</p>
+<h3 id="2-用谓词替换分支"><a class="markdownIt-Anchor" href="#2-用谓词替换分支"></a> 2. 用谓词替换分支</h3>
+<p>通过执行分支的两个部分，然后选择正确的结果，可以有效地消除一些分支。 如果 if 分支有非常多的错误预测，可以尝试通过这种方式来消除分支。例如：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 原始版本</span></span><br><span class="line"><span class="type">int</span> a;</span><br><span class="line"><span class="keyword">if</span>(cond) &#123; <span class="comment">// 假设分支有较高的错误预测率</span></span><br><span class="line">    a = computeX();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    a = computeY();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 原始汇编版本</span></span><br><span class="line"><span class="attr">400504:</span> 	<span class="string">test</span>	<span class="string">%edi,</span> <span class="string">%edi</span>	<span class="comment"># 要在执行阶段完成后才能知道结果</span></span><br><span class="line"><span class="attr">400506:</span> 	<span class="string">je</span>	<span class="string">$400514</span></span><br><span class="line"><span class="attr">400508:</span> 	<span class="string">mov</span>	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">40050d:</span> 	<span class="string">call</span>	<span class="string">&lt;computeX&gt;</span></span><br><span class="line"><span class="attr">400512:</span> 	<span class="string">jmp</span>	<span class="string">$40051e</span></span><br><span class="line"><span class="attr">400514:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">400519:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeY&gt;</span></span><br><span class="line"><span class="attr">40051e:</span> 	<span class="string">mov</span> 	<span class="string">%eax,</span> <span class="string">%edi</span></span><br></pre></td></tr></table></figure>
+<p>用谓词替换分支后：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 无分支版本</span></span><br><span class="line"><span class="type">int</span> x = computeX();</span><br><span class="line"><span class="type">int</span> y = computeY();</span><br><span class="line"><span class="type">int</span> a = cond ? x : y;</span><br></pre></td></tr></table></figure>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 无分支汇编版本</span></span><br><span class="line"><span class="attr">400537:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">40053c:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeX&gt;</span></span><br><span class="line"><span class="attr">400541:</span> 	<span class="string">mov</span> 	<span class="string">%eax,</span> <span class="string">%ebp</span></span><br><span class="line"><span class="attr">400543:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">400548:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeY&gt;</span></span><br><span class="line"><span class="attr">40054d:</span> 	<span class="string">test</span> 	<span class="string">%ebx,</span> <span class="string">%ebx</span></span><br><span class="line"><span class="attr">40054f:</span> 	<span class="string">cmovne</span>	<span class="string">%ebp,</span> <span class="string">%eax</span>	<span class="comment"># 要在执行阶段完成后才能知道结果</span></span><br></pre></td></tr></table></figure>
+<p>在无分支版本中，编译器能够去除分支并生成 cmovne 指令来替代。</p>
+<blockquote>
+<p>这里大家可能会有疑问：无分支汇编版本中的 <code>cmovne</code>（第 8 行）跟原始汇编版本中的 <code>test</code>（第 2 行）一样，都是要等到执行阶段完成后才能确定下一条指令的地址，那为什么无分支版本的效率会更高呢？</p>
+<p>在当前示例中，<code>test</code> 后面还有很多依赖其结果的指令，它们都会阻塞起来等待其执行完成；而 <code>cmovne</code> 并没有阻塞后续指令，因此它的执行效率会更高。</p>
+</blockquote>
+<h2 id="消除分支的负面影响"><a class="markdownIt-Anchor" href="#消除分支的负面影响"></a> 消除分支的负面影响</h2>
+<p>在上述无分支版本的示例中，x 和 y 都是独立计算的，然后只选择其中一个值。<span class="p red">虽然这种转换消除了分支错误预测的惩罚，但它会比原始代码做更多的工作。</span></p>
+<p>在这种情况下，性能改进在很大程度上取决于 computeX() 和 computeY() 函数的特性。如果函数很小并且编译器能够内联它们，它可能会带来显著的性能优势；但 <span class="p red">如果函数很大，两个函数都去执行的开销就会比分支预测错误的开销更大。</span></p>
+<p>此外，<span class="p red">消除分支还会限制 CPU 的并行执行能力。</span></p>
+<p>对于原始版本中的代码片段，CPU 可以根据分支预测器选择 if 分支，并使用 <code>a = computeX()</code> 来推测执行。如果后续有指令要用 <code>a</code> 来索引数组元素，那么在知道 if 分支的真实结果之前就可以发出此加载（即直接使用分支预测所计算出的 <code>a</code> 的值。因为分支预测只需选择一个分支然后向下执行即可，而不需要计算出所有情况）。</p>
+<p>而对于无分支版本中的代码，这种推测是不可能的，因为 CPU 无法在 <code>cmovne</code> 指令完成之前发出使用 <code>a</code> 的加载（无分支版本需要计算出所有情况，并且在最终执行完 <code>cmovne</code> 指令后才能确定 <code>a</code> 的值到底属于哪种情况）。</p>
+<h2 id="何时选择无分支版本"><a class="markdownIt-Anchor" href="#何时选择无分支版本"></a> 何时选择无分支版本</h2>
+<p>在代码的原始版本和无分支版本之间进行权衡的典型例子是 <strong>二分查找</strong>。</p>
+<ul>
+<li>
+<p><span class="p red">对于不适合 CPU 缓存的大型数组的查找，基于分支的二分查找版本的性能更好。</span>因为与内存访问的延迟（cache 未命中会导致较高的延迟，无分支版本可能会有更多的 cache 不命中）相比，分支预测错误的代价较低。由于存在分支，CPU 可以推测它们的结果，从而同时加载当前迭代和下一次迭代中的数组元素。</p>
+</li>
+<li>
+<p><span class="p red">对于适合 CPU 缓存的小型数组的查找，情况则正好相反。</span>由于数组适合 CPU 缓存，因此加载延迟很小（只有几个周期）。而基于分支的二分查找可能会遭受持续的错误预测（对于二分查找一旦预测错误，后续所有的预测一定都是错的），惩罚约为 20 个周期。在这种情况下，错误预测的代价远远大于内存访问的代价，从而大大削弱了推测执行的优势。在这种情况下，无分支版本通常会更快。</p>
+</li>
+</ul>
+<p>二分查找是一个很好的例子，说明了如何在基础版本和无分支版本之间进行选择。但现实情况可能很难分析，因此，需要通过测试来确定在特定场景中替换分支是否有益。</p>
+<h2 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h2>
+<ul>
+<li>现代处理器非常擅长预测分支结果，因此 <strong>建议仅在错误预测率较高时再去修复分支错误预测的工作</strong>。</li>
+<li>当 CPU 分支预测错误率较高时，应用程序的性能可能会受到影响。在这种情况下，算法的无分支版本可能会更好，因此可以考虑通过 <strong>查找表</strong> 和 <strong>谓词</strong> 来替换分支。</li>
+<li><strong>无分支算法并非总是有益的</strong>，要通过测试来确定是否适合特定场景。</li>
+</ul>
+</br>
+<div class="note info flat"><p><span class="p blue">以上内容主要参考自『Performance Analysis and Tuning on Modern CPUs』</span></p>
+</div>]]></content>
+      <categories>
+        <category>读书笔记 - CSAPP</category>
+      </categories>
+      <tags>
+        <tag>分支消除</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>CPU流水线的各个阶段到底做了什么</title>
+    <url>/posts/3931262747.html</url>
+    <content><![CDATA[<p>我们在学习 CPU 处理机制的时候，为了便于理解，都会从 <strong>顺序执行</strong>（Sequential）的处理器开始介绍。对于顺序执行的 CPU，每个时钟周期都要处理一条完整的指令，这是一个漫长的过程，因此时钟频率会低到让人难以接受。为了提升 CPU 的性能，便引入了流水线技术。</p>
+<p class='div-border blue left'>可即便使用了流水线，顺序执行的 CPU 的处理效率仍然无法满足我们的现实需要，因此现代处理器都是 <b>乱序执行</b>（Out-of-Order）的。</br>乱序执行即指令的执行并非按照程序中指令的原始顺序，而是后面的指令有可能会先于前面的指令执行。当然，为了保证程序的正确性，乱序执行必须保证与顺序执行相同的执行结果。</p>
+<p>通常来说，处理一条指令包括很多操作，将它们组织成一个特殊的序列，就能设计出一个充分利用每个硬件的处理器。CPU 流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新 PC 寄存器。这些阶段的划分已是老生常谈，但每个阶段具体都做了什么，却跟我之前的理解有着严重的偏差。比如：</p>
+<ul>
+<li><span class="p red">取指阶段就只是单纯地从 PC 寄存器取出指令吗？</span></li>
+<li><span class="p red">译码阶段是要对取出的机器指令进行翻译吗？</span></li>
+<li><span class="p red">执行阶段好像是最简单的，就是执行程序逻辑中的主体运算，但真的就只有这一种情况吗？</span></li>
+<li><span class="p red">访存就是访问 DRAM 内存吗？</span></li>
+<li><span class="p red">写回是将修改后的值重新写回到内存吗？</span></li>
+</ul>
+<p>当然这些答案都是否定的，接下来我将通过各种类型的指令来详细介绍 CPU 流水线的各个阶段。</p>
+<p>为了彻底搞清楚 CPU 对这些指令的处理过程，首先需要了解这些 <code>Y86-64</code> 指令的编码格式：</p>
+<p><img src="https://img.gejiba.com/images/9cfcac8bb960fb57bda358842cf65826.webp" alt="Y86-64" /></p>
+<p>可以看到指令编码长度从 1 字节到 10 字节不等。其中：</p>
+<p>第 1 个字节表示操作码（icode : ifun），根据第 1 个字节就能知道指令的类型，进而知道有没有操作数，以及有几个操作数。图中 <code>fn</code> 用来表示该条指令是整数操作（OPq）、数据传送条件（cmovXX）或是分支条件（jXX）。</p>
+<p>第 2 个字节表示操作数（rA : rB），对于那些只需要一个寄存器操作数的指令（irmovq、pushq 和 popq），将另一个寄存器指示符设置为十六进制数 <code>F</code>。</p>
+<p>剩余 8 个字节表示立即数（irmovq 中的 <code>V</code>）、地址偏移量（rmmovq 与 mrmovq 中的 <code>D</code>）或是目标地址（jXX 与 call 中的 <code>Dest</code>）。</p>
+<p>背景知识介绍差不多了，接下来我们就进入正题！</p>
+<h2 id="opq-rrmovq-与-irmovq"><a class="markdownIt-Anchor" href="#opq-rrmovq-与-irmovq"></a> OPq、rrmovq 与 irmovq</h2>
+<p><img src="https://img.gejiba.com/images/8f1a06dd51324402e831fdfa77d93088.webp" alt="OPq&amp;rrmovq&amp;irmovq" /></p>
+<p>图中 <span class="p red">M<sub>n</sub>[X]</span> 表示访问内存位置 <code>X</code> 处的 <code>n</code> 个字节，下同。</p>
+<p>可以看到，<strong>取指阶段</strong> 根据 PC 寄存器中所保存的地址从内存中取出指令，同时还解析出了指令的操作码和操作数，以及当前指令的长度，并且根据该长度计算出了下一条指令的地址 <code>valP</code>。</p>
+<p><strong>译码阶段</strong> 从寄存器文件中读取最多两个操作数。而 irmovq 指令是将立即数读入到寄存器，不涉及对寄存器的读取，因此该指令在译码阶段不执行任何操作。</p>
+<p><strong>执行阶段</strong> 由 ALU 执行指令指明的操作，当只有一个操作数时，将第二个操作数设为 0。这个过程可能需要设置条件码（<code>set CC</code>）。</p>
+<p>由于这三类指令均未涉及到内存操作，因此在 <strong>访存阶段</strong> 不执行任何操作。</p>
+<p><strong>写回阶段</strong> 将执行阶段得到的结果写回到目的寄存器，最后 <strong>更新 PC 寄存器</strong>。</p>
+<h2 id="rmmovq-与-mrmovq"><a class="markdownIt-Anchor" href="#rmmovq-与-mrmovq"></a> rmmovq 与 mrmovq</h2>
+<p><img src="https://img.gejiba.com/images/186a2f5d3d11a529447ab9046504c0dc.webp" alt="rmmovq&amp;mrmovq" /></p>
+<p>这里的 <code>D</code> 表示地址偏移量，例如 <code>rmmovq %rsp,100(%rbx)</code>，表示将 %rsp 寄存器中的值放到内存中，内存地址是 %rbx 寄存器中的值加上 100。</p>
+<p>这里的 <strong>执行阶段</strong> 计算的是内存地址。</p>
+<p><strong>访存阶段</strong> 将值写入内存或者从内存中读出某个值。</p>
+<p>由于 rmmovq 的不涉及到对目的寄存器的写，因此在 <strong>写回阶段</strong> 该指令不执行任何操作。</p>
+<p>其余阶段中相同的操作这里不再赘述，下同。</p>
+<h2 id="pushq-与-popq"><a class="markdownIt-Anchor" href="#pushq-与-popq"></a> pushq 与 popq</h2>
+<p><img src="https://img.gejiba.com/images/0ed95a00e91e504ff8ee2a6b780504eb.webp" alt="pushq&amp;popq" /></p>
+<p><strong>译码阶段</strong> 除了要读取指定寄存器中的操作数，还要读取栈顶指针的值。</p>
+<p><strong>执行阶段</strong> 计算栈顶指针移动后的地址，该地址就是将要访问的内存地址。</p>
+<p><strong>写回阶段</strong> 除了将结果写回目的寄存器外，还要更新栈顶指针的位置。</p>
+<h2 id="jxx-call-与-ret"><a class="markdownIt-Anchor" href="#jxx-call-与-ret"></a> jXX、call 与 ret</h2>
+<p><img src="https://img.gejiba.com/images/6f15acef0a82abde1779d52ca2104e86.webp" alt="jXX&amp;call&amp;ret" /></p>
+<p>call 和 ret 指令类似于 pushq 和 popq。call 指令会将下一条指令的地址压入栈中（<strong>访存</strong>），然后将调用的目的地址 <code>valC</code> 作为下一条执行指令的地址（<strong>更新 PC</strong>）。ret 指令将从栈顶弹出的地址 <code>valM</code> 作为下一条执行指令的地址（<strong>更新 PC</strong>），并且由 call 可知，这条指令其实就是 call 指令后面紧跟的那条指令，表示在函数调用返回后继续往下执行。</p>
+<p>jXX 指令在 <strong>执行阶段</strong> 会计算是否满足跳转条件。</p>
+<p><strong>更新 PC 阶段</strong> 将根据分支条件设置下一条指令的地址。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>处理一条指令可以划分成以下几个阶段，这些阶段不一定都会执行，与具体的指令类型有关。</p>
+<ul>
+<li><strong>取指</strong>（Fetch）：从内存中读取指令，地址为 PC 寄存器的值。同时还会解析指令的操作码（指令类型）和操作数（寄存器指示符 rA/rB，可能还有常数），并计算出顺序执行时下一条指令的地址，该地址等于 PC 的值加上当前指令的长度。</li>
+<li><strong>译码</strong>（Decode）：根据寄存器指示符从相应的寄存器文件中读入最多两个操作数，有时候需要读取 %rsp 寄存器所保存的地址。</li>
+<li><strong>执行</strong>（Execute）：根据操作码类型，这个阶段可能执行的操作包括：执行指令指明的操作（可能还会设置条件码）；计算内存引用的有效地址；增加或减少栈指针；检验条件码和传送条件是否成立（条件传送指令 cmovXX）；决定是否选择分支（跳转指令）。</li>
+<li><strong>访存</strong>（Memory）：从内存读取数据，或者将数据写入内存。</li>
+<li><strong>写回</strong>（Write back）：最多可以将两个结果写到寄存器文件，包括写回指令中指定的目的寄存器，以及 %rsp 寄存器（更新栈顶指针的位置）。</li>
+<li><strong>更新 PC</strong>（PC update）：将 PC 寄存器设置成下一条指令的地址。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>读书笔记 - CSAPP</category>
+      </categories>
+      <tags>
+        <tag>CPU流水线</tag>
+      </tags>
   </entry>
   <entry>
     <title>看懂简单的汇编代码</title>
@@ -283,345 +573,53 @@
       </tags>
   </entry>
   <entry>
-    <title>CPU流水线的各个阶段到底做了什么</title>
-    <url>/posts/3931262747.html</url>
-    <content><![CDATA[<p>我们在学习 CPU 处理机制的时候，为了便于理解，都会从 <strong>顺序执行</strong>（Sequential）的处理器开始介绍。对于顺序执行的 CPU，每个时钟周期都要处理一条完整的指令，这是一个漫长的过程，因此时钟频率会低到让人难以接受。为了提升 CPU 的性能，便引入了流水线技术。</p>
-<p class='div-border blue left'>可即便使用了流水线，顺序执行的 CPU 的处理效率仍然无法满足我们的现实需要，因此现代处理器都是 <b>乱序执行</b>（Out-of-Order）的。</br>乱序执行即指令的执行并非按照程序中指令的原始顺序，而是后面的指令有可能会先于前面的指令执行。当然，为了保证程序的正确性，乱序执行必须保证与顺序执行相同的执行结果。</p>
-<p>通常来说，处理一条指令包括很多操作，将它们组织成一个特殊的序列，就能设计出一个充分利用每个硬件的处理器。CPU 流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新 PC 寄存器。这些阶段的划分已是老生常谈，但每个阶段具体都做了什么，却跟我之前的理解有着严重的偏差。比如：</p>
+    <title>计算机系统漫游</title>
+    <url>/posts/4223884717.html</url>
+    <content><![CDATA[<h1 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h1>
+<p>《深入理解计算机系统-CSAPP》是计算机领域的圣经✨之前翻看过两三次，不过由于平时在实验室一直都有各种事情牵扯时间跟精力，每次阅读都近乎走马观花。</p>
+<p>最近论文送审之后终于有了充足的时间，于是便静下心来重新读了一遍。对于其中一些晦涩难懂且意义不大（个人愚见）的知识点（如浮点数的表示和运算、存储器山等等）本人并未细究，这里仅对自己之前没有完全掌握，或者易忘易混淆的知识点做个记录📝方便日后查阅。</p>
+<p>在整理了部分内容之后我发现整体架构看起来依然有些零散，没有逻辑主线💥事实上我也确实是从 <code>hello.c</code> 程序编译的各个过程中发散出来的小的知识点。</p>
+<p>为了使介绍能够更加聚焦，后续内容我决定采用问答的形式，然后从回答中抽取关键字来“浅挖”其原理和细节。能力一般，水平有限，所有内容仅仅是个人的一些粗浅的理解，之后我会尽量多读相关书籍来修正和完善这些内容🚩</p>
+<p>『计算机系统漫游』部分主要是对全书中我比较感兴趣的部分做一个粗略的介绍，其中每个 <span class="inline-tag blue">蓝色小标签</span> 中的内容（包括但不限于此）都将是后续博客中进一步展开介绍的对象~~</p>
+<h2 id="从hello-world开始"><a class="markdownIt-Anchor" href="#从hello-world开始"></a> 从Hello World开始</h2>
+<p><img src="https://img.gejiba.com/images/2df68f1e0cc0ea3c4bd7722f0b09e509.webp" alt="Hello World编译过程" /></p>
+<h2 id="文本文件与二进制文件"><a class="markdownIt-Anchor" href="#文本文件与二进制文件"></a> 文本文件与二进制文件</h2>
+<p>我们所编写的 <code>hello.c</code> 程序属于文本文件，经过编译后生成的可执行文件是二进制文件。它们最终在物理内存上都是以二进制形式保存的，因此二者的主要区别是逻辑上的而不是物理上的：</p>
 <ul>
-<li><span class="p red">取指阶段就只是单纯地从 PC 寄存器取出指令吗？</span></li>
-<li><span class="p red">译码阶段是要对取出的机器指令进行翻译吗？</span></li>
-<li><span class="p red">执行阶段好像是最简单的，就是执行程序逻辑中的主体运算，但真的就只有这一种情况吗？</span></li>
-<li><span class="p red">访存就是访问 DRAM 内存吗？</span></li>
-<li><span class="p red">写回是将修改后的值重新写回到内存吗？</span></li>
+<li>
+<p>文本文件：基于字符编码，如ASCII、Unicode等，每个值都有固定的Size。</p>
+</li>
+<li>
+<p>二进制文件：基于值编码，没有固定的Size，实际上就是把值在物理内存上的原始二进制形式。</p>
+</li>
 </ul>
-<p>当然这些答案都是否定的，接下来我将通过各种类型的指令来详细介绍 CPU 流水线的各个阶段。</p>
-<p>为了彻底搞清楚 CPU 对这些指令的处理过程，首先需要了解这些 <code>Y86-64</code> 指令的编码格式：</p>
-<p><img src="https://img.gejiba.com/images/9cfcac8bb960fb57bda358842cf65826.webp" alt="Y86-64" /></p>
-<p>可以看到指令编码长度从 1 字节到 10 字节不等。其中：</p>
-<p>第 1 个字节表示操作码（icode : ifun），根据第 1 个字节就能知道指令的类型，进而知道有没有操作数，以及有几个操作数。图中 <code>fn</code> 用来表示该条指令是整数操作（OPq）、数据传送条件（cmovXX）或是分支条件（jXX）。</p>
-<p>第 2 个字节表示操作数（rA : rB），对于那些只需要一个寄存器操作数的指令（irmovq、pushq 和 popq），将另一个寄存器指示符设置为十六进制数 <code>F</code>。</p>
-<p>剩余 8 个字节表示立即数（irmovq 中的 <code>V</code>）、地址偏移量（rmmovq 与 mrmovq 中的 <code>D</code>）或是目标地址（jXX 与 call 中的 <code>Dest</code>）。</p>
-<p>背景知识介绍差不多了，接下来我们就进入正题！</p>
-<h2 id="opq-rrmovq-与-irmovq"><a class="markdownIt-Anchor" href="#opq-rrmovq-与-irmovq"></a> OPq、rrmovq 与 irmovq</h2>
-<p><img src="https://img.gejiba.com/images/8f1a06dd51324402e831fdfa77d93088.webp" alt="OPq&amp;rrmovq&amp;irmovq" /></p>
-<p>图中 <span class="p red">M<sub>n</sub>[X]</span> 表示访问内存位置 <code>X</code> 处的 <code>n</code> 个字节，下同。</p>
-<p>可以看到，<strong>取指阶段</strong> 根据 PC 寄存器中所保存的地址从内存中取出指令，同时还解析出了指令的操作码和操作数，以及当前指令的长度，并且根据该长度计算出了下一条指令的地址 <code>valP</code>。</p>
-<p><strong>译码阶段</strong> 从寄存器文件中读取最多两个操作数。而 irmovq 指令是将立即数读入到寄存器，不涉及对寄存器的读取，因此该指令在译码阶段不执行任何操作。</p>
-<p><strong>执行阶段</strong> 由 ALU 执行指令指明的操作，当只有一个操作数时，将第二个操作数设为 0。这个过程可能需要设置条件码（<code>set CC</code>）。</p>
-<p>由于这三类指令均未涉及到内存操作，因此在 <strong>访存阶段</strong> 不执行任何操作。</p>
-<p><strong>写回阶段</strong> 将执行阶段得到的结果写回到目的寄存器，最后 <strong>更新 PC 寄存器</strong>。</p>
-<h2 id="rmmovq-与-mrmovq"><a class="markdownIt-Anchor" href="#rmmovq-与-mrmovq"></a> rmmovq 与 mrmovq</h2>
-<p><img src="https://img.gejiba.com/images/186a2f5d3d11a529447ab9046504c0dc.webp" alt="rmmovq&amp;mrmovq" /></p>
-<p>这里的 <code>D</code> 表示地址偏移量，例如 <code>rmmovq %rsp,100(%rbx)</code>，表示将 %rsp 寄存器中的值放到内存中，内存地址是 %rbx 寄存器中的值加上 100。</p>
-<p>这里的 <strong>执行阶段</strong> 计算的是内存地址。</p>
-<p><strong>访存阶段</strong> 将值写入内存或者从内存中读出某个值。</p>
-<p>由于 rmmovq 的不涉及到对目的寄存器的写，因此在 <strong>写回阶段</strong> 该指令不执行任何操作。</p>
-<p>其余阶段中相同的操作这里不再赘述，下同。</p>
-<h2 id="pushq-与-popq"><a class="markdownIt-Anchor" href="#pushq-与-popq"></a> pushq 与 popq</h2>
-<p><img src="https://img.gejiba.com/images/0ed95a00e91e504ff8ee2a6b780504eb.webp" alt="pushq&amp;popq" /></p>
-<p><strong>译码阶段</strong> 除了要读取指定寄存器中的操作数，还要读取栈顶指针的值。</p>
-<p><strong>执行阶段</strong> 计算栈顶指针移动后的地址，该地址就是将要访问的内存地址。</p>
-<p><strong>写回阶段</strong> 除了将结果写回目的寄存器外，还要更新栈顶指针的位置。</p>
-<h2 id="jxx-call-与-ret"><a class="markdownIt-Anchor" href="#jxx-call-与-ret"></a> jXX、call 与 ret</h2>
-<p><img src="https://img.gejiba.com/images/6f15acef0a82abde1779d52ca2104e86.webp" alt="jXX&amp;call&amp;ret" /></p>
-<p>call 和 ret 指令类似于 pushq 和 popq。call 指令会将下一条指令的地址压入栈中（<strong>访存</strong>），然后将调用的目的地址 <code>valC</code> 作为下一条执行指令的地址（<strong>更新 PC</strong>）。ret 指令将从栈顶弹出的地址 <code>valM</code> 作为下一条执行指令的地址（<strong>更新 PC</strong>），并且由 call 可知，这条指令其实就是 call 指令后面紧跟的那条指令，表示在函数调用返回后继续往下执行。</p>
-<p>jXX 指令在 <strong>执行阶段</strong> 会计算是否满足跳转条件。</p>
-<p><strong>更新 PC 阶段</strong> 将根据分支条件设置下一条指令的地址。</p>
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>处理一条指令可以划分成以下几个阶段，这些阶段不一定都会执行，与具体的指令类型有关。</p>
+<p>比如 <code>\n</code> 在文本文件中是换行符，而在二进制文件中会被认为是 <code>\</code> 和 <code>n</code> 两个字符。</p>
+<h2 id="原码-反码和补码"><a class="markdownIt-Anchor" href="#原码-反码和补码"></a> 原码、反码和补码</h2>
+<p>有符号数的表示方法有三种，分别是原码、反码和补码，它们都是用最高位的 <code>0</code> 和 <code>1</code> 来区分正负。对于正数，三者的表示都是一致的，即该数的二进制表示，主要区别是在负数上。例如 <code>15</code> 的二进制表示为 <code>0000 1111</code>，而对于 <code>-15</code>：</p>
 <ul>
-<li><strong>取指</strong>（Fetch）：从内存中读取指令，地址为 PC 寄存器的值。同时还会解析指令的操作码（指令类型）和操作数（寄存器指示符 rA/rB，可能还有常数），并计算出顺序执行时下一条指令的地址，该地址等于 PC 的值加上当前指令的长度。</li>
-<li><strong>译码</strong>（Decode）：根据寄存器指示符从相应的寄存器文件中读入最多两个操作数，有时候需要读取 %rsp 寄存器所保存的地址。</li>
-<li><strong>执行</strong>（Execute）：根据操作码类型，这个阶段可能执行的操作包括：执行指令指明的操作（可能还会设置条件码）；计算内存引用的有效地址；增加或减少栈指针；检验条件码和传送条件是否成立（条件传送指令 cmovXX）；决定是否选择分支（跳转指令）。</li>
-<li><strong>访存</strong>（Memory）：从内存读取数据，或者将数据写入内存。</li>
-<li><strong>写回</strong>（Write back）：最多可以将两个结果写到寄存器文件，包括写回指令中指定的目的寄存器，以及 %rsp 寄存器（更新栈顶指针的位置）。</li>
-<li><strong>更新 PC</strong>（PC update）：将 PC 寄存器设置成下一条指令的地址。</li>
+<li>原码：<code>1000 1111</code> 符号位 + 二进制表示</li>
+<li>反码：<code>1111 0000</code> 在原码基础上，除符号位外全部取反</li>
+<li>补码：<code>1111 0001</code> 反码 + 1</li>
 </ul>
+<p>在计算机中，有符号数是用补码来表示的。之所以不用另外两种编码方式，是因为对于数字 <code>0</code>，二者都有两种不同的编码方式，分别是 <code>+0</code> 和 <code>-0</code>，而补码则不存在这种问题。</p>
+<h2 id="汇编程序与机器指令"><a class="markdownIt-Anchor" href="#汇编程序与机器指令"></a> 汇编程序与机器指令</h2>
+<p>高级语言编写的程序可以在很多不同的机器上编译运行，生成该机器所支持的 <span class="inline-tag blue">机器指令</span>。 <span class="inline-tag blue">汇编程序</span> 是机器指令的文本表示，在不同指令级架构的机器上有不同的表现形式，这也就解释了为什么最终生成的可执行目标文件一般都不能跨平台执行。</p>
+<p>Java之所以能够跨平台（一次编译多次运行），是因为它并不是直接运行在CPU上的，而是生成字节码（.class）文件后由 JVM 统一执行。此时JVM有两种选择：一种是使用 Java 解释器解释执行，另一种是使用 JIT 编译器将字节码转化为本地机器指令。</p>
+<p>二者的区别在于，前者启动速度快但运行速度慢，后者启动速度慢但运行速度快。这是因为解释器不需要像 JIT 编译器一样，将所有字节码都转化为机器指令，自然就省去了优化的时间。而当 JIT 编译器完成第一次编译后会将字节码对应的机器指令保存下来，下次可以直接使用。由于机器指令的执行效率要高于 Java 解释器，所以在实际情况中，为了速度和效率，通常采用两者相结合的方式。</p>
+<h2 id="可重定位文件与可执行文件"><a class="markdownIt-Anchor" href="#可重定位文件与可执行文件"></a> 可重定位文件与可执行文件</h2>
+<p>如果想让代码运行，那么生成的目标代码中的每个符号（函数或变量）的地址都应该是确定的。事实上，在汇编阶段，只有跟源代码在同一个模块中的符号地址能确定下来，而定义在其他模块中的全局变量和函数的地址要在链接的时候才能确定。编译器在没法确定地址的情况下，会先将其置为 0，等到链接的时候再去修正它们，这个过程就是<span class="inline-tag blue">重定位</span>。因此很自然地，在链接之前（汇编阶段）生成的目标文件叫做可重定位目标文件，在链接之后生成的目标文件叫做 <span class="inline-tag blue">可执行目标文件</span>。</p>
+<h2 id="静态链接与动态链接"><a class="markdownIt-Anchor" href="#静态链接与动态链接"></a> 静态链接与动态链接</h2>
+<p>链接分为 <span class="inline-tag blue">静态链接</span> 和 <span class="inline-tag blue">动态链接</span>，二者的区别在于：静态链接会把引用到的所有目标文件全部嵌入到可执行文件中，因此生成的是完全可执行的目标文件；动态链接只会链接所引用文件的重定位和符号表信息，因此生成的是部分链接的可执行目标文件，直到运行或加载的时候，才会由动态链接器将物理内存中的共享库的地址与其链接起来。</p>
+<h2 id="cpu流水线划分"><a class="markdownIt-Anchor" href="#cpu流水线划分"></a> CPU流水线划分</h2>
+<p>CPU流水线最经典的划分方式包括：取指、译码、执行、访存、写回、更新PC寄存器。这些阶段看似简单，但有很多细节与我之前的理解存在严重偏差。比如取指阶段就只是单纯地从PC寄存器取出指令吗？译码阶段是要对取出的机器指令进行翻译吗？执行阶段好像是最简单的，就是执行我们程序逻辑中的主体运算，但就只有这一种情况吗？访存就是访问DRAM内存吗？写回是将修改后的值重新写回到内存吗？当然这些答案都是否定的，后续我会详细介绍 <span class="inline-tag blue">CPU流水线</span> 的这几个阶段。</p>
+<h2 id="高速缓存存储器"><a class="markdownIt-Anchor" href="#高速缓存存储器"></a> 高速缓存存储器</h2>
+<p><span class="inline-tag blue">高速缓存</span> 的结构可以用<code>(S, E, B, m)</code>来表示，每个缓存行中还保存了有效位和标记位，方便快速定位目标数据，那具体工作过程是怎样的呢？另外根据<code>E</code>的不同，可以分为直接映射、组相连和全相连的高速缓存，这样划分的目的是什么？各有都有哪些优缺点？每种方式都有自己的应用场景吗？</p>
+<h2 id="物理内存和虚拟内存"><a class="markdownIt-Anchor" href="#物理内存和虚拟内存"></a> 物理内存和虚拟内存</h2>
+<p><span class="inline-tag blue">虚拟内存</span> 并不是虚拟的、非真实存在的内存，而是对磁盘的虚拟化，将内存视为磁盘的高速缓存，在内存空间不足时将磁盘的一块区域划分成虚拟内存，通过与物理内存的换入换出来满足程序运行的需求。有虚拟内存自然就有 <span class="inline-tag blue">虚拟地址</span>，相应地也会有物理地址，它们之间是如何完成映射的？进程的虚拟地址空间是真实存在的吗？是保存在物理内存中的吗？程序请求分配到的内存是物理内存吗？<span class="inline-tag blue">内存分配</span> 后忘记释放内存会怎么样？Java不需要手动释放内存，那它的 <span class="inline-tag blue">垃圾回收</span> 机制是怎么实现的？这些问题我都会在后续博客中一一解答。</p>
 ]]></content>
       <categories>
         <category>读书笔记 - CSAPP</category>
       </categories>
-      <tags>
-        <tag>流水线</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>如何摆脱CPU分支预测错误</title>
-    <url>/posts/2875321003.html</url>
-    <content><![CDATA[<p>现在我们已经知道，CPU 引入流水线的目的就是为了保证每个时钟周期都能发射一条新的指令，从而提升其性能。要做到这一点，就必须在取出当前指令后立马确定下一条指令的位置。</p>
-<p>根据 <a href="https://younghblog.gitee.io/posts/3931262747.html" target="_blank">上一篇</a> 博文可知，大多数指令都可以在取指阶段确定下一条指令的地址，比如对于 call 和 jmp（无条件跳转）指令来说，下一条指令的地址就是指令中的常数字 <code>valC</code>，而对于其他指令来说则是 <code>valP</code>。</p>
-<p>但不幸的是，如果取出的指令是条件转移指令 cmovXX，则必须等到执行阶段完成才能确定下一条指令的地址。类似地，如果取出的指令是返回指令 ret，则要等到访存结束后才能确定下一条指令的地址。</p>
-<p>CPU 对于 ret 的处理比较简单，即 <span class="p red">流水线必须暂停直到 ret 指令访存结束。</span>而对于 cmovXX，则会进行分支预测以提高 CPU 的执行效率。</p>
-<h2 id="cpu-分支预测"><a class="markdownIt-Anchor" href="#cpu-分支预测"></a> CPU 分支预测</h2>
-<p>具体来说，CPU 既可以预测选择了分支，也可以预测没有选择分支，然后按照所预测的方向继续往下执行。当然，预测终归只是预测，必然会有错误的情况发生。如果错误的分支预测经常发生，那么性能损失就会显著增加。因为当这样的事件发生时，CPU 已经取出并执行了部分错误的指令，因此需要清除掉所有这些错误的指令，同时还需要用来自正确分支的指令填充流水线。 <span class="p red">通常，现代 CPU 会因分支预测错误而遭受 10-20 个周期的惩罚。</span></p>
-<p>如今，处理器非常擅长预测分支结果，不仅可以遵循静态预测规则，还可以检测动态模式。通常，分支预测器会采用后者。</p>
-<p class='div-border blue left'> <b>静态分支预测</b>：由编译器来决定哪个分支可能被 CPU 命中。一般会选择第一个分支，即 if 后面的逻辑，而不是 else 后面的逻辑。</br><b>动态分支预测</b>：在运行期间决定预测结果。它会在 CPU 硬件中开辟一块缓存，专门记录每个分支最近几次的命中情况，然后做出预测。</p>
-<p>通用来说，应用程序的错误预测率在 5%-10% 的范围是正常的，如果该指标高于 10% 就要引起注意了。</p>
-<h2 id="摆脱分支预测错误的方式"><a class="markdownIt-Anchor" href="#摆脱分支预测错误的方式"></a> 摆脱分支预测错误的方式</h2>
-<p><span class="p red">为了摆脱分支预测错误，最直接的方法就是摆脱分支本身。</span>接下来就介绍两种摆脱分支的方式。</p>
-<h3 id="1-用查找表替换分支"><a class="markdownIt-Anchor" href="#1-用查找表替换分支"></a> 1. 用查找表替换分支</h3>
-<p>通过查找表可以避免频繁的分支。例如：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">0</span> &amp;&amp; v &lt; <span class="number">10</span>)   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">10</span> &amp;&amp; v &lt; <span class="number">20</span>)  <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">20</span> &amp;&amp; v &lt; <span class="number">30</span>)  <span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">30</span> &amp;&amp; v &lt; <span class="number">40</span>)  <span class="keyword">return</span> <span class="number">3</span>;</span><br><span class="line">    <span class="keyword">if</span>(v &gt;= <span class="number">40</span> &amp;&amp; v &lt; <span class="number">50</span>)  <span class="keyword">return</span> <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上述代码中存在许多分支，这些分支可能具有很高的错误预测率。</p>
-<p>我们可以使用数组查找来重写该函数，这样函数的汇编代码应该只有一个分支而不是多个分支。此外，buckets 数组相对较小，因此我们可以期望它驻留在 CPU 缓存中，从而能够对其进行快速访问：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 查找表版本</span></span><br><span class="line"><span class="type">int</span> buckets[<span class="number">256</span>] = &#123;</span><br><span class="line">     <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,  <span class="number">0</span>,</span><br><span class="line">     <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,  <span class="number">1</span>,</span><br><span class="line">     <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,  <span class="number">2</span>,</span><br><span class="line">     <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,  <span class="number">3</span>,</span><br><span class="line">     <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,  <span class="number">4</span>,</span><br><span class="line">    <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>,</span><br><span class="line">    <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>,</span><br><span class="line">    ... &#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">mapToBucket</span><span class="params">(<span class="type">unsigned</span> v)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(v &lt; (<span class="keyword">sizeof</span>(buckets) / <span class="keyword">sizeof</span>(<span class="type">int</span>)))</span><br><span class="line">    	<span class="keyword">return</span> buckets[v];</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如果我们需要映射更大范围的值，分配一个非常大的数组是不切实际的。在这种情况下，可以使用 interval map 数据结构，以使用更少的内存和对数级的查找复杂度来实现该目标。</p>
-<h3 id="2-用谓词替换分支"><a class="markdownIt-Anchor" href="#2-用谓词替换分支"></a> 2. 用谓词替换分支</h3>
-<p>通过执行分支的两个部分，然后选择正确的结果，可以有效地消除一些分支。 如果 if 分支有非常多的错误预测，可以尝试通过这种方式来消除分支。例如：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 原始版本</span></span><br><span class="line"><span class="type">int</span> a;</span><br><span class="line"><span class="keyword">if</span>(cond) &#123; <span class="comment">// 假设分支有较高的错误预测率</span></span><br><span class="line">    a = computeX();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    a = computeY();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 原始汇编版本</span></span><br><span class="line"><span class="attr">400504:</span> 	<span class="string">test</span>	<span class="string">%edi,</span> <span class="string">%edi</span>	<span class="comment"># 要在执行阶段完成后才能知道结果</span></span><br><span class="line"><span class="attr">400506:</span> 	<span class="string">je</span>	<span class="string">$400514</span></span><br><span class="line"><span class="attr">400508:</span> 	<span class="string">mov</span>	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">40050d:</span> 	<span class="string">call</span>	<span class="string">&lt;computeX&gt;</span></span><br><span class="line"><span class="attr">400512:</span> 	<span class="string">jmp</span>	<span class="string">$40051e</span></span><br><span class="line"><span class="attr">400514:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">400519:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeY&gt;</span></span><br><span class="line"><span class="attr">40051e:</span> 	<span class="string">mov</span> 	<span class="string">%eax,</span> <span class="string">%edi</span></span><br></pre></td></tr></table></figure>
-<p>用谓词替换分支后：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 无分支版本</span></span><br><span class="line"><span class="type">int</span> x = computeX();</span><br><span class="line"><span class="type">int</span> y = computeY();</span><br><span class="line"><span class="type">int</span> a = cond ? x : y;</span><br></pre></td></tr></table></figure>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 无分支汇编版本</span></span><br><span class="line"><span class="attr">400537:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">40053c:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeX&gt;</span></span><br><span class="line"><span class="attr">400541:</span> 	<span class="string">mov</span> 	<span class="string">%eax,</span> <span class="string">%ebp</span></span><br><span class="line"><span class="attr">400543:</span> 	<span class="string">mov</span> 	<span class="string">$0,</span> <span class="string">%eax</span></span><br><span class="line"><span class="attr">400548:</span> 	<span class="string">call</span> 	<span class="string">&lt;computeY&gt;</span></span><br><span class="line"><span class="attr">40054d:</span> 	<span class="string">test</span> 	<span class="string">%ebx,</span> <span class="string">%ebx</span></span><br><span class="line"><span class="attr">40054f:</span> 	<span class="string">cmovne</span>	<span class="string">%ebp,</span> <span class="string">%eax</span>	<span class="comment"># 要在执行阶段完成后才能知道结果</span></span><br></pre></td></tr></table></figure>
-<p>在无分支版本中，编译器能够去除分支并生成 cmovne 指令来替代。</p>
-<blockquote>
-<p>这里大家可能会有疑问：无分支汇编版本中的 <code>cmovne</code>（第 8 行）跟原始汇编版本中的 <code>test</code>（第 2 行）一样，都是要等到执行阶段完成后才能确定下一条指令的地址，那为什么无分支版本的效率会更高呢？</p>
-<p>在当前示例中，<code>test</code> 后面还有很多依赖其结果的指令，它们都会阻塞起来等待其执行完成；而 <code>cmovne</code> 并没有阻塞后续指令，因此它的执行效率会更高。</p>
-</blockquote>
-<h2 id="消除分支的负面影响"><a class="markdownIt-Anchor" href="#消除分支的负面影响"></a> 消除分支的负面影响</h2>
-<p>在上述无分支版本的示例中，x 和 y 都是独立计算的，然后只选择其中一个值。<span class="p red">虽然这种转换消除了分支错误预测的惩罚，但它会比原始代码做更多的工作。</span></p>
-<p>在这种情况下，性能改进在很大程度上取决于 computeX() 和 computeY() 函数的特性。如果函数很小并且编译器能够内联它们，它可能会带来显著的性能优势；但 <span class="p red">如果函数很大，两个函数都去执行的开销就会比分支预测错误的开销更大。</span></p>
-<p>此外，<span class="p red">消除分支还会限制 CPU 的并行执行能力。</span></p>
-<p>对于原始版本中的代码片段，CPU 可以根据分支预测器选择 if 分支，并使用 <code>a = computeX()</code> 来推测执行。如果后续有指令要用 <code>a</code> 来索引数组元素，那么在知道 if 分支的真实结果之前就可以发出此加载（即直接使用分支预测所计算出的 <code>a</code> 的值。因为分支预测只需选择一个分支然后向下执行即可，而不需要计算出所有情况）。</p>
-<p>而对于无分支版本中的代码，这种推测是不可能的，因为 CPU 无法在 <code>cmovne</code> 指令完成之前发出使用 <code>a</code> 的加载（无分支版本需要计算出所有情况，并且在最终执行完 <code>cmovne</code> 指令后才能确定 <code>a</code> 的值到底属于哪种情况）。</p>
-<h2 id="何时选择无分支版本"><a class="markdownIt-Anchor" href="#何时选择无分支版本"></a> 何时选择无分支版本</h2>
-<p>在代码的原始版本和无分支版本之间进行权衡的典型例子是 <strong>二分查找</strong>。</p>
-<ul>
-<li>
-<p><span class="p red">对于不适合 CPU 缓存的大型数组的查找，基于分支的二分查找版本的性能更好。</span>因为与内存访问的延迟（cache 未命中会导致较高的延迟，无分支版本可能会有更多的 cache 不命中）相比，分支预测错误的代价较低。由于存在分支，CPU 可以推测它们的结果，从而同时加载当前迭代和下一次迭代中的数组元素。</p>
-</li>
-<li>
-<p><span class="p red">对于适合 CPU 缓存的小型数组的查找，情况则正好相反。</span>由于数组适合 CPU 缓存，因此加载延迟很小（只有几个周期）。而基于分支的二分查找可能会遭受持续的错误预测（对于二分查找一旦预测错误，后续所有的预测一定都是错的），惩罚约为 20 个周期。在这种情况下，错误预测的代价远远大于内存访问的代价，从而大大削弱了推测执行的优势。在这种情况下，无分支版本通常会更快。</p>
-</li>
-</ul>
-<p>二分查找是一个很好的例子，说明了如何在基础版本和无分支版本之间进行选择。但现实情况可能很难分析，因此，需要通过测试来确定在特定场景中替换分支是否有益。</p>
-<h2 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h2>
-<ul>
-<li>现代处理器非常擅长预测分支结果，因此 <strong>建议仅在错误预测率较高时再去修复分支错误预测的工作</strong>。</li>
-<li>当 CPU 分支预测错误率较高时，应用程序的性能可能会受到影响。在这种情况下，算法的无分支版本可能会更好，因此可以考虑通过 <strong>查找表</strong> 和 <strong>谓词</strong> 来替换分支。</li>
-<li><strong>无分支算法并非总是有益的</strong>，要通过测试来确定是否适合特定场景。</li>
-</ul>
-</br>
-<div class="note info flat"><p><span class="p blue">以上内容主要参考自『Performance Analysis and Tuning on Modern CPUs』</span></p>
-</div>]]></content>
-      <categories>
-        <category>读书笔记 - CSAPP</category>
-      </categories>
-      <tags>
-        <tag>分支预测</tag>
-        <tag>分支消除</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>如何保证CPU的缓存一致性</title>
-    <url>/posts/921523538.html</url>
-    <content><![CDATA[<p>当 CPU 中的某个核要对内存中的数据进行修改时，会先将其缓存到 cache 中，然后再去修改。此时由于修改后的数据尚未写回到内存，如果其他核要去访问这个数据，就会读到修改之前的数据，这就是 <strong>缓存一致性问题</strong>。对此有两种解决方式：</p>
-<h2 id="对总线加锁"><a class="markdownIt-Anchor" href="#对总线加锁"></a> 对总线加锁</h2>
-<p>CPU 和其他组件都是通过 <strong>总线</strong>（数据总线、控制总线、地址总线）进行通信的，因此通过对总线加锁就可以保证只有一个核获取到锁，而其他核都处于阻塞状态。这样虽然保证了数据的一致性，但也严重影响了 CPU 的执行效率。</p>
-<h2 id="使用缓存一致性协议-mesi"><a class="markdownIt-Anchor" href="#使用缓存一致性协议-mesi"></a> 使用缓存一致性协议 MESI</h2>
-<p>该协议只对单个缓存行加锁，因此不会影响到内存中其他数据的读写，这样就可以保证执行效率。</p>
-<p><strong>MESI</strong> 每个字母对应一种状态：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">状态</th>
-<th style="text-align:center">含义</th>
-<th style="text-align:center">描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">M（Modified）</td>
-<td style="text-align:center">修改</td>
-<td style="text-align:center">缓存行中的数据已被修改，与内存中的数据不一致，并且该数据只存在于本地 cache 中（即只存在于当前核的 cache 中）</td>
-</tr>
-<tr>
-<td style="text-align:center">E（Exclusive）</td>
-<td style="text-align:center">独享、互斥</td>
-<td style="text-align:center">缓存行中的数据与内存中的数据一致，并且该数据只存在于本地 cache 中</td>
-</tr>
-<tr>
-<td style="text-align:center">S（Shared）</td>
-<td style="text-align:center">共享</td>
-<td style="text-align:center">缓存行中的数据与内存中的数据一致，并且该数据存在于多个 cache 中（即存在于多个核的 cache 中）</td>
-</tr>
-<tr>
-<td style="text-align:center">I（Invalid）</td>
-<td style="text-align:center">无效</td>
-<td style="text-align:center">当前缓存行无效</td>
-</tr>
-</tbody>
-</table>
-<p>MESI 的状态转移过程：</p>
-<p class='div-border blue left'>local read/write：当前核读写本地 cache 中的缓存行数据。</br>remote read/write：其它核读写内存中的数据，该数据已被缓存到某个核的 cache 中。</p>
-<table style="width:100%">
-    <tr>
-        <th align="center" bgcolor="#f5f6f8">当前<br/>状态</th> 
-        <th align="center" bgcolor="#f5f6f8">事件</th> 
-        <th align="center" bgcolor="#f5f6f8">行为</th> 
-        <th align="center" width="8%" bgcolor="#f5f6f8">下个<br/>状态</th> 
-   </tr>
-    <tr>
-        <td rowspan="5" align="center" style="font-size:50px; font-weight:bold">M</td>
-    </tr>
-    <tr>
-        <td align="center">local read</td>
-        <td align="left">从 cache 中读，状态不变</td>
-        <td align="center">M</td>
-    </tr>
-    <tr>
-        <td align="center">local write</td>
-        <td align="left">修改 cache 数据，状态不变</td>
-        <td align="center">M</td>
-    </tr>
-    <tr>
-        <td align="center">remote read</td>
-        <td align="left">将数据写回内存，使其它核能够获取到最新数据，状态变为 S</td>
-        <td align="center">S</td>    
-    </tr>
-    <tr>
-        <td align="center">remote write</td>
-        <td align="left">将数据写回内存，使其它核能够获取到最新数据，状态变为 I</td>
-        <td align="center">I</td>    
-    </tr>
-    <tr>
-        <td rowspan="5" align="center" style="font-size:50px; font-weight:bold">E</td>    
-    </tr>
-    <tr>
-        <td align="center">local read</td>
-        <td align="left">从 cache 中读，状态不变</td>
-        <td align="center">E</td>
-    </tr>
-    <tr>
-        <td align="center">local write</td>
-        <td align="left">修改 cache 数据，状态变为 M</td>
-        <td align="center">M</td>
-    </tr>
-    <tr>
-        <td align="center">remote read</td>
-        <td align="left">数据与其它核共享，状态变为 S</td>
-        <td align="center">S</td>    
-    </tr>
-    <tr>
-        <td align="center">remote write</td>
-        <td align="left">数据被修改，状态变为 I</td>
-        <td align="center">I</td>    
-    </tr>
-    <tr>
-        <td rowspan="5" align="center" style="font-size:50px; font-weight:bold">S</td>    
-    </tr>
-    <tr>
-        <td align="center">local read</td>
-        <td align="left">从 cache 中读，状态不变</td>
-        <td align="center">S</td>
-    </tr>
-    <tr>
-        <td align="center">local write</td>
-        <td align="left">先将其它核的状态变为 I，再将本地状态变为 M</td>
-        <td align="center">M</td>
-    </tr>
-    <tr>
-        <td align="center">remote read</td>
-        <td align="left">数据与其它核共享，状态不变</td>
-        <td align="center">S</td>    
-    </tr>
-    <tr>
-        <td align="center">remote write</td>
-        <td align="left">数据被修改，状态变为 I</td>
-        <td align="center">I</td>    
-    </tr>
-    <tr>
-        <td rowspan="9" align="center" style="font-size:50px; font-weight:bold">I</td>    
-    </tr>
-    <tr>
-        <td rowspan="3" align="center">local read</td>
-        <td align="left">若其它核中没数据，则将内存中的数据缓存到本地 cache，状态变为 E</td>
-        <td rowspan="3" align="center">E/S</td>
-    </tr>
-    <tr>
-        <td align="left">若其它核中有数据，且状态为 M，则先将数据写回内存，然后将内存中的数据缓存到本地 cache，二者状态均变为 S</td>
-    </tr>
-    <tr>
-        <td align="left">若其它核中有数据，且状态为 E 或 S，则将内存中的数据缓存到本地 cache，并将它们的状态均变为 S</td>
-    </tr>
-    <tr>
-        <td rowspan="3" align="center">local write</td>
-        <td align="left">若其它核中没数据，则将内存中的数据缓存到本地 cache，状态变为 M</td>
-        <td rowspan="3" align="center">M</td>
-    </tr>
-    <tr>
-        <td align="left">若其它核中有数据，且状态为 M，则先将数据写回内存，状态变为 I，然后将内存中的数据缓存到本地 cache，状态变为 M</td>
-    </tr>
-    <tr>
-        <td align="left">若其它核中有数据，且状态为 E 或 S，则将它们的状态变为 I，然后将内存中的数据缓存到本地 cache，状态变为 M</td>
-    </tr>
-    <tr>
-        <td align="center">remote read</td>
-        <td align="left">本地数据已失效，不受其它核操作的影响</td>
-        <td align="center">I</td>    
-    </tr>
-    <tr>
-        <td align="center">remote write</td>
-        <td align="left">本地数据已失效，不受其它核操作的影响</td>
-        <td align="center">I</td>    
-    </tr>
-</table>]]></content>
-      <categories>
-        <category>读书笔记 - CSAPP</category>
-      </categories>
-      <tags>
-        <tag>MESI</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>高速缓存是如何查找数据的</title>
-    <url>/posts/2065420180.html</url>
-    <content><![CDATA[<p>高速缓存有三种类型，每种类型的访存方式有所差异。不同类型的高速缓存是根据其组织结构划分的，因此有必要先了解一下高速缓存的组织结构。</p>
-<h2 id="cache-的组织结构"><a class="markdownIt-Anchor" href="#cache-的组织结构"></a> Cache 的组织结构</h2>
-<p>高速缓存可以看成由缓存行（cache line）组成的数组，每个缓存行分为三个部分，其中：</p>
-<ul>
-<li>
-<p><strong>有效位</strong> 指明了当前行所存储的数据是否有效，大小为 1 个 bit；</p>
-</li>
-<li>
-<p><strong>标记位</strong> 唯一地标识了存储在缓存行中的信息；</p>
-</li>
-<li>
-<p><strong>数据块</strong>（Block） 则是部分内存数据的副本。</p>
-</li>
-</ul>
-<p>高速缓存的组织结构可以用元组 <code>(S, E, B, m)</code> 表示，<code>m</code> 是主存物理地址的位数。</p>
-<img src="https://img.gejiba.com/images/86f467a47a83e338e941edf133d73fc5.webp" alt="cachestruct" style="zoom:45%;" />
-<p>高速缓存的大小（Capacity）指的是所有数据块的大小之和，并不包含有效位和标记位，因此可以通过 <code>C = B x E x S</code> 计算得到。</p>
-<p>相应地，对高速缓存访问的 <code>m</code> 位的地址被划分成了如下结构：</p>
-<img src="https://img.gejiba.com/images/85db219b099cce3ea5c5a13f86de723f.webp" alt="cacheaddr" style="zoom:70%;" />
-<p>当某个地址向高速缓存发出访问后，首先根据组索引位 <code>s</code> 确定索要访问的数据在哪个组，然后根据标记位 <code>t</code> 确定组中的哪一行与之匹配，当且仅当有效位为 1 并且标记位也匹配时才算访存命中。此时，根据块偏移位 <code>b</code> 就可以从 B 个字节的数据块中抽取出所访问的数据。</p>
-<h2 id="cache-的分类"><a class="markdownIt-Anchor" href="#cache-的分类"></a> Cache 的分类</h2>
-<p>根据每个组高速缓存行的行数 <code>E</code>，高速缓存可以分为三种类型：</p>
-<h3 id="直接映射高速缓存"><a class="markdownIt-Anchor" href="#直接映射高速缓存"></a> 直接映射高速缓存</h3>
-<p><code>E == 1</code>：</p>
-<img src="https://img.gejiba.com/images/9828e5344d0fdc7b3d6b1754c5bfac0f.webp" alt="directmap" style="zoom:30%;" />
-<p>由于每个组只有 1 个缓存行，因此访存时确定了所属组之后就只需访问一行，通过比较标记位和判断有效位来确定是否命中。若不命中，则从内存中取出相应数据直接替换掉当前行。</p>
-<h3 id="组相连高速缓存"><a class="markdownIt-Anchor" href="#组相连高速缓存"></a> 组相连高速缓存</h3>
-<p><code>1 &lt; E &lt; C/B</code>：</p>
-<img src="https://img.gejiba.com/images/8ac0edf84c919e9c95998d17fe2aab75.webp" alt="二路组相连cache" style="zoom:43%;" />
-<p>每个组包含不止一个缓存行，通常也叫 <strong>E路组相连</strong> 高速缓存。</p>
-<p>访存时确定了所属组之后，必须检查多个缓存行的标记位和有效位，因为组中的每一行都可以包含任何映射到这个组中的内存块，就相当于将所有哈希值相同的数据都放在同一个组中。</p>
-<p>当访存不命中时，需要从内存中取出包含这个数据的块。此时，若该组中有空行，自然将取回的数据放入空行；如果没有，则需要选择其中一行进行替换。常见的缓存替换策略有 LFU（Least Frequently Used，最不经常使用）、LRU（Least Recently Used，最近最少使用）、随机替换等等。</p>
-<h3 id="全相连高速缓存"><a class="markdownIt-Anchor" href="#全相连高速缓存"></a> 全相连高速缓存</h3>
-<p><code>E == C/B</code>：</p>
-<img src="https://img.gejiba.com/images/945c8168db1fd891a288777fd799a8b2.webp" alt="fullyassociativecache" style="zoom:45%;" />
-<p>高速缓存只有一个组，包含了所有行。因此地址中不再需要组索引位，只包含标记位和块偏移。</p>
-<p>此时的访存操作必须并行地比对很多标记位，构造一个又大又快的全相连高速缓存困难且昂贵，因此这种方式只适合做小的高速缓存，例如 TLB。</p>
-]]></content>
-      <categories>
-        <category>读书笔记 - CSAPP</category>
-      </categories>
-      <tags>
-        <tag>cache结构</tag>
-        <tag>cache类型</tag>
-      </tags>
   </entry>
   <entry>
     <title>This is a test blog</title>
