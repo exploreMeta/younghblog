@@ -3,8 +3,7 @@
   <entry>
     <title>高速缓存是如何查找数据的</title>
     <url>/posts/2065420180.html</url>
-    <content><![CDATA[<p>高速缓存有三种类型，每种类型的访存方式有所差异。不同类型的高速缓存是根据其组织结构划分的，因此有必要先了解一下高速缓存的组织结构。</p>
-<h2 id="cache-的组织结构"><a class="markdownIt-Anchor" href="#cache-的组织结构"></a> Cache 的组织结构</h2>
+    <content><![CDATA[<h2 id="cache-的组织结构"><a class="markdownIt-Anchor" href="#cache-的组织结构"></a> Cache 的组织结构</h2>
 <p>高速缓存可以看成由缓存行（cache line）组成的数组，每个缓存行分为三个部分，其中：</p>
 <ul>
 <li>
@@ -23,23 +22,23 @@
 <p>相应地，对高速缓存访问的 <code>m</code> 位的地址被划分成了如下结构：</p>
 <img src="https://img.gejiba.com/images/85db219b099cce3ea5c5a13f86de723f.webp" alt="cacheaddr" style="zoom:70%;" />
 <p>当某个地址向高速缓存发出访问后，首先根据组索引位 <code>s</code> 确定索要访问的数据在哪个组，然后根据标记位 <code>t</code> 确定组中的哪一行与之匹配，当且仅当有效位为 1 并且标记位也匹配时才算访存命中。此时，根据块偏移位 <code>b</code> 就可以从 B 个字节的数据块中抽取出所访问的数据。</p>
-<h2 id="cache-的分类"><a class="markdownIt-Anchor" href="#cache-的分类"></a> Cache 的分类</h2>
+<h2 id="cache-的地址映射方式"><a class="markdownIt-Anchor" href="#cache-的地址映射方式"></a> Cache 的地址映射方式</h2>
 <p>根据每个组高速缓存行的行数 <code>E</code>，高速缓存可以分为三种类型：</p>
 <h3 id="直接映射高速缓存"><a class="markdownIt-Anchor" href="#直接映射高速缓存"></a> 直接映射高速缓存</h3>
 <p><code>E == 1</code>：</p>
 <img src="https://img.gejiba.com/images/9828e5344d0fdc7b3d6b1754c5bfac0f.webp" alt="directmap" style="zoom:30%;" />
 <p>由于每个组只有 1 个缓存行，因此访存时确定了所属组之后就只需访问一行，通过比较标记位和判断有效位来确定是否命中。若不命中，则从内存中取出相应数据直接替换掉当前行。</p>
-<h3 id="组相连高速缓存"><a class="markdownIt-Anchor" href="#组相连高速缓存"></a> 组相连高速缓存</h3>
+<h3 id="组相联高速缓存"><a class="markdownIt-Anchor" href="#组相联高速缓存"></a> 组相联高速缓存</h3>
 <p><code>1 &lt; E &lt; C/B</code>：</p>
-<img src="https://img.gejiba.com/images/8ac0edf84c919e9c95998d17fe2aab75.webp" alt="二路组相连cache" style="zoom:43%;" />
-<p>每个组包含不止一个缓存行，通常也叫 <strong>E路组相连</strong> 高速缓存。</p>
+<img src="https://img.gejiba.com/images/8ac0edf84c919e9c95998d17fe2aab75.webp" alt="二路组相联cache" style="zoom:43%;" />
+<p>每个组包含不止一个缓存行，通常也叫 <strong>E路组相联</strong> 高速缓存。</p>
 <p>访存时确定了所属组之后，必须检查多个缓存行的标记位和有效位，因为组中的每一行都可以包含任何映射到这个组中的内存块，就相当于将所有哈希值相同的数据都放在同一个组中。</p>
 <p>当访存不命中时，需要从内存中取出包含这个数据的块。此时，若该组中有空行，自然将取回的数据放入空行；如果没有，则需要选择其中一行进行替换。常见的缓存替换策略有 LFU（Least Frequently Used，最不经常使用）、LRU（Least Recently Used，最近最少使用）、随机替换等等。</p>
-<h3 id="全相连高速缓存"><a class="markdownIt-Anchor" href="#全相连高速缓存"></a> 全相连高速缓存</h3>
+<h3 id="全相联高速缓存"><a class="markdownIt-Anchor" href="#全相联高速缓存"></a> 全相联高速缓存</h3>
 <p><code>E == C/B</code>：</p>
 <img src="https://img.gejiba.com/images/945c8168db1fd891a288777fd799a8b2.webp" alt="fullyassociativecache" style="zoom:45%;" />
 <p>高速缓存只有一个组，包含了所有行。因此地址中不再需要组索引位，只包含标记位和块偏移。</p>
-<p>此时的访存操作必须并行地比对很多标记位，构造一个又大又快的全相连高速缓存困难且昂贵，因此这种方式只适合做小的高速缓存，例如 TLB。</p>
+<p>此时的访存操作必须并行地比对很多标记位，构造一个又大又快的全相联高速缓存困难且昂贵，因此这种方式只适合做小的高速缓存，例如 TLB。</p>
 ]]></content>
       <categories>
         <category>读书笔记 - CSAPP</category>
