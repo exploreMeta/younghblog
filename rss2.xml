@@ -15,8 +15,37 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Wed, 25 May 2022 12:26:14 GMT</pubDate>
+    <pubDate>Fri, 27 May 2022 07:47:36 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>虚拟内存知多少</title>
+      <link>https://younghblog.gitee.io/posts/1869698891.html</link>
+      <guid>https://younghblog.gitee.io/posts/1869698891.html</guid>
+      <pubDate>Thu, 26 May 2022 02:42:34 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;h2 id=&quot;认识虚拟内存&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#认识虚拟内存&quot;&gt;&lt;/a&gt; 认识虚拟内存&lt;/h2&gt;
+&lt;p&gt;虚拟内存是对主存和磁盘 I/O 设备的抽象，是 CPU 与物理内存之间的一个中间层。&lt;/p&gt;
+&lt;p</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-CSAPP/">读书笔记 - CSAPP</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98/">虚拟内存</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/1869698891.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>高速缓存是如何查找数据的</title>
