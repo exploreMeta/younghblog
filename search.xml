@@ -97,7 +97,7 @@
 <p>由此可知，在内存中必须驻留一个 4MB 大小的页表，即使该程序只用到了虚拟地址空间中很小的一部分。对于 64 位的系统来说，页表将会更大。</p>
 <p>为了压缩页表，常用的方法就是使用 <strong>多级页表</strong>。还是上面的例子，一个 4MB 的页表映射了 4GB 的空间，如果我们使用两级页表，那么效果会是什么样呢？</p>
 <p>将这个独立的页表拆分成 1024 个等大小的页表，那么每个页表的大小为 4MB / 1024 = 4 KB，每个 4KB 的页表能够映射 4KB / 4B * 4KB = 4MB 的虚拟地址空间，这段空间我们称其为 <strong>片</strong>（chunk）。</p>
-<p>为了管理这 1024 个页表，还需要一个页表，这里将其称为一级页表，相应地这 1024 个页表就叫二级页表。一级页表中一个页表项对应一个二级页表，因此一级页表就有 1024 个页表项，于是一级页表的大小为 1024 * 4B = 4KB。</p>
+<p>为了管理这 1024 个页表，还需要一个页表，这里将其称为 <strong><span class="p red">一级页表（也叫页目录）</span></strong>，相应地这 1024 个页表就叫二级页表。一级页表中一个页表项对应一个二级页表，因此一级页表就有 1024 个页表项，于是一级页表的大小为 1024 * 4B = 4KB。</p>
 <p>可以发现，一级页表和每个二级页表大小都是 4KB，刚好是一个页的大小。</p>
 <img src="https://img.gejiba.com/images/b3c385435e90fd3920f53e97a30c59d2.webp" alt="2levelPT" style="zoom:40%;" />
 <p>如果某个片中每个虚拟页均未分配，那么相应的一级页表项就为空（片2~7），自然也不需要二级页表。多级页表从两个方面缓解了对内存的需求：</p>
@@ -110,6 +110,18 @@
 <p>在前 k - 1 级页表中，每个 PTE 都下一级页表的基地址，第 k 级页表中的 PTE 则包含了某个物理页的页号，或者某个磁盘块的地址。为了构造出物理地址，MMU 必须访问 k 个页表。</p>
 <div class="note quote flat"><p>事实上，多级页表的地址翻译并不会比单页表慢很多。</p>
 </div>
+<p>以 Core i7 为例，看一下完整的地址翻译过程。</p>
+<p>Core i7 采用四级页表的层次结构，CR3 寄存器保存了一级页表的基地址。CR3 的值是每个进程上下文的一部分，每次进程上下文切换时，CR3 的值都会被保存和恢复。</p>
+<p>Core i7 的内存系统如下：</p>
+<img src="https://img.gejiba.com/images/b7450e2a058a179082ebcac570771477.webp" alt="corei7mem" style="zoom:40%;" />
+<p>地址翻译过程如下：</p>
+<img src="https://img.gejiba.com/images/1be6c26ad41cec6488e280cbddcc30d3.webp" alt="corei7addtranslation" style="zoom:40%;" />
+<h2 id="linux-虚拟内存系统"><a class="markdownIt-Anchor" href="#linux-虚拟内存系统"></a> Linux 虚拟内存系统</h2>
+<p>Linux 进程的虚拟内存空间如下图，我们已经很熟悉了。</p>
+<img src="https://img.gejiba.com/images/b3d458042407463af9d69dfab0d3a6d1.webp" alt="Linux进程的虚拟内存空间" style="zoom:60%;" />
+<p>Linux 将虚拟内存组织为区域（area，也叫段）的集合，每个区域实际上都是一个数据结构。内核为系统中的每个进程都维护了一个任务结构 <code>task_struct</code>，其中包含了运行该进程所需的所有信息，例如 PID、PC、栈指针、可执行文件的名字等等。</p>
+<p><img src="https://img.gejiba.com/images/0c09cdfb806b3ec4eec728948ddeeee9.webp" alt="vmas" /></p>
+<p><code>task_struct</code> 中的一个条目指向 <code>mm_struct</code>，</p>
 ]]></content>
       <categories>
         <category>读书笔记 - CSAPP</category>
