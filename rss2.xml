@@ -15,8 +15,33 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Sat, 28 May 2022 03:12:17 GMT</pubDate>
+    <pubDate>Sat, 28 May 2022 06:11:12 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>程序员的自我修养</title>
+      <link>https://younghblog.gitee.io/posts/2768540175.html</link>
+      <guid>https://younghblog.gitee.io/posts/2768540175.html</guid>
+      <pubDate>Sat, 28 May 2022 05:21:36 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;h1 id=&quot;更新预告&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#更新预告&quot;&gt;&lt;/a&gt;</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB/">读书笔记 - 程序员的自我修养</category>
+      
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2768540175.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>虚拟内存知多少</title>
