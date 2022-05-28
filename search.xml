@@ -16,7 +16,6 @@
 <h2 id="虚拟页"><a class="markdownIt-Anchor" href="#虚拟页"></a> 虚拟页</h2>
 <p><span class="p red"><b>从概念上来说，虚拟内存是存放在磁盘上的一个地址连续的数组。</b></span>数组索引是虚拟地址，数组中的内容被缓存在主存中。</p>
 <p>虚拟内存与物理内存之间以页为单位传送数据。虚拟内存中的页称为 <strong>虚拟页</strong>，物理内存中的页称为 <strong>物理页</strong>，物理页也叫 <strong>页帧</strong> 或 <strong>页框</strong>（page frame）。</p>
-<p>当可执行程序被装载的时候，其中的代码段、数据段等部分会映射到虚拟内存中的相应段，此时这个虚拟内存中的虚拟页才属于已分配的状态。虽然可执行文件被映射到了虚拟内存，但 Linux 内核并不会立刻为其分配物理内存，而是直到发生缺页异常的时候才会分配。</p>
 <p>虚拟页一共有三种状态：</p>
 <ol>
 <li><strong>未分配</strong>：磁盘中还没有任何数据与之相关联。</li>
@@ -31,7 +30,7 @@
 <p>未分配状态指的是磁盘中的空闲内存，可以通过内存分配函数（如 malloc）进行申请。</p>
 <p>虚拟页往往很大，通常是 4KB ~ 2MB，这主要是因为主存的不命中处罚很大（主存不命中时访问磁盘的时间较长），为了补偿这些较长的访问时间，倾向于使用较大的数据块。并且由于大的不命中处罚，DRAM 缓存是全相联的，即任何虚拟页都可以放置在任何物理页中。</p>
 <h2 id="页表"><a class="markdownIt-Anchor" href="#页表"></a> 页表</h2>
-<p>如何判断一个虚拟页是否缓存到了 DRAM 中，以及缓存到了 DRAM 中的哪个物理页中？除了需要依靠操作系统和 MMU 的支持外，还有一个非常重要的数据结构就是 <strong>页表</strong>。</p>
+<p>如何判断一个虚拟页是否缓存到了 DRAM 中，以及缓存到了 DRAM 中的哪个物理页呢？除了需要依靠操作系统和 MMU 的支持外，还有一个非常重要的数据结构就是 <strong>页表</strong>。</p>
 <p>每个进程都有自己的页表，页表保存在物理内存中，负责将虚拟页映射到物理页。每次 MMU 要将一个虚拟地址转换为物理地址时，都会读取页表。页表中的内容是由操作系统维护的。</p>
 <p>页表中的每一项都是一个页表条目（Page Table Entry，PTE），每个虚拟页都会对应一个 PTE。这里先假设每个 PTE 只由 1 个有效位和 1 个 n 位地址字段组成。</p>
 <p>有效位为 1 表示相应虚拟页被缓存到了物理内存中，而后面的地址字段就是相应物理页的地址。</p>
@@ -56,7 +55,7 @@
 <li><code>READ</code>：控制对页面的读访问权限。</li>
 <li><code>WRITE</code>：控制对页面的写访问权限。</li>
 </ul>
-<p>通过这些许可位就可以控制一个用户进程不能修改其只读代码段，不能读写内核中的代码和数据段，不能读写其他进程的私有内存，不能修改与其他进程共享的虚拟页面（除非其他共享者都显示地允许它这么做），从而起到了保护内存的作用。</p>
+<p>通过这些许可位就可以控制一个用户进程不能修改其只读代码段，不能读写内核中的代码和数据段，不能读写其他进程的私有内存，不能修改与其他进程共享的虚拟页面（除非其他共享者都显式地允许它这么做），从而起到了 <strong>内存保护</strong> 的作用。</p>
 <p>如果指令违反了这些许可条件，例如修改一个只读代码段，CPU 就会触发保护机制，在 Linux 中会报段错误（segmentation fault）。</p>
 <h2 id="地址翻译"><a class="markdownIt-Anchor" href="#地址翻译"></a> 地址翻译</h2>
 <p>了解了虚拟页、物理页和页表之后，再来看一下 <strong>地址翻译</strong>，即 MMU 是如何通过页表将虚拟地址映射到物理地址的：</p>
@@ -69,7 +68,7 @@
 <img src="https://img.gejiba.com/images/d44d25a093d0442c932ab25deea267aa.webp" alt="PTMiss" style="zoom:25%;" />
 <p>为了方便理解，上图将高速缓存和内存放到一起进行表示，二者之间的实际交互关系如下：</p>
 <img src="https://img.gejiba.com/images/073cdfdb3c2973603fd4546938322501.webp" alt="cache&dram" style="zoom:30%;" />
-<p>可以发现，CPU 每产生一个虚拟地址，MMU 就必须进行一次访存操作，即查阅 PTE 将虚拟地址转换为物理地址。在最坏情况下，内存中也没有该页表项，这时就需要从磁盘换入该 PTE，然后 MMU 再额外进行一次访存操作。而在最好情况下，该 PTE 恰好缓存在 L1 Cache，那么访存开销就只有 1~2 个周期，而即便是这样的开销，很多系统也仍会试图消除它，具体做法就是在 MMU 中增加了一个 PTE 的缓存，即 TLB。</p>
+<p>可以发现，CPU 每产生一个虚拟地址，MMU 就必须进行一次访存操作，即查阅 PTE 将虚拟地址转换为物理地址。在最坏情况下，内存中也没有该页表项，这时就需要从磁盘换入该 PTE，然后 MMU 再额外进行一次访存操作。而在最好情况下，该 PTE 恰好缓存在 L1 Cache，那么访存开销就只有 1~2 个周期，而即便是这样的开销，很多系统也仍会试图消除它，具体做法就是在 MMU 中增加一个 PTE 的缓存，即 TLB。</p>
 <h2 id="tlb"><a class="markdownIt-Anchor" href="#tlb"></a> TLB</h2>
 <p>TLB（Translation Lookaside Buffer），俗称快表，是一个小的、虚拟寻址的缓存。为了通过虚拟地址寻找 TLB 中的项（TLB 是组相联或全相联的），将虚拟地址的虚拟页号（VPN）进一步划分为 TLB 的标记位（TLBT）和组索引位（TLBI），如图所示：</p>
 <img src="https://img.gejiba.com/images/b7c9f89274715cefa3afc2b1ea971fe9.webp" alt="VA" style="zoom:30%;" />
@@ -89,25 +88,25 @@
 <p>4 KB 的页 <span class="p red"><b>→</b></span> 即页大小为 2<sup>12</sup> B <span class="p red"><b>→</b></span> 总页数为 2<sup>32</sup> B / 2<sup>12</sup> B = 2<sup>20</sup></p>
 </li>
 <li>
-<p>4 B 的页表项 <span class="p red"><b>→</b></span> 即页表项大小为 2<sup>2</sup> B，而一个页表项对应一个页，所以有 2<sup>20</sup> 个页就需要有相应数量的页表项 <span class="p red"><b>→</b></span> 页表大小 = 页表项数 x 页表项大小 = 2<sup>20</sup> x 2<sup>2</sup> B = 4 x 2<sup>20</sup> B = 4 MB</p>
+<p>4 B 的页表项 <span class="p red"><b>→</b></span> 即页表项大小为 2<sup>2</sup> B，而一个页表项对应一个页，所以有 2<sup>20</sup> 个页就需要有相同数量的页表项 <span class="p red"><b>→</b></span> 页表大小 = 页表项数 x 页表项大小 = 2<sup>20</sup> x 2<sup>2</sup> B = 4 x 2<sup>20</sup> B = 4 MB</p>
 </li>
 </ul>
 <p class='div-border blue left right'> 2<sup>30</sup> B	=	1 GB</br>2<sup>20</sup> B	=	1 MB</br>2<sup>10</sup> B	=	1 KB</p>
 </blockquote>
-<p>由此可知，在内存中必须驻留一个 4MB 大小的页表，即使该程序只用到了虚拟地址空间中很小的一部分。对于 64 位的系统来说，页表将会更大。</p>
+<p>由此可知，在内存中必须驻留一个 4MB 大小的页表，即使该程序只用到了虚拟地址空间中很小的一部分。对于 64 位的系统来说，页表会更大。</p>
 <p>为了压缩页表，常用的方法就是使用 <strong>多级页表</strong>。还是上面的例子，一个 4MB 的页表映射了 4GB 的空间，如果我们使用两级页表，那么效果会是什么样呢？</p>
 <p>将这个独立的页表拆分成 1024 个等大小的页表，那么每个页表的大小为 4MB / 1024 = 4 KB，每个 4KB 的页表能够映射 4KB / 4B * 4KB = 4MB 的虚拟地址空间，这段空间我们称其为 <strong>片</strong>（chunk）。</p>
 <p>为了管理这 1024 个页表，还需要一个页表，这里将其称为 <strong><span class="p red">一级页表（也叫页目录）</span></strong>，相应地这 1024 个页表就叫二级页表。一级页表中一个页表项对应一个二级页表，因此一级页表就有 1024 个页表项，于是一级页表的大小为 1024 * 4B = 4KB。</p>
 <p>可以发现，一级页表和每个二级页表大小都是 4KB，刚好是一个页的大小。</p>
-<img src="https://img.gejiba.com/images/b3c385435e90fd3920f53e97a30c59d2.webp" alt="2levelPT" style="zoom:40%;" />
-<p>如果某个片中每个虚拟页均未分配，那么相应的一级页表项就为空（片2~7），自然也不需要二级页表。多级页表从两个方面缓解了对内存的需求：</p>
+<img src="https://img.gejiba.com/images/aa4db5f33751e65016341f82cc31be0a.webp" alt="2levelPT" style="zoom:40%;" />
+<p>如果某个片中每个虚拟页均未分配，那么相应的一级页表项就为空（片2~7），自然也不需要二级页表了。多级页表从两个方面缓解了对内存的需求：</p>
 <ul>
 <li>如果一级页表为空，那么相应的二级页表根本就不会存在。这代表着一种巨大的潜在节约，因为对于一个典型的程序来说，4GB 的虚拟地址空间中大部分虚拟页都是未分配的。</li>
 <li>只有一级页表和经常使用的二级页表才需要缓存在主存中，其他二级页表只在必要时换入换出，这就大大减少了主存的压力。</li>
 </ul>
 <p>当使用了 k 级页表之后，进行地址翻译时虚拟地址中的虚拟页号会被划分成 k 个：</p>
 <img src="https://img.gejiba.com/images/a2b7aa48456b24f6f8be5fd722fbfc07.webp" alt="klevelPT" style="zoom:28%;" />
-<p>在前 k - 1 级页表中，每个 PTE 都下一级页表的基地址，第 k 级页表中的 PTE 则包含了某个物理页的页号，或者某个磁盘块的地址。为了构造出物理地址，MMU 必须访问 k 个页表。</p>
+<p>在前 k - 1 级页表中，每个 PTE 都指向下一级页表的基地址，第 k 级页表中的 PTE 则包含了某个物理页的页号，或者某个磁盘块的地址。为了构造出物理地址，MMU 必须访问 k 个页表。</p>
 <div class="note quote flat"><p>事实上，多级页表的地址翻译并不会比单页表慢很多。</p>
 </div>
 <p>以 Core i7 为例，看一下完整的地址翻译过程。</p>
@@ -121,7 +120,7 @@
 <img src="https://img.gejiba.com/images/b3d458042407463af9d69dfab0d3a6d1.webp" alt="Linux进程的虚拟内存空间" style="zoom:60%;" />
 <p>Linux 将虚拟内存组织为区域（area，也叫段）的集合，每个区域实际上都是一个数据结构。内核为系统中的每个进程都维护了一个任务结构 <code>task_struct</code>，其中包含了运行该进程所需的所有信息，例如 PID、PC、栈指针、可执行文件的名字等等。</p>
 <p><img src="https://img.gejiba.com/images/0c09cdfb806b3ec4eec728948ddeeee9.webp" alt="vmas" /></p>
-<p><code>task_struct</code> 中的一个条目指向 <code>mm_struct</code>，</p>
+<p><code>task_struct</code> 的其中一个成员 <code>mm</code> 指向 <code>mm_struct</code>，</p>
 ]]></content>
       <categories>
         <category>读书笔记 - CSAPP</category>
