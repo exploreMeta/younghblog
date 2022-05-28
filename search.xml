@@ -120,13 +120,29 @@
 <img src="https://img.gejiba.com/images/b3d458042407463af9d69dfab0d3a6d1.webp" alt="Linux进程的虚拟内存空间" style="zoom:60%;" />
 <p>Linux 将虚拟内存组织为区域（area，也叫段）的集合，每个区域实际上都是一个数据结构。内核为系统中的每个进程都维护了一个任务结构 <code>task_struct</code>，其中包含了运行该进程所需的所有信息，例如 PID、PC、栈指针、可执行文件的名字等等。</p>
 <p><img src="https://img.gejiba.com/images/0c09cdfb806b3ec4eec728948ddeeee9.webp" alt="vmas" /></p>
-<p><code>task_struct</code> 的其中一个成员 <code>mm</code> 指向 <code>mm_struct</code>，</p>
-]]></content>
+<p><code>task_struct</code> 的其中一个成员 <code>mm</code> 指向 <code>mm_struct</code>，它描述了虚拟内存的当前状态。其中 <code>pgd</code>（page global directory，页目录）指向页目录的基地址，当内核运行该进程时会将其存放在 CR3 控制寄存器中；<code>mmap</code> 则指向 <code>vm_area_struct</code> 链表。</p>
+<p>每个 <code>vm_area_struct</code> 都描述了当前虚拟地址空间的一个区域，其中各字段的含义已在图中标出。</p>
+<p>当 MMU 翻译某个虚拟地址时发生了缺页，缺页处理程序将会执行以下步骤：</p>
+<ol>
+<li>判断该虚拟地址是否合法，即是否在某个区域的地址范围内。此时需要比较该虚拟地址与每个区域结构的 <code>vm_start</code> 和 <code>vm_end</code>，如果不合法，则会触发 <strong>段错误</strong>，如图中 ① 所示，从而终止进程。</li>
+<li>判断该内存访问是否合法，即进程是否有读、写或执行该区域的权限。如果不合法，比如要对只读代码段进行写操作，则会触发 <strong>保护异常</strong>，如图中 ② 所示，从而终止进程。</li>
+<li>此时便可以确定该缺页是由于合法的虚拟地址进行合法的内存访问所造成的。处理缺页的过程为：选择一个牺牲页（如果没有空白页的话），如果被修改过则需要写回磁盘，然后换入新的物理页并更新页表。当缺页处理程序返回时，CPU 重新执行引起缺页的指令，此时就可以正常翻译了。</li>
+</ol>
+<h2 id="内存映射"><a class="markdownIt-Anchor" href="#内存映射"></a> 内存映射</h2>
+<p>前面在介绍 <a href="#%E8%99%9A%E6%8B%9F%E9%A1%B5">虚拟页</a> 的时候，我们提到了当可执行文件被装载时，会建立虚拟地址空间与可执行文件的映射关系，这实际上就是内存映射。</p>
+<p>Linux 通过将一个虚拟内存区域与一个磁盘上的对象关联起来，以初始化该虚拟内存区域中的内容，这个过程称为 <strong>内存映射</strong>。可以映射的磁盘文件有两种类型：</p>
+<ol>
+<li>普通文件。文件中保存了初始化的内容，例如可执行目标文件。页面按需调度，直到发生缺页时才会换入物理内存。如果换入之后没有填满该区域，则用零来填充剩余部分。</li>
+<li><strong>匿名文件</strong>。文件中保存的都是二进制零，由内核创建。当虚拟内存空间映射到该区域时，并不需要在磁盘和内存之间进行数据传送，只需用零覆盖即可。因此，映射到匿名文件的页有时也叫 <strong>请求二进制零的页</strong>。</li>
+</ol>
+<p>无论哪种情况，一旦一个虚拟页与磁盘中的文件完成了内存映射，它就会在由内核维护的交换空间与物理内存之间换入换出。</p>
+<p class='div-border blue left'><b>交换空间</b> 是磁盘上的一块区域，当物理内存吃紧时，会将内存中不常访问的数据换出到该区域，这样系统就有了更多的物理内存为各进程服务。当需要访问交换空间中存储的内容时，再将其换入到物理内存中。因此，<span class="p red"><b>交换空间限制了当前进程所能分配的虚拟页的总数。</b></span></p>]]></content>
       <categories>
         <category>读书笔记 - CSAPP</category>
       </categories>
       <tags>
         <tag>虚拟内存</tag>
+        <tag>地址翻译</tag>
       </tags>
   </entry>
   <entry>
