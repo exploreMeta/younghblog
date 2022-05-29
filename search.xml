@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>程序员的自我修养</title>
-    <url>/posts/2768540175.html</url>
-    <content><![CDATA[<h1 id="更新预告"><a class="markdownIt-Anchor" href="#更新预告"></a> 更新预告</h1>
+    <title>温故而知新</title>
+    <url>/posts/2281565213.html</url>
+    <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
+<p>在整理 <a href="https://younghblog.gitee.io/categories/读书笔记-CSAPP/" target="_blank">CSAPP</a> 的这段时间，我阅读了《程序员的自我修养—链接、装载与库》这本经典书籍。书中基于 Linux 和 Windows 两大平台，介绍了系统软件的运行机制和原理，对链接、装载和库进行了深入浅出的剖析，强烈推荐❤️对系统底层感兴趣的各位小伙伴去阅读原书！</p>
+<p>初次阅读，有点磕磕绊绊，所以趁现在有时间打算重新看一遍，顺便整理下笔记📝一方面加深理解，一方面便于查阅。这里我只会整理 Linux 平台下的相关笔记，Windows 暂时不打算看。</p>
 ]]></content>
       <categories>
         <category>读书笔记 - 程序员的自我修养</category>
@@ -1018,7 +1020,7 @@
 <h1 id="音乐"><a class="markdownIt-Anchor" href="#音乐"></a> 音乐</h1>
 <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" src="//music.163.com/outchain/player?type=2&id=1342183925&auto=0"></iframe>
 <h1 id="emoji表情"><a class="markdownIt-Anchor" href="#emoji表情"></a> Emoji表情</h1>
-<p><a href="https://hub.xn--gzu630h.xn--kpry57d/SmallOyster/emoji">查询链接</a></p>
+<p><a href="https://hub.xn--p8jhe.tw/SmallOyster/emoji">查询链接</a></p>
 ]]></content>
   </entry>
 </search>
