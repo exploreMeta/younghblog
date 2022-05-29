@@ -6,6 +6,8 @@
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
 <p>在整理 <a href="https://younghblog.gitee.io/categories/读书笔记-CSAPP/" target="_blank">CSAPP</a> 的这段时间，我阅读了《程序员的自我修养—链接、装载与库》这本经典书籍。书中基于 Linux 和 Windows 两大平台，介绍了系统软件的运行机制和原理，对链接、装载和库进行了深入浅出的剖析，强烈推荐❤️对系统底层感兴趣的各位小伙伴去阅读原书！</p>
 <p>初次阅读，有点磕磕绊绊，所以趁现在有时间打算重新看一遍，顺便整理下笔记📝一方面加深理解，一方面便于查阅。这里我只会整理 Linux 平台下的相关笔记，Windows 暂时不打算看。</p>
+<h2 id="思维导图"><a class="markdownIt-Anchor" href="#思维导图"></a> 思维导图</h2>
+<p><img src="https://img.gejiba.com/images/af556438a474eb674f73ba760b07751a.webp" alt="温故知新" /></p>
 ]]></content>
       <categories>
         <category>读书笔记 - 程序员的自我修养</category>
