@@ -15,8 +15,37 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Tue, 31 May 2022 05:47:56 GMT</pubDate>
+    <pubDate>Sat, 04 Jun 2022 13:23:54 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>静态链接</title>
+      <link>https://younghblog.gitee.io/posts/1093737480.html</link>
+      <guid>https://younghblog.gitee.io/posts/1093737480.html</guid>
+      <pubDate>Fri, 03 Jun 2022 07:56:36 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p class=&#39;div-border yellow left right&#39;&gt;&lt;b&gt;&lt;font color=&quot;green&quot;&gt;粽&lt;/font&gt; 有 千 古 ， 横 有 八 荒&lt;/b&gt;&lt;/br&gt;&lt;b&gt;前 途 似 海 ， 来 日 方 长&lt;/b&gt;&lt;/br&gt;——</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB/">读书笔记 - 程序员的自我修养</category>
+      
+      
+      <category domain="https://younghblog.gitee.io/tags/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5/">静态链接</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/ELF/">ELF</category>
+      
+      
+      <comments>https://younghblog.gitee.io/posts/1093737480.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>温故而知新</title>
