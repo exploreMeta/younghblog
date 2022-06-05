@@ -26,12 +26,12 @@
 </li>
 </ol>
 <h2 id="目标文件里有什么"><a class="markdownIt-Anchor" href="#目标文件里有什么"></a> 目标文件里有什么</h2>
-<p>目标文件中除了会包含编译后生成的代码和数据之外，还包括了链接时所需要的一些信息，如符号表、字符串表、调试信息等。这些信息按照不同的属性，以 <strong>段</strong>（Segment 或 <strong>Section</strong>） 的形式存储。下面以 <code>SimpleSection.o</code> 为例看一下其内内部细节。</p>
+<p>目标文件中除了会包含编译后生成的代码和数据之外，还包括了链接时所需要的一些信息，如符号表、字符串表、调试信息等。这些信息按照不同的属性，以 <strong>段</strong>（Segment 或 <strong>Section</strong>） 的形式存储。下面以 <code>SimpleSection.o</code> 为例看一下其内部细节。</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*************************************************************************</span></span><br><span class="line"><span class="comment">    &gt; File Name: SimpleSection.c</span></span><br><span class="line"><span class="comment">    &gt; Author: Youngh</span></span><br><span class="line"><span class="comment">    &gt; Mail: younghblog@gmail.com</span></span><br><span class="line"><span class="comment">    &gt; Created Time: 2022-06-01 09:32:47</span></span><br><span class="line"><span class="comment"> ************************************************************************/</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">printf</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *format, ...)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> g_init_var = <span class="number">84</span>;</span><br><span class="line"><span class="type">int</span> g_uninit_var;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> g_static_init_var = <span class="number">83</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> g_static_uninit_var;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">func</span><span class="params">(<span class="type">int</span> i)</span> &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, i);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">static</span> <span class="type">int</span> static_init_var = <span class="number">85</span>;</span><br><span class="line">    <span class="type">static</span> <span class="type">int</span> static_uninit_var;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> a = <span class="number">1</span>;</span><br><span class="line">    <span class="type">int</span> b;</span><br><span class="line"></span><br><span class="line">    func(static_init_var + static_uninit_var + a + b);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>我们以 32 位模式进行编译（并未链接），以生成目标文件：</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gcc -c SimpleSection.c -m32</span><br></pre></td></tr></table></figure>
 <p>通过 <code>objdump -h</code> 可以查看目标文件中关键段的基本信息：</p>
-<img src="https://img.gejiba.com/images/ec9d561dc4b120e5145d865154af241e.webp" alt="image-20220604172027702" style="zoom:60%;" />
+<img src="https://img.gejiba.com/images/ec9d561dc4b120e5145d865154af241e.webp" alt="关键段" style="zoom:60%;" />
 <center>图2-1 关键段</center>
 <p>打印出的信息共有 7 列，<code>Size</code> 表示段的长度；<code>VMA</code> 即 Virtual Memory Address，是段的虚拟地址；<code>LMA</code> 即 Load Memory Address，是段的装载地址；<code>File off</code> 是段所在的位置。</p>
 <p>在段名一列，可以看到除了我们熟悉的 <code>.text</code>、<code>.data</code>、<code>.bss</code> 和 <code>.rodata</code> 之外，还有一些其他段。其中 <code>.comment</code> 存放的是编译器的版本信息，<code>.note.GNU-stack</code> 是堆栈提示段，剩余段暂不细究。</p>
@@ -43,27 +43,27 @@
 <h3 id="代码段"><a class="markdownIt-Anchor" href="#代码段"></a> 代码段</h3>
 <p>通过 <code>objdump -s</code> 可以查看目标文件中所有段的内容，并以十六进制的形式展示；而 <code>-d</code> 可以将所有包含指令的段反汇编。因此，执行 <code>objdump -s -d SimpleSection.o</code> 则可以同时打印这些内容。</p>
 <p>由于内容过多，我将只截取与当前主题相关的信息：</p>
-<img src="https://img.gejiba.com/images/31f2ef1fcf46e594e60400dc0b75ad9f.webp" alt="image-20220604192332042" style="zoom:65%;" />
+<img src="https://img.gejiba.com/images/31f2ef1fcf46e594e60400dc0b75ad9f.webp" alt="text" style="zoom:65%;" />
 <center>图2-3 .text段</center>
 <p>其中最左边一列是 <code>.text</code> 中的内容在该段中的偏移量，中间 4 列是十六进制内容，最右边一列是 <code>.text</code> 段的 ASCII 码形式。对照下面的反汇编结果，可以发现二者完全一致，因此 <code>.text</code> 段包含了 <code>func()</code> 与 <code>main()</code> 两个函数的所有指令。</p>
 <h3 id="数据段和只读数据段"><a class="markdownIt-Anchor" href="#数据段和只读数据段"></a> 数据段和只读数据段</h3>
-<img src="https://img.gejiba.com/images/07704393c9c5253e1e0eccfad5073f82.webp" alt="image-20220604193529585" style="zoom:60%;" />
+<img src="https://img.gejiba.com/images/07704393c9c5253e1e0eccfad5073f82.webp" alt="data&rodata" style="zoom:60%;" />
 <center>图2-4 .data&.rodata段</center>
-<p><code>.data</code> 段保存的是已初始化值不为 0 的全局变量和静态变量，在 <code>SimpleSection.c</code> 中对应 <code>g_init_var</code>、<code>g_static_init_var</code> 与 <code>static_init_var</code> 三个变量。从上图可以看到，该段保存的内容有三个值（小端法），分别是 <code>0x00000054</code>、<code>0x00000053</code> 与 <code>0x00000055</code>，分别对应十进制的 83、84 和 85，正好对应上述三个变量。</p>
+<p><code>.data</code> 段保存的是已初始化且值不为 0 的全局变量和静态变量，在 <code>SimpleSection.c</code> 中对应 <code>g_init_var</code>、<code>g_static_init_var</code> 与 <code>static_init_var</code> 三个变量。从上图可以看到，该段保存的内容有三个值（小端法），分别是 <code>0x00000054</code>、<code>0x00000053</code> 与 <code>0x00000055</code>，分别对应十进制的 84、83 和 85，正好对应上述三个变量。</p>
 <p>在 <code>SimpleSection.c</code> 中调用 <code>printf()</code> 时用到了一个字符串常量 <code>%d\n</code>，它是只读的，因此放在 <code>.rodata</code> 段。从上图可以看到，该段保存的内容为 <code>25 64 01 00</code>，分别对应 ASCII 值 <code>% d \n \0</code>，其中 <code>\0</code> 是结束标志。</p>
 <h3 id="bss-段"><a class="markdownIt-Anchor" href="#bss-段"></a> BSS 段</h3>
 <p><code>.bss</code> 段存放的是未初始化或初始化为 0 的全局变量和静态变量，在 <code>SimpleSection.c</code> 中对应 <code>g_uninit_var</code>、<code>g_static_uninit_var</code> 与 <code>static_uninit_var</code> 三个 int 型变量，因此该段的大小应该为 12 个字节，但图 2-1 却显示该段大小只有 8 个字节。</p>
 <p>我们可以查看一下目标文件的符号信息：</p>
-<img src="https://img.gejiba.com/images/97c33037fac6fef89e230d0e354db1aa.webp" alt="image-20220604202411847" style="zoom:60%;" />
+<img src="https://img.gejiba.com/images/97c33037fac6fef89e230d0e354db1aa.webp" alt="所有符号" style="zoom:60%;" />
 <center>图2-5 所有符号</center>
 <p>其中 <code>Ndx</code> 表示段的索引。我们之前通过 <code>objdump -h</code> 查看到的只是关键段，并不完整，因此我们需要查看到完整的段才可以知道每个索引具体指哪个段：</p>
-<img src="https://img.gejiba.com/images/e066261c166ed2bfbd10521bbd09ae9a.webp" alt="image-20220604202724431" style="zoom:60%;" />
+<img src="https://img.gejiba.com/images/e066261c166ed2bfbd10521bbd09ae9a.webp" alt="所有段" style="zoom:60%;" />
 <center>图2-6 所有段</center>
 <p>从图 2-5 可知，两个未初始化的静态变量都在索引为 5 的段，结合图 2-6 可知，该段正是 <code>.bss</code> 段，因此 <code>.bss</code> 段只会存放未初始化的静态变量，而未初始化的全局变量 <code>g_uninit_var</code> 则没有存放在任何段，只是一个未定义的 <code>COMMON</code> 符号。</p>
 <p><code>.bss</code> 段其实并没有实际存放数据，即它并不会占用磁盘空间，只是通过记录这些未初始化静态变量的大小，达到为其预留空间的目的。更具体地讲，该段只是节省了最终存储在磁盘中的文件所占用的空间，而一旦该文件被装载到内存，就需要为其分配相应大小的内存空间，这样才能保证程序正确运行。</p>
 <p><strong><span class="p red">那为什么未初始化的全局变量没有放在 <code>.bss</code> 段呢？</span></strong></p>
-<p>这主要是因为未初始化的全局变量是 <strong>弱符号</strong>，在链接时该符号有可能在其他模块中所占的空间更大，那编译器就应该为该符号分配更大的空间。也就是说，在编译阶段并不能确定该符号的大小，所以 <code>.bss</code> 段并不知道应该为其分配多大的空间。当链接完成之后，任何一个弱符号的大小就确定确定下来了，因此会在最终的可执行文件中的 <code>.bss</code> 段为其分配空间。</p>
-<p>因此，在最终生成的可执行文件中，未初始化或初始化为 0 的全局变量和静态变量都是存放在 <code>.bss</code> 段的，只是在链接之前，<code>.bss</code> 段只存放了未初始化或初始化为 0 的静态变量。</p>
+<p>这主要是因为未初始化的全局变量是 <strong>弱符号</strong>，在链接时该符号有可能在其他模块中所占的空间更大，那编译器就应该为该符号分配更大的空间。也就是说，在编译阶段并不能确定该符号的大小，所以 <code>.bss</code> 段并不知道应该为其分配多大的空间。当链接完成之后，任何一个弱符号的大小就确定下来了，因此会在最终的可执行文件中的 <code>.bss</code> 段为其分配空间。</p>
+<p>由此可知，在最终生成的可执行文件中，未初始化或初始化为 0 的全局变量和静态变量都是存放在 <code>.bss</code> 段的，只是在链接之前，<code>.bss</code> 段只存放了未初始化或初始化为 0 的静态变量。</p>
 <p>关于弱符号，我后面会做详细介绍，这里只需有个印象即可。</p>
 <h2 id="elf-文件结构描述"><a class="markdownIt-Anchor" href="#elf-文件结构描述"></a> ELF 文件结构描述</h2>
 ]]></content>
