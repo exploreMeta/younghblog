@@ -33,7 +33,7 @@
 <p>通过 <code>objdump -h</code> 可以查看目标文件中关键段的基本信息：</p>
 <img src="https://img.gejiba.com/images/ec9d561dc4b120e5145d865154af241e.webp" alt="关键段" style="zoom:60%;" />
 <center>图2-1 关键段</center>
-<p>打印出的信息共有 7 列，<code>Size</code> 表示段的长度；<code>VMA</code> 即 Virtual Memory Address，是段的虚拟地址；<code>LMA</code> 即 Load Memory Address，是段的装载地址；<code>File off</code> 是段所在的位置。</p>
+<p>打印出的信息共有 7 列，<code>Size</code> 表示段的长度；<code>VMA</code> 即 Virtual Memory Address，是段的虚拟地址，<code>LMA</code> 即 Load Memory Address，是段的装载地址，正常情况下两个值是一样的，但在某些嵌入式系统，特别是将程序放在 ROM 中的系统中值会不同；<code>File off</code> 是段所在的位置。</p>
 <p>在段名一列，可以看到除了我们熟悉的 <code>.text</code>、<code>.data</code>、<code>.bss</code> 和 <code>.rodata</code> 之外，还有一些其他段。其中 <code>.comment</code> 存放的是编译器的版本信息，<code>.note.GNU-stack</code> 是堆栈提示段，剩余段暂不细究。</p>
 <p>每个段的第 2 行表示段的各种属性。<code>CONTENTS</code> 表示该段在文件中存在，可以看到 <code>.bss</code> 段实际上在 ELF 文件中并不存在内容；<code>.note.GNU-stack</code> 段虽然有 <code>CONTENTS</code>，但其长度为 0，我们暂且也认为它在 ELF 文件中不存在。</p>
 <p>根据上述打印出的信息，我们可以画出该目标文件的结构图：</p>
@@ -251,6 +251,20 @@
 <p>与之相对的还有 <strong>弱引用</strong>，处理若引用时，如果该符号有定义则正常链接，如果没有也不会报错。对于未定义的弱引用，链接器会默认其为 0 或是一个特殊值，以便程序代码能够识别。</p>
 <p>弱符号和弱引用对于库来说十分有用。比如库中定义的弱符号可以被用户定义的强符号覆盖，从而使用自定义版本的库函数；或者可以将某些扩展功能模块的引用定义为弱引用，这样当扩展模块与程序链接在一起时扩展功能可以正常使用，即使去掉了某些功能模块程序也可以正常链接，只是缺少了相应功能。</p>
 <h2 id="静态链接"><a class="markdownIt-Anchor" href="#静态链接"></a> 静态链接</h2>
+<p>静态链接采用 <strong>相似段合并</strong> 的方式，将多个目标文件中的代码段、数据段等分别进行合并，生成最终的可执行目标文件。整个链接过程分两步：</p>
+<ul>
+<li>第一步：空间与地址分配。</li>
+<li>第二部：符号解析与重定位。</li>
+</ul>
+<p>这里以一个例子来介绍静态链接过程：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*************************************************************************</span></span><br><span class="line"><span class="comment">    &gt; File Name: a.c</span></span><br><span class="line"><span class="comment"> ************************************************************************/</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="type">int</span> shared;</span><br><span class="line"><span class="keyword">extern</span> <span class="type">void</span> <span class="title function_">swap</span><span class="params">(<span class="type">int</span> *, <span class="type">int</span> *)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> a = <span class="number">100</span>;</span><br><span class="line">    swap(&amp;a, &amp;shared);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*************************************************************************</span></span><br><span class="line"><span class="comment">    &gt; File Name: b.c</span></span><br><span class="line"><span class="comment"> ************************************************************************/</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> shared = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">swap</span><span class="params">(<span class="type">int</span> *a, <span class="type">int</span> *b)</span> &#123;</span><br><span class="line">    *a ^= *b ^= *a ^= *b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以 32 位模式将其编译成目标文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gcc -c a.c b.c -m32 -fno-stack-protector</span><br></pre></td></tr></table></figure>
+<p>这里之所以要去掉栈保护，是因为链接时会报 __stack_chk_fail_local 未定义错误。</p>
+<p>使用 ld 链接器将二者链接起来，并且为了避免引入多余文件，将 main 指定为程序入口（默认为 _start）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ld -m elf_i386 a.o b.o -e main -o ab</span><br></pre></td></tr></table></figure>
+<p>这里要加 <code>-m elf_i386</code> 是因为目标文件是 i386 架构，是 32 位的，而我机器上的 ld 默认是 i386:x86-64，是 64 位的，二者不兼容，因此需要指定生成 32 位的可执行文件。</p>
 ]]></content>
       <categories>
         <category>读书笔记 - 程序员的自我修养</category>
