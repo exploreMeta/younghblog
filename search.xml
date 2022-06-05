@@ -37,7 +37,7 @@
 <p>在段名一列，可以看到除了我们熟悉的 <code>.text</code>、<code>.data</code>、<code>.bss</code> 和 <code>.rodata</code> 之外，还有一些其他段。其中 <code>.comment</code> 存放的是编译器的版本信息，<code>.note.GNU-stack</code> 是堆栈提示段，剩余段暂不细究。</p>
 <p>每个段的第 2 行表示段的各种属性。<code>CONTENTS</code> 表示该段在文件中存在，可以看到 <code>.bss</code> 段实际上在 ELF 文件中并不存在内容；<code>.note.GNU-stack</code> 段虽然有 <code>CONTENTS</code>，但其长度为 0，我们暂且也认为它在 ELF 文件中不存在。</p>
 <p>根据上述打印出的信息，我们可以画出该目标文件的结构图：</p>
-<img src="https://img.gejiba.com/images/5f24e7285aaee742a607d2c7dc619d6f.webp" alt="SSo" style="zoom:70%;" />
+<img src="https://img.gejiba.com/images/3d04b951138994a76311dc3a02f49608.webp" alt="SSo" style="zoom:45%;" />
 <center>图2-2 SimpleSection.o结构</center>
 <p>接下来分别看一下各个段里的内容。</p>
 <h3 id="代码段"><a class="markdownIt-Anchor" href="#代码段"></a> 代码段</h3>
@@ -54,18 +54,203 @@
 <h3 id="bss-段"><a class="markdownIt-Anchor" href="#bss-段"></a> BSS 段</h3>
 <p><code>.bss</code> 段存放的是未初始化或初始化为 0 的全局变量和静态变量，在 <code>SimpleSection.c</code> 中对应 <code>g_uninit_var</code>、<code>g_static_uninit_var</code> 与 <code>static_uninit_var</code> 三个 int 型变量，因此该段的大小应该为 12 个字节，但图 2-1 却显示该段大小只有 8 个字节。</p>
 <p>我们可以查看一下目标文件的符号信息：</p>
-<img src="https://img.gejiba.com/images/97c33037fac6fef89e230d0e354db1aa.webp" alt="所有符号" style="zoom:60%;" />
-<center>图2-5 所有符号</center>
-<p>其中 <code>Ndx</code> 表示段的索引。我们之前通过 <code>objdump -h</code> 查看到的只是关键段，并不完整，因此我们需要查看到完整的段才可以知道每个索引具体指哪个段：</p>
-<img src="https://img.gejiba.com/images/e066261c166ed2bfbd10521bbd09ae9a.webp" alt="所有段" style="zoom:60%;" />
-<center>图2-6 所有段</center>
-<p>从图 2-5 可知，两个未初始化的静态变量都在索引为 5 的段，结合图 2-6 可知，该段正是 <code>.bss</code> 段，因此 <code>.bss</code> 段只会存放未初始化的静态变量，而未初始化的全局变量 <code>g_uninit_var</code> 则没有存放在任何段，只是一个未定义的 <code>COMMON</code> 符号。</p>
+<img src="https://img.gejiba.com/images/22aab797f0251672803f931d2e3fbfc6.webp" alt="symboltable" style="zoom:60%;" />
+<center>图2-5 符号表内容</center>
+<p>可以看到 <code>.bss</code> 段只会存放未初始化的静态变量，而未初始化的全局变量 <code>g_uninit_var</code> 则没有存放在任何段，只是一个未定义的 <code>COMMON</code> 符号。</p>
 <p><code>.bss</code> 段其实并没有实际存放数据，即它并不会占用磁盘空间，只是通过记录这些未初始化静态变量的大小，达到为其预留空间的目的。更具体地讲，该段只是节省了最终存储在磁盘中的文件所占用的空间，而一旦该文件被装载到内存，就需要为其分配相应大小的内存空间，这样才能保证程序正确运行。</p>
 <p><strong><span class="p red">那为什么未初始化的全局变量没有放在 <code>.bss</code> 段呢？</span></strong></p>
 <p>这主要是因为未初始化的全局变量是 <strong>弱符号</strong>，在链接时该符号有可能在其他模块中所占的空间更大，那编译器就应该为该符号分配更大的空间。也就是说，在编译阶段并不能确定该符号的大小，所以 <code>.bss</code> 段并不知道应该为其分配多大的空间。当链接完成之后，任何一个弱符号的大小就确定下来了，因此会在最终的可执行文件中的 <code>.bss</code> 段为其分配空间。</p>
 <p>由此可知，在最终生成的可执行文件中，未初始化或初始化为 0 的全局变量和静态变量都是存放在 <code>.bss</code> 段的，只是在链接之前，<code>.bss</code> 段只存放了未初始化或初始化为 0 的静态变量。</p>
 <p>关于弱符号，我后面会做详细介绍，这里只需有个印象即可。</p>
 <h2 id="elf-文件结构描述"><a class="markdownIt-Anchor" href="#elf-文件结构描述"></a> ELF 文件结构描述</h2>
+<p>通过以上介绍，我们已经可以大致勾勒出 ELF 文件的轮廓，接下来我们进一步看一下该目标文件的详细内容。</p>
+<p>ELF 目标文件以 <strong>ELF 文件头</strong>（ELF Header）开始，该结构描述了整个文件的基本属性。</p>
+<p>紧接着就是 ELF 文件的各个段，每个段的基本信息是保存在 <strong>段表</strong>（Section Header Table）中的，段表也在该目标文件中。</p>
+<p>另外还会有一些其他辅助结构，比如符号表、字符串表以及重定位表等。</p>
+<h3 id="文件头"><a class="markdownIt-Anchor" href="#文件头"></a> 文件头</h3>
+<p>查看 ELF 文件头：</p>
+<img src="https://img.gejiba.com/images/7821e360ff1a2f910949afd1ed24053c.webp" alt="ELFHeader" style="zoom:60%;" />
+<center>图3-1 ELF文件头</center>
+<ul>
+<li>
+<p><strong>ELF 魔数</strong>。描述了 ELF 文件的平台属性。前 4 个字节是所有 ELF 文件都必须相同的标识码，其中第一个字节对应 ASCII 字符里的 DEL 控制符，后面三个字节分别对应 ELF 三个字母。其余每个字节的含义都已在图中标出。需要说明的是，ELF 文件的主版本号一般是 1，因为 ELF 自 1.2 以后就再没 更新了。</p>
+<img src="https://img.gejiba.com/images/31aa7c216dc6e241ae8fe37267672daf.webp" alt="Magic" style="zoom:55%;" />
+<center>图3-2 魔数</center>
+</li>
+<li>
+<p>数据存储方式：用补码（2’s complement）表示有符号数，用小端法存储。</p>
+</li>
+<li>
+<p>Type：表示 ELF 文件类型。系统正是据此来判断 ELF 文件类型的，而不是通过文件扩展名。</p>
+</li>
+<li>
+<p>ELF 文件头大小为 52 个字节，对应十六进制 0x34，因此其结束地址即为 0x34。</p>
+</li>
+<li>
+<p>段表的位置在 1212 处，对应十六进制的 0x4bc。段表中有 16 个元素，每个元素的大小为 40 个字节，因此段表的大小为 16 * 40 = 640 = 0x280，于是段表的结束地址为 0x4bc + 0x280 = 0x73c。</p>
+<p>我们再来查看一下目标文件的大小：</p>
+<img src="https://img.gejiba.com/images/662d52cb1f04c6822004f4c9316d3414.webp" alt="ObjectSize" style="zoom:60%;" />
+<center>图3-3 目标文件大小</center>
+<p>目标文件的大小是 1852 个字节，对应十六进制为 0x73c，因此其虚拟地址范围为 0x000 ~ 0x73c，由此可知段表就在该目标文件的末尾。</p>
+</li>
+</ul>
+<h3 id="段表"><a class="markdownIt-Anchor" href="#段表"></a> 段表</h3>
+<p><strong>段表</strong>（Section Header Table）保存了段的基本属性，比如每个段的名字、长度、偏移、读写权限等等。换言之，<strong>ELF 文件的段结构是由段表决定的</strong>，编译器、链接器和装载器也都是依靠段表来定位和访问各个段的属性的。</p>
+<p>前面我们通过 <code>objdump -h</code> 只是打印出了 ELF 文件中的关键段，下面我们通过打印段表来查看一下 ELF 文件的完整的段：</p>
+<img src="https://img.gejiba.com/images/e4dd2cb1f932587d4d2c6ae7d4a67a93.webp" alt="SectionHeader" style="zoom:55%;" />
+<center>图3-4 段表信息</center>
+<ul>
+<li>
+<p>Nr：段的索引。通过其他命令查询到的段的索引与这里相对应。</p>
+</li>
+<li>
+<p>Type：段的类型，共有如下几种类型：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">类型</th>
+<th style="text-align:center">值</th>
+<th style="text-align:center">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">NULL</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">无效段</td>
+</tr>
+<tr>
+<td style="text-align:center">PROGBITS</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">程序段，包括代码段和数据段</td>
+</tr>
+<tr>
+<td style="text-align:center">SYMTAB</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">符号表</td>
+</tr>
+<tr>
+<td style="text-align:center">STRTAB</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">字符串表</td>
+</tr>
+<tr>
+<td style="text-align:center">RELA</td>
+<td style="text-align:center">4</td>
+<td style="text-align:center">重定位表</td>
+</tr>
+<tr>
+<td style="text-align:center">HASH</td>
+<td style="text-align:center">5</td>
+<td style="text-align:center">符号表的哈希表</td>
+</tr>
+<tr>
+<td style="text-align:center">DYNAMIC</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">动态链接信息</td>
+</tr>
+<tr>
+<td style="text-align:center">NOTE</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">提示性信息</td>
+</tr>
+<tr>
+<td style="text-align:center">NOBITS</td>
+<td style="text-align:center">8</td>
+<td style="text-align:center">在文件中没有内容</td>
+</tr>
+<tr>
+<td style="text-align:center">REL</td>
+<td style="text-align:center">9</td>
+<td style="text-align:center">包含重定位信息</td>
+</tr>
+<tr>
+<td style="text-align:center">SHLIB</td>
+<td style="text-align:center">10</td>
+<td style="text-align:center">保留</td>
+</tr>
+<tr>
+<td style="text-align:center">DNYSYM</td>
+<td style="text-align:center">11</td>
+<td style="text-align:center">动态链接的符号表</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>Addr：段的虚拟地址。如果该段可以被加载，则为加载后在进程虚拟地址空间中的地址，否则为 0。</p>
+</li>
+<li>
+<p>Off：该段在文件中的偏移量。</p>
+</li>
+<li>
+<p>ES：即 Entry Size。若该段包含了一些大小固定的项，则此值表示每个项的大小，否则为 0。</p>
+</li>
+<li>
+<p>Flg：段的标志位。其中 A（Alloc）表示该段在进程空间中需要分配空间。</p>
+</li>
+<li>
+<p>Al：即 Address Alignment，段地址对齐。0 和 1 表示没有对齐要求。</p>
+</li>
+</ul>
+<h3 id="重定位表"><a class="markdownIt-Anchor" href="#重定位表"></a> 重定位表</h3>
+<p>在链接时需要知道哪些指令需要被调整，指令的哪些部分需要被调整，以及怎么调整，而 <strong>重定位表</strong> 就是用来记录重定位相关信息的。</p>
+<p>严格来说，重定位表实际上应该叫重定位段，因为每个要被重定位的 ELF 段都有一个对应的重定位表，比如 <code>.rel.text</code>、<code>.rel.data</code> 等，可以通过以下命令来查看目标文件中的重定位表：</p>
+<img src="https://img.gejiba.com/images/5316a41dae31cc6739591afb4bc8cbea.webp" alt="rel" style="zoom:60%;" />
+<center>图3-5 重定位表</center>
+<p>其中 <code>OFFSET</code> 对应指令中需要调整的地址，可以结合反汇编代码进行查看：</p>
+<img src="https://img.gejiba.com/images/1131223a0715763943fec8ec777b31a6.webp" alt="objdump" style="zoom:60%;" />
+<center>图3-6 反汇编代码</center>
+<p>以需要重定位的 <code>printf</code> 为例，其地址为 0x25，对应到反汇编代码中正好是 call 指令所调用的 printf 的地址。<code>TYPE</code> 表示重定位符号的调整方式，函数和变量的调整方式是不一样的。</p>
+<h3 id="字符串表"><a class="markdownIt-Anchor" href="#字符串表"></a> 字符串表</h3>
+<p>引用字符串表中的字符串只需给出一个下标，然后一直往后读，直到遇到 <code>\0</code>（0x00）停止。</p>
+<p>在图 3-4 中，有两个字符串表，分别是 <code>.strtab</code> 与 <code>.shstrtab</code>，它们的索引分别是 14 和 15。其中：</p>
+<ul>
+<li>
+<p><code>.strtab</code> 是 <strong>字符串表</strong>，用来保存普通的字符串，比如符号名：</p>
+<img src="https://img.gejiba.com/images/cce93cd82ced57b9fbc97ef9c5231f2d.webp" alt="strtab" style="zoom:60%;" />
+<center>图3-7 .strtab内容</center>
+<p>第一列即表示字符串在该表中的下标，下同。</p>
+</li>
+<li>
+<p><code>.shstrtab</code> 是 <strong>段表字符串表</strong>，用来保存段表中的字符串，通常是段名：</p>
+<img src="https://img.gejiba.com/images/f5d75fab13c920843e0fa3df2b0c448b.webp" alt="shstrtab" style="zoom:60%;" />
+<center>图3-8 .shstrtab内容</center>
+</li>
+</ul>
+<h3 id="符号表"><a class="markdownIt-Anchor" href="#符号表"></a> 符号表</h3>
+<p><strong>符号表</strong>（<code>.symtab</code>）记录了目标文件中所用到的所有符号，我们可以打印出来看一下：</p>
+<img src="https://img.gejiba.com/images/efd17aa4a2c29631be034a30e124a57b.webp" alt="symtab" style="zoom:55%;" />
+<center>图3-9 符号表内容</center>
+<p>符号表的第一个元素，即下标为 0 的元素总是一个无效的未定义符号。接下来我们从最右边一列开始看起：</p>
+<ul>
+<li>Name：可以看到有些符号的名字并没有显示，这些符号都是段名，根据 Ndx 可以在图 3-4 中找到相应的段名。</li>
+<li>Ndx：符号所在段，可以结合图 3-4 查看。另外 <code>UND</code> 是未定义（如 printf），表示该符号在本文件中被引用，但却在其他文件中定义；<code>ABS</code> 表示该符号包含一个绝对的值；<code>COM</code> 表示该符号是一个 COMMON 类型的符号，如未初始化的全局变量 <code>g_uninit_var</code>。</li>
+<li>Vis：在 C/C++ 中未使用，我们暂时忽略它。</li>
+<li>Bind：符号绑定信息。<code>LOCAL</code> 表示局部符号，仅本目标文件可见；<code>GLOBAL</code> 表示全局符号，外部可见；<code>WEAK</code> 表示弱引用。</li>
+<li>Type：符号类型。<code>NOTYPE</code> 表示未知类型的符号；<code>FILE</code> 表示该符号是文件名；<code>SECTION</code> 表示该符号是一个段；<code>OBJECT</code> 表示该符号是个数据对象，例如变量、数组等；<code>FUNC</code> 表示该符号是个函数或其他可执行代码。</li>
+<li>Size：符号大小。对于包含数据的符号，该值是数据类型的大小。0 表示该符号大小为 0 或未知。</li>
+</ul>
+<h3 id="重绘目标文件结构"><a class="markdownIt-Anchor" href="#重绘目标文件结构"></a> 重绘目标文件结构</h3>
+<p>基于以上信息，我们在之前的基础上对 <code>SimpleSection.o</code> 的结构做了进一步完善（灰色段表示在本文中没有细究）：</p>
+<img src="https://img.gejiba.com/images/cb5b8a4a7dc373f2c7465b5c7fb13fbf.webp" alt="SimpleSection" style="zoom:70%;" />
+<center>图3-10 SimpleSection.o结构</center>
+<p>可以看到在段表字符串表（.shstrtab）与段表（Section Header Table）之间存在 3 个字节的间隙，这是对齐所造成的。</p>
+<h2 id="符号和引用"><a class="markdownIt-Anchor" href="#符号和引用"></a> 符号和引用</h2>
+<p>我们从图 3-9 可以看到变量 <code>static_init_var</code> 与 <code>static_uninit_var</code> 变成了 <code>static_init_var.1513</code> 与 <code>static_uninit_var.1514</code>，这是 <strong>符号修饰</strong> 的结果，主要是为了防止符号冲突。</p>
+<p>不同编译器采用了不同的符号修饰方法，因此不同编译器编译生成的目标文件之间无法正常链接。C++ 为了能够与 C 兼容引入了 <code>extern &quot;C&quot;</code>，从而保证该部分代码能够被当做 C 语言处理，C++ 的符号修饰机制将不会对该部分代码起作用，这样就保证了 C 库函数能够正常使用。</p>
+<p>尽管有符号修饰，当多个目标文件中含有相同名字的全局符号定义时，链接过程中仍然会出现 <strong>符号重定义</strong> 的错误，这就涉及到了强弱符号的概念。</p>
+<p>对于 C/C++，编译器会默认 <span alt="underline">函数</span> 和 <span alt="underline">初始化的全局变量</span> 为 <strong>强符号</strong>，而 <span alt="underline">未初始化的全局变量</span> 为 <strong>弱符号</strong>，也可已通过 GCC 的 <code>__attribute__((weak))</code> 来定义任何一个强符号为弱符号。</p>
+<p>根据强弱符号的概念，链接器的处理规则如下：</p>
+<ol>
+<li>规则 1：不允许强符号被多次定义，否则会报重复定义的错误；</li>
+<li>规则 2：如果一个符号在某个目标文件中是强符号，在其他目标文件中是弱符号，那么会选择强符号；</li>
+<li>规则 3：如果一个符号在所有目标文件中都是弱符号，那么选择其中占空间最大的那个。</li>
+</ol>
+<p>当一个目标文件中存在对外部目标文件中符号的引用时，链接过程中如果找不到该符号的定义，链接器就会报符号未定义错误，这种引用称为 <strong>强引用</strong>。</p>
+<p>与之相对的还有 <strong>弱引用</strong>，处理若引用时，如果该符号有定义则正常链接，如果没有也不会报错。对于未定义的弱引用，链接器会默认其为 0 或是一个特殊值，以便程序代码能够识别。</p>
+<p>弱符号和弱引用对于库来说十分有用。比如库中定义的弱符号可以被用户定义的强符号覆盖，从而使用自定义版本的库函数；或者可以将某些扩展功能模块的引用定义为弱引用，这样当扩展模块与程序链接在一起时扩展功能可以正常使用，即使去掉了某些功能模块程序也可以正常链接，只是缺少了相应功能。</p>
+<h2 id="静态链接"><a class="markdownIt-Anchor" href="#静态链接"></a> 静态链接</h2>
 ]]></content>
       <categories>
         <category>读书笔记 - 程序员的自我修养</category>
