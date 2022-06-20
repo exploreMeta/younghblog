@@ -15,7 +15,7 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Mon, 20 Jun 2022 08:37:50 GMT</pubDate>
+    <pubDate>Mon, 20 Jun 2022 09:07:51 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
@@ -41,6 +41,8 @@
       <category domain="https://younghblog.gitee.io/tags/%E8%A3%85%E8%BD%BD/">装载</category>
       
       <category domain="https://younghblog.gitee.io/tags/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5/">动态链接</category>
+      
+      <category domain="https://younghblog.gitee.io/tags/PIC/">PIC</category>
       
       
       <comments>https://younghblog.gitee.io/posts/3697966026.html#disqus_thread</comments>
