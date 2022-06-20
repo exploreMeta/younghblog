@@ -63,6 +63,116 @@
 <p>其中，esp 指向栈顶，前 4 个字节表示命令行参数的数量，这里是 <code>prog</code> 与 <code>123</code> 共 2 个参数，紧接着就是指向这两个字符串的指针。之后是一个 0，表示命令行读取结束。再后面是指向环境变量字符串的指针，最后还是以 0 表示结束。</p>
 <p>进程启动后，初始化堆栈中的参数信息部分会被传递给 main 函数，即 <code>argc</code> 和 <code>argv</code> 两个参数。</p>
 <h2 id="动态链接"><a class="markdownIt-Anchor" href="#动态链接"></a> 动态链接</h2>
+<p>静态链接的缺陷：</p>
+<ul>
+<li>空间浪费。对于多个程序的公共部分，会在内存和磁盘空间中存在多个副本，造成严重的空间浪费。</li>
+<li>更新困难。程序的更新、部署和发布不方便，每次都要以整个程序为单位。</li>
+</ul>
+<p>解决办法就是不对组成程序的目标文件进行链接，而是推迟到运行时才链接，这就是动态链接的基本思想。</p>
+<p>动态链接时，多个程序的所有公共部分只会存在一份，以共享的方式存在。因此动态链接不仅节省了内存，还使程序的更新变得更加容易，只需覆盖某个旧的目标文件，在程序下次运行时自然会将新的目标文件链接进来，从而完成升级目标。</p>
+<p>此外，动态链接还有其他一些优点，例如程序的 <strong>可扩展性</strong> 和 <strong>兼容性</strong>。</p>
+<p>动态链接的程序在运行时可以动态选择加载各种程序模块，因此我们可以按照程序提供的接口编写符合要求的动态链接文件，即 <strong>插件</strong>（Plug-in），实现程序功能的扩展。</p>
+<p>动态链接可以加强程序的兼容性是指，程序在不同平台运行时可以动态链接到操作系统提供的动态链接库，库函数的实现方式因平台而异，但只要提供的接口相同，便可在不同平台统一调用。</p>
+<p>在 Linux 中，ELF 动态链接文件被称为 <strong>共享对象</strong>，一般以 <code>.so</code> 作为扩展名。</p>
+<h3 id="简单的动态链接例子"><a class="markdownIt-Anchor" href="#简单的动态链接例子"></a> 简单的动态链接例子</h3>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* Program1.c */</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;Lib.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    foobar(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Program2.c */</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;Lib.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    foobar(<span class="number">2</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Lib.c */</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">foobar</span><span class="params">(<span class="type">int</span> i)</span> &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Printing from Lib.so %d\n&quot;</span>, i);</span><br><span class="line">    sleep(<span class="number">-1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Lib.h */</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span> LIB_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LIB_H</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">foobar</span><span class="params">(<span class="type">int</span> i)</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p>Program1.c 与 Program2.c 分别调用了 Lib.c 中的 foobar() 函数，该函数会将传入的参数打印出来。</p>
+<p>首先将 Lib.c 编译成一个共享对象文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gcc -fPIC -shared Lib.c -o Lib.so -m32</span><br></pre></td></tr></table></figure>
+<p>其中 <code>-shared</code> 表示生成共享对象，<code>-fPIC</code> 表示生成位置无关代码。</p>
+<p>得到 <a href="http://Lib.so">Lib.so</a> 共享对象文件后，再分别编译两个程序：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gcc Program1.c -o Program1 ./Lib.so -m32</span><br><span class="line">gcc Program2.c -o Program2 ./Lib.so -m32</span><br></pre></td></tr></table></figure>
+<p>与静态链接不同，最终生成的可执行文件 Program1 中并没有将 Lib.o 链接进来，而是链接了 <a href="http://Lib.so">Lib.so</a>。该文件中保存了完整的符号信息，链接器在解析符号时就可以知道，foobar 是定义在 <a href="http://Lib.so">Lib.so</a> 中的动态符号。因此链接器在解析 Program1.o 遇到 foobar 时，就会将其标记位动态链接符号而不是进行地址重定位，这个过程会被留到装载时再进行。</p>
+<p>根据 <a href="#%E5%A0%86%E5%92%8C%E6%A0%88">前面</a> 的介绍我们已经知道，当静态链接的可执行文件在执行时，整个进程中只有该文件本身会被映射到虚拟内存空间。那我们现在看一下，动态链接的可执行文件执行时的虚拟内存空间分布情况：</p>
+<img src="https://img.gejiba.com/images/54401841ead2cef834c5d57b8006e788.webp" alt="ld-maps" style="zoom:55%;" />
+<p>可以看到，除了可执行文件本身外，还有一些其他文件。其中，<a href="http://Lib.so">Lib.so</a> 与 Program1 一样都是被系统以同样的方法映射至进程的虚拟地址空间；另外，Program1 还用到了动态链接形式的 C 运行库 <a href="http://libc-2.31.so">libc-2.31.so</a>；而剩下的 <a href="http://ld-2.31.so">ld-2.31.so</a> 实际上是 Linux 的动态链接器。</p>
+<p>动态链接器跟普通共享对象一样被映射到了进程的虚拟地址空间，在系统装载完可执行文件 Program1 之后，会先将控制权交给动态链接器，由它负责将可执行文件中外部符号的引用与相应的共享对象中的实际位置链接起来，然后再把控制权交给可执行文件 Program1 的入口地址，此时程序才会开始执行。</p>
+<p>再来看一下 <a href="http://Lib.so">Lib.so</a> 的装载属性：</p>
+<img src="https://img.gejiba.com/images/7badc295bef39dcf14d3bb2e01479f9f.webp" alt="Libso" style="zoom:55%;" />
+<p>可以看到动态链接模块的装载地址是从 0x00000000 开始的，说明共享对象的装载地址在编译时是不确定的，而是在装载时由装载器根据当前地址空间的空闲情况，动态分配足够大小的虚拟地址空间给它。</p>
+<h3 id="地址无关代码"><a class="markdownIt-Anchor" href="#地址无关代码"></a> 地址无关代码</h3>
+<p>那么共享对象装载时，它在虚拟地址空间中的位置该如何确定呢？</p>
+<p>如果使用固定地址来装载共享对象，对这些模块地址的管理将是一件无比繁琐的事，而且有很大的局限性。</p>
+<p>如果使用静态链接的链接时重定位的方法，实现 <strong>装载时重定位</strong>，虽然可以将共享对象装载到任意位置，但该对象就不能被共享了。什么意思？</p>
+<p>当共享对象被装载映射至虚拟空间后，其指令部分在多个进程之间是共享的。如果该模块中存在绝对地址引用，那么装载时重定位就会修改需要重定位的指令，而修改后的指令对每个进程来说都是不同的，所以没办法被多个进程共享。</p>
+<p><strong>地址无关代码</strong>（PIC，Position-independent Code）是这么解决的：把指令中需要被修改的部分分离出来放到数据段（数据段权限为可读可写），这样指令部分就可以保持不变（代码段权限为可读可执行但不可修改），而数据部分则可以在每个进程中都拥有一个副本。</p>
+<p>为了产生地址无关代码，我们先来分析一下共享对象模块中地址的引用方式：</p>
+<ol>
+<li>类型一：模块内部的函数调用、跳转等。</li>
+<li>类型二：模块内部的数据访问，比如模块中定义的全局变量、静态变量。</li>
+<li>类型三：模块外部的函数调用、跳转等。</li>
+<li>类型四：模块外部的数据访问，比如其他模块中定义的全局变量。</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> a;</span><br><span class="line"><span class="keyword">extern</span> <span class="type">int</span> b;</span><br><span class="line"><span class="keyword">extern</span> <span class="type">void</span> <span class="title function_">ext</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">bar</span><span class="params">()</span> &#123;</span><br><span class="line">    a = <span class="number">1</span>; <span class="comment">// Type 2: Inner-module data access</span></span><br><span class="line">    b = <span class="number">2</span>; <span class="comment">// Type 4: Inter-module data access</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">foo</span><span class="params">()</span> &#123;</span><br><span class="line">    bar(); <span class="comment">// Type 1: Inner-module call</span></span><br><span class="line">    ext(); <span class="comment">// Type 3: Inter-module call</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于以上四种地址引用方式，地址无关代码的解决策略如下。</p>
+<h4 id="1-模块内函数调用"><a class="markdownIt-Anchor" href="#1-模块内函数调用"></a> ① 模块内函数调用</h4>
+<p>这种类型是最简单的。模块内部的函数调用或跳转都是相对地址调用，指令中的地址部分是相对于下一条指令的偏移量，二者相加之后才是所调用函数的地址，因此调用者和被调用者的相对位置是不变的，所以指令本身就是地址无关的，即不论该模块被装载到哪个位置，这条指令都是有效的。</p>
+<p>不过这种情况有可能会出现 <strong>全局符号介入</strong> 的问题：程序所引用的某个函数在两个共享对象中都定义了，并且该程序又同时引用了这两个共享对象，那么一个共享对象里面的全局符号就会被另一个共享对象的同名全局符号覆盖，这种现象称为共享对象全局符号介入。</p>
+<p>一般动态链接器都会按照装载顺序进行处理。当一个符号已经加载进全局符号表时，后面的相同符号将会被忽略。</p>
+<h4 id="2-模块内数据访问"><a class="markdownIt-Anchor" href="#2-模块内数据访问"></a> ② 模块内数据访问</h4>
+<p>对于模块内数据的访问，指令中不能直接包含数据的绝对地址，否则装载时需要重定位，而代码段是不允许修改的，因此唯一的办法就是相对寻址。</p>
+<p>任何一条指令与模块内部的数据之间的相对位置是固定的，因此可以修改为当前指令的地址加上固定的偏移量来访问模块内数据。</p>
+<h4 id="3-模块间数据访问"><a class="markdownIt-Anchor" href="#3-模块间数据访问"></a> ③ 模块间数据访问</h4>
+<p>模块间数据访问的地址要等装载时才能确定，地址无关代码会将与地址相关的部分放到数据段里面，ELF 的做法是在数据段里面建立一个指向这些变量的指针数组，叫做 <strong>全局偏移表</strong>（GOT，Global Offset Table）。当代码需要引用另一个模块的全局变量时，根据 GOT 中变量所对应的的项可以找到变量的目标地址。</p>
+<p>由于 GOT 放在数据段，所以在模块装载时可以被修改。并且每个进程都有一个独立的副本，互相之间不受影响，从而实现了地址无关。</p>
+<h4 id="4-模块间函数调用"><a class="markdownIt-Anchor" href="#4-模块间函数调用"></a> ④ 模块间函数调用</h4>
+<p>同类型三一样，可以通过 GOT 实现地址无关。</p>
+<img src="https://img.gejiba.com/images/1c1c57d5de9d52b576496329b865ba1b.webp" alt="processVirtualSpace" style="zoom:50%;" />
+<p>地址无关代码技术除了可以用于共享对象，还可以用于可执行文件，需要使用 <code>-fPIE</code> 编译，生成的文件叫做 <strong>地址无关可执行文件</strong>（PIE，Position Independent Executable）。</p>
+<p>除了以上四种类型，其实还存在一些其他情况。比如共享模块内定义了可以被其他模块引用的全局变量，以及数据段中的绝对地址引用问题，这里就不展开了，感兴趣可以阅读原书。</p>
+<h3 id="延迟绑定"><a class="markdownIt-Anchor" href="#延迟绑定"></a> 延迟绑定</h3>
+<p>动态链接虽然有很多<a href="#%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5">优势</a>，比静态链接要灵活很多，但它是以牺牲一部分性能为代价的。它比静态链接慢的主要原因有二：</p>
+<ul>
+<li>动态链接下对于全局和静态数据的访问以及模块间的调用，都要先定位 GOT，然后再间接寻址或跳转，如此一来程序的运行速度必然会减慢；</li>
+<li>动态链接是在运行时完成的，即每次程序执行时都要进行一次链接工作。动态链接器会寻找并装载所需的共享对象并进行符号查找和地址重定位等工作，这些工作势必会减慢程序的启动速度。</li>
+</ul>
+<p>实际上，在程序执行过程中，很多函数可能自始至终都不会用到，比如一些错误处理函数或者用户很少会用到的功能模块等，如果一开始就把所有函数都链接好其实是一种浪费。</p>
+<p>ELF 采用了 <strong>延迟绑定</strong> 的做法，即当函数第一次被用到时才进行绑定，如果没用到则不进行绑定。这样可以大大加快陈恒旭的启动速度。</p>
+<p>为了实现延迟绑定，ELF 使用了 <strong>PLT</strong>（Procedure Linkage Table）。同时 ELF 还将 GOT 拆分成了两个表 <code>.got</code> 和 <code>.got.plt</code>，前者用来保存全局变量引用的地址，后者保存函数引用的地址。PLT 在 ELF 中以独立的段存放，段名通常叫做 <code>.plt</code>。由于其本身是地址无关的代码，因此可以跟代码段一起合并成一个 Segment。</p>
+<h3 id="动态链接相关结构"><a class="markdownIt-Anchor" href="#动态链接相关结构"></a> 动态链接相关结构</h3>
+<h4 id="interp-段"><a class="markdownIt-Anchor" href="#interp-段"></a> .interp 段</h4>
+<p>系统中动态链接器的位置是由 ELF 可执行文件决定的，其中 <code>.interp</code> 段（interpreter - 解释器）保存了可执行文件所需要的动态链接器的路径。</p>
+<img src="https://img.gejiba.com/images/c8b384a90a8e841ef532505ce6f22426.webp" alt="interp" style="zoom:55%;" />
+<p>该路径通常是一个 <strong>软链接</strong>，可以打印出来看一下：</p>
+<img src="https://img.gejiba.com/images/ea31b8b17dfeb1fd636979654ec56dbe.webp" alt="ld-path" style="zoom:55%;" />
+<p>可以看到，它最终指向的是 <code>/lib32/ld-2.31.so</code>，这个才是真正的动态链接器。</p>
+<h4 id="dynamic-段"><a class="markdownIt-Anchor" href="#dynamic-段"></a> .dynamic 段</h4>
+<p><code>.dynamic</code> 段保存了动态链接器所需要的基本信息，可以看做是动态链接下 ELF 的文件头。</p>
+<img src="https://img.gejiba.com/images/455f5a1ebbe3f6d46c1cc2a73d307dfd.webp" alt="dynamic" style="zoom:55%;" />
+<p>还可以通过如下命令查看一个模块或共享库依赖于哪些共享库：</p>
+<img src="https://img.gejiba.com/images/2157b8fae17f194c158e93e8c04d606b.webp" alt="ldd" style="zoom:60%;" />
+<h4 id="动态符号表"><a class="markdownIt-Anchor" href="#动态符号表"></a> 动态符号表</h4>
+<p>对于 Program1 来说，它引用了 <a href="http://Lib.so">Lib.so</a> 里面的 foobar() 函数，我们就称 Program1 <strong>导入</strong>（Import）了 foobar() 函数，foobar() 也叫 Program1 的 <strong>导入函数</strong>。</p>
+<p>对于 <a href="http://Lib.so">Lib.so</a> 来说，它定义了 foobar() 函数并提供给其他模块使用，我们称 <a href="http://Lib.so">Lib.so</a> <strong>导出</strong>（Export）了 foobar() 函数，foobar() 也叫 <a href="http://Lib.so">Lib.so</a> 的 <strong>导出函数</strong>。</p>
+<p>为了表示动态链接这些模块之间的符号导入导出关系。ELF 使用 <strong>动态符号表</strong>（Dynamic Symbol Table）来保存这些信息，段名叫 <code>.dynsym</code>。与静态链接的符号表 <code>.symtab</code> 不同的是，<code>.dynsym</code> 只保存了与动态链接相关的符号，而 <code>.symtab</code> 则保存了包括 <code>.dynsym</code> 在内的所有符号。</p>
+<p>同时，与 <code>syntab</code> 类似，动态符号表也需要一些辅助表，比如保存符号名的字符串表。该表在静态链接中叫 <code>.strtab</code>，而在动态链接中叫 <code>.dynstr</code>。另外，由于动态链接需要在程序运行时查找符号，为了加快符号的查找过程，往往还有辅助的 <strong>符号哈希表</strong>（<code>.hash</code>）。</p>
+<img src="https://img.gejiba.com/images/b3aeb8b51fc75184d4c9fc07b64e4d60.webp" alt="dynsym" style="zoom:55%;" />
+<h4 id="动态链接重定位表"><a class="markdownIt-Anchor" href="#动态链接重定位表"></a> 动态链接重定位表</h4>
+<p>动态链接中导入符号的地址在运行时才能确定，所以需要在运行时对其进行重定位。</p>
+<p>虽然可执行文件和共享对象使用了 PIC（位置无关代码）技术，但这只能说明代码段不需要重定位，而数据段还包含了代码段中分离出来的 GOT，以及可能包含的其他绝对地址的引用，因此仍然需要重定位。</p>
+<p>动态链接中的重定位表有 <code>.rel.dyn</code> 和 <code>.rel.plt</code>。前者是对数据引用的修正，它所修正的位置位于 <code>.got</code> 以及数据段；后者是对函数引用的修正，它所修正的位置位于 <code>.got.plt</code>。</p>
+<img src="https://img.gejiba.com/images/93552e4866b5ecc52cedf57152b937d2.webp" alt="rel" style="zoom:55%;" />
+<h3 id="动态链接的步骤和实现"><a class="markdownIt-Anchor" href="#动态链接的步骤和实现"></a> 动态链接的步骤和实现</h3>
+<p>动态链接的步骤基本可以分为 3 步：</p>
+<ul>
+<li>启动动态链接器</li>
+<li>装载所有需要的共享对象</li>
+<li>重定位和初始化</li>
+</ul>
+<h4 id="动态链接器自举"><a class="markdownIt-Anchor" href="#动态链接器自举"></a> 动态链接器自举</h4>
+<p>对于普通的共享对象来说，它可以依赖其他共享对象，由动态链接器负责链接和装载，以及重定位工作。</p>
+<p>而动态链接器本身也是一个共享对象，因此它自然不能依赖其他共享对象，并且对于全局和静态变量的重定位工作也必须由它自身完成。</p>
+<p>对于第一个条件，可以人为地在编写时进行控制；而对于第二个条件，动态链接器则必须在启动时有一段非常精巧的代码可以实现，同时又不能用到全局和静态变量。这种具有一定限制条件的启动代码往往被称为 <strong>自举</strong>（bootstrap）。</p>
+<h4 id="装载共享对象"><a class="markdownIt-Anchor" href="#装载共享对象"></a> 装载共享对象</h4>
+<p>完成自举后，动态链接器就可以启动起来了。此时动态链接器会将可执行文件的符号表和链接器本身的符号表合并到一个 <strong>全局符号表</strong> 中。</p>
+<p>然后链接器寻找可执行文件中所依赖的共享对象，即 <code>.dynamic</code> 段中 NEEDED 类型的对象。这些共享对象的名字会被放到一个装载集合中。</p>
+<p>链接器依次从集合中取出共享对象的名字，找到相应文件并读取相应的 ELF 文件头和 <code>.dynamic</code> 段，然后将其代码段和数据段映射到进程空间。如果该对象还依赖其他对象，那么还需将该对象的名字也放入集合中，如此循环直到把所有依赖的共享对象都被装载进来位置。关于加载顺序是广度优先、深度优先还是其他顺序，取决于链接器。一般是广度优先的。</p>
+<p>当一个共享对象被加载进来的时候，它的符号表也会被合并到全局符号表中。</p>
+<h4 id="重定位和初始化"><a class="markdownIt-Anchor" href="#重定位和初始化"></a> 重定位和初始化</h4>
+<p>共享对象装载完成后，动态链接器已经拥有了进程的全局符号表，包含了动态链接所需要的所有符号。此时链接器会重新遍历可执行文件和每个共享对象的重定位表进行重定位。</p>
+<p>重定位完成后，如果某个共享对象有 <code>.init</code> 段，那么动态链接器会执行该段中的代码完成共享对象的初始化过程。相应地，共享对象还可能有 <code>.fini</code> 段，在进程退出时执行。</p>
+<p>注意，动态链接执行的是共享对象中的 <code>.init</code> 段，而不是可执行文件中的。后者中的相应段由程序初始化部分代码来执行。</p>
+<p>至此，所有的准备工作就完成了，动态链接器会将控制权移交给程序入口开始执行。</p>
 ]]></content>
       <categories>
         <category>读书笔记 - 程序员的自我修养</category>
