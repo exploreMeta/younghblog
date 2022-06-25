@@ -1,6 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>库与运行库</title>
+    <url>/posts/1155868944.html</url>
+    <content><![CDATA[<h2 id="函数返回值传递"><a class="markdownIt-Anchor" href="#函数返回值传递"></a> 函数返回值传递</h2>
+<p>之前在 CSAPP 中介绍过<a href="https://younghblog.gitee.io/posts/3467593604.html#%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8">函数传参时的栈帧结构</a>，并且假设返回值都是通过 rax 寄存器传递的。对于 32 位的系统，则是通过 eax 寄存器传递的，但 eax 本身只有 4 个字节，对于返回 5 ~ 8 字节的情况，几乎所有的调用惯例都是通过 eax 与 edx 联合返回的方式进行的。那对于超过 8 个字节的返回类型又该如何传递呢？</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">big_obj</span> &#123;</span></span><br><span class="line">    <span class="type">char</span> buf[<span class="number">128</span>];</span><br><span class="line">&#125; big_obj;</span><br><span class="line"></span><br><span class="line">big_obj <span class="title function_">return_test</span><span class="params">()</span> &#123;</span><br><span class="line">    big_obj obj;</span><br><span class="line">    obj.buf[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    big_obj res = return_test();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码中 <code>return_test</code> 的返回类型是一个长度为 128 字节的结构，它的传递方式如下：</p>
+<ul>
+<li><code>main()</code> 函数在栈上额外开辟一块空间，将其中一部分作为传递返回值的临时对象 <code>temp</code>，并将该地址作为隐藏参数传递给 <code>return_test()</code> 函数。</li>
+<li><code>return_test()</code> 函数将构造好的 <code>obj</code> 拷贝给 <code>temp</code> 对象，并将 <code>temp</code> 对象的地址用 eax 返回。</li>
+<li><code>return_test()</code> 函数返回之后，<code>main()</code> 函数再将 eax 指向的 <code>temp</code> 对象拷贝给 <code>res</code>。</li>
+</ul>
+<p>由此可知，当返回类型太大时，C 语言会使用一个临时的栈上内存区域做中转，最终所返回的对象会被拷贝两次。C++ 返回对象时也是一样的过程，为了减小开销，C++ 提出了 <strong>返回值优化</strong>（RVO，Return Value Optimization），直接在 return 时构造对象（例如 <code>return cpp_obj()</code>），可以减少一次复制过程。</p>
+<p>对于面向对象的程序设计，光有栈还远远不够。因为栈上的数据在函数返回时就会被释放掉，无法将数据传递至函数外部，因此还必须要有堆。</p>
+<h2 id="堆与内存管理"><a class="markdownIt-Anchor" href="#堆与内存管理"></a> 堆与内存管理</h2>
+<p><strong>堆</strong> 是一块巨大的内存空间，常常占据整个虚拟内存空间的绝大部分。在这块空间里，程序可以请求一块连续的内存自由使用，并且在程序主动释放该内存之前会一直有效。</p>
+<p>如果每次申请或释放对空间都进行系统调用，交由内核去完成的话，性能开销将会很大。因此通常的做法是程序向操作系统申请一块适当大小的堆空间，然后由程序自己来管理这块空间。<span class="p red">管理堆空间的往往是程序的 <strong>运行库</strong>。</span></p>
+<p>为了使程序能够正常运行，其背后有一套庞大的代码来支撑。这套代码至少包括入口函数及其所依赖的函数、各种标准库函数的实现等等。这样一个代码集合就称为 <strong>运行（时）库</strong>（Runtime Library），C 语言的运行库称为 <strong>C运行库</strong>（CRT）。</p>
+<p>那么运行库是如何申请内存，又是如何管理内存的呢？</p>
+<h3 id="linux-进程堆管理"><a class="markdownIt-Anchor" href="#linux-进程堆管理"></a> Linux 进程堆管理</h3>
+<p>Linux 提供了两种堆空间分配的方式：一个是 <code>brk()</code> 系统调用，一个是 <code>mmap()</code> 系统调用。</p>
+<p><code>brk()</code> 通过设置数据段的结束地址来扩大或缩小数据段，从而达到分配和释放堆空间的目的。</p>
+<p><code>mmap()</code> 会向操作系统申请一段虚拟地址空间，这段虚拟地址空间不会被映射到任何文件（称为 <strong>匿名空间</strong>），用来作为堆空间。申请时以页为单位，因此对于字节数很小的请求也用 <code>mmap()</code> 的话无疑会浪费大量空间。</p>
+<h3 id="堆分配算法"><a class="markdownIt-Anchor" href="#堆分配算法"></a> 堆分配算法</h3>
+<p>堆的分配算法有很多，这里只介绍几种简单的方法。</p>
+<h4 id="空闲链表"><a class="markdownIt-Anchor" href="#空闲链表"></a> 空闲链表</h4>
+<p>空闲链表是将堆中的各个空闲块以双向链表的形式链接起来。每个空闲块都有一个头，记录了前一个与后一个空闲块的地址。当分配内存时首先查找能足够容纳请求大小的空闲块，并将其分为两部分，一部分服务请求，另一部分作为新的空闲块。</p>
+<p>当释放内存时，为了确定应该释放的块大小，会在请求内存时额外分配 4 个字节的内存来记录块的大小。</p>
+<p>这种方式存在的问题是，一旦链表或记录块大小的那 4 个字节因为越界读写被破坏，整个堆将无法工作。</p>
+<h4 id="位图"><a class="markdownIt-Anchor" href="#位图"></a> 位图</h4>
+<p>将整个堆划分成等大小的块，用户请求内存时分配整数个块给用户。在已分配的块中，第一个块称为头，其余块称为主体，每个块只有 头/主体/空闲 三种状态，因此只需两个位即可表示一个块，这也是 <strong>位图</strong>（Bitmap）这一名字的由来。可以使用一个整数数组来记录块的使用情况。</p>
+<p class='div-border blue left'>假设堆的大小为 1 MB，块大小为 128 B，那么一共就有 1MB / 128 B = 8192 个块。如果用 int 来保存，一个 int 是 4 个字节，即 32 位，那就可以表示 32 / 2 = 16 个块，因此一共需要 8192 / 16 = 512 个 int。</p>
+<p>这种方式的优点为：</p>
+<ul>
+<li>速度快。整个堆的空闲信息存储在数组中，访问速度会比较快。</li>
+<li>稳定性好。为了避免越界读写破坏数据，可以备份位图。而且即便部分数据被破坏，也不会导致整个堆都无法工作。</li>
+</ul>
+<p>这种方式自然也存在一些缺点：</p>
+<ul>
+<li>容易产生碎片。每次都要分配整数个块。</li>
+<li>如果堆很大，或者块很小（为了减少碎片），位图将会很大。可以使用多级位图来解决。</li>
+</ul>
+<h4 id="对象池"><a class="markdownIt-Anchor" href="#对象池"></a> 对象池</h4>
+<p>在一些场合中，被分配对象的大小往往都是较为固定的几个值。因此对象池将每次请求分配的大小作为一个单位，把堆空间划分成大量小块，每次请求时只需找到一个小块就可以了。</p>
+<p>对象池的管理方法可以采用空闲链表，也可以采用位图。</p>
+<p>glibc  的 <code>malloc()</code> 函数的堆分配方式为：</p>
+<ul>
+<li>
+<p>小于 64 B 的请求，采用类似对象池的方法；</p>
+</li>
+<li>
+<p>64 B ~ 512 B 的请求，视情况采取上述方法中的折中策略；</p>
+</li>
+<li>
+<p>512 B ~ 128 KB 的请求，采用最佳适配算法；</p>
+</li>
+<li>
+<p>大于 128 KB 的请求，使用 <code>mmap()</code> 机制直接向操作系统申请空间。</p>
+</li>
+</ul>
+<h2 id="系统调用与中断"><a class="markdownIt-Anchor" href="#系统调用与中断"></a> 系统调用与中断</h2>
+<p>由于系统有限的资源有可能被多个不同的应用程序同时访问，如果不加以保护，那么各个应用程序难免会产生冲突。所以现代操作系统将可能产生冲突的系统资源（文件、网络、IO、各种设备等）都保护起来，避免应用的直接访问。为了让程序访问系统资源，每个操作系统都提供了一套接口，即 <strong>系统调用</strong>。</p>
+<p>系统调用虽然可以实现相应功能，但由于接口往往过于原始，使用起来并不方便，所以系统调用并不是与程序交互的最终接口。最终接口是运行库，它是对系统调用的封装。</p>
+<p>系统调用是运行在内核态的，而应用程序基本都运行在用户态，用户态的程序要运行内核态的代码，一般是通过 <strong>中断</strong> 来切换 CPU 模式的。</p>
+<p>中断一般有两个属性：<strong>中断号</strong>（从 0 开始）和 <strong>中断处理程序</strong>。不同的中断具有不同的中断号，中断处理程序与中断号一一对应。那通过中断号是如何找到相应的中断处理程序的呢？答案是 <strong>中断向量表</strong>。</p>
+<p>中断向量表是一个数组，保存在内核中，其中第 n 项即指向中断号为 n 的中断处理程序。发生中断时，CPU 会暂停当前执行的程序，根据中断号在中断向量表中找到相应的中断处理程序，并调用它。执行完成后，CPU 再继续执行之前的代码。</p>
+<p>中断有两种类型：一种称为 <strong>硬件中断</strong>，这种中断来自硬件异常或者电源掉电、键盘被按下等其他事件的发生。另一种称为 <strong>软件中断</strong>，这种中断通常是一条指令，可以由用户手动触发。例如 Linux 中 <code>int 0x80</code> 这条指令会调用中断号为 <code>0x80</code> 的中断处理程序。<span class="p red">系统调用是一种软中断处理程序。</span></p>
+<p>由于中断号是有限的，操作系统不会舍得用一个中断号来对应一个系统调用，例如 Linux 的中断号 <code>0x80</code> 对应了所有的系统调用。那这时操作系统又是如何知道该调用哪个系统调用呢？</p>
+<p>与中断一样，每个系统调用也都有自己的 <strong>系统调用号</strong>，它通常就是系统调用在 <strong>系统调用表</strong> 中的位置。这个系统调用号在执行 int 指令之前会被放在某个固定的寄存器（eax）里，中断代码会获取到这个系统调用号，并调用正确的函数。</p>
+<p>在实际执行中断向量表中第 <code>0x80</code> 号元素所对应的函数之前，CPU 还需进行栈的切换。在 Linux 中，用户态和内核态使用的是不同的栈，两者各自负责自己的函数调用，互不干扰。当应用程序调用 <code>0x80</code> 号中断时，程序的执行流会从用户态切换到内核态，这时程序的 <strong>当前栈</strong>（即 esp 所指向的栈空间）也必须相应地从 <strong>用户栈</strong> 切换到 <strong>内核栈</strong>。当中断处理函数返回时，程序的当前栈再切换回去。</p>
+]]></content>
+      <categories>
+        <category>读书笔记 - 程序员的自我修养</category>
+      </categories>
+      <tags>
+        <tag>堆管理</tag>
+        <tag>系统调用</tag>
+        <tag>中断</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>装载与动态链接</title>
     <url>/posts/3697966026.html</url>
     <content><![CDATA[<p>在 <a href="https://younghblog.gitee.io/posts/1093737480.html">上一篇</a> 文章中，通过静态链接我们已经得到了可执行文件。为了使其运行起来，还需要将其读取到物理内存中才能被 CPU 执行。这篇文章就重点介绍一下可执行文件是如何被装载到物理内存的，以及动态链接的过程。</p>
