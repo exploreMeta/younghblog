@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>类图关系</title>
+    <url>/posts/3530858630.html</url>
+    <content><![CDATA[<h2 id="类图关系示例"><a class="markdownIt-Anchor" href="#类图关系示例"></a> 类图关系示例</h2>
+<img src="https://img.gejiba.com/images/34d7e86718ac8044a492362d9aa211fe.webp" alt="类图关系" style="zoom:50%;" />]]></content>
+      <categories>
+        <category>读书笔记 - 程序员的自我修养</category>
+      </categories>
+  </entry>
+  <entry>
     <title>库与运行库</title>
     <url>/posts/1155868944.html</url>
     <content><![CDATA[<h2 id="函数返回值传递"><a class="markdownIt-Anchor" href="#函数返回值传递"></a> 函数返回值传递</h2>

@@ -15,8 +15,34 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Sat, 25 Jun 2022 06:07:57 GMT</pubDate>
+    <pubDate>Sun, 26 Jun 2022 07:22:05 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>类图关系</title>
+      <link>https://younghblog.gitee.io/posts/3530858630.html</link>
+      <guid>https://younghblog.gitee.io/posts/3530858630.html</guid>
+      <pubDate>Sun, 26 Jun 2022 07:07:31 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;h2 id=&quot;类图关系示例&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#类图关系示例&quot;&gt;&lt;/a&gt; 类图关系示例&lt;/h2&gt;
+&lt;img</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB/">读书笔记 - 程序员的自我修养</category>
+      
+      
+      
+      <comments>https://younghblog.gitee.io/posts/3530858630.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>库与运行库</title>
