@@ -15,8 +15,35 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Sat, 09 Jul 2022 14:45:28 GMT</pubDate>
+    <pubDate>Sun, 04 Sep 2022 13:31:34 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>Android渲染的整体架构</title>
+      <link>https://younghblog.gitee.io/posts/3659942439.html</link>
+      <guid>https://younghblog.gitee.io/posts/3659942439.html</guid>
+      <pubDate>Sun, 04 Sep 2022 13:11:29 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;h2 id=&quot;概述&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#概述&quot;&gt;&lt;/a&gt; 概述&lt;/h2&gt;
+&lt;p&gt;Android 渲染的整体架构是一个生产者-消费者模型：&lt;/p&gt;
+&lt;img</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/Android%E4%B9%8B%E6%98%BE%E7%A4%BA%E6%9C%8D%E5%8A%A1/">Android之显示服务</category>
+      
+      
+      
+      <comments>https://younghblog.gitee.io/posts/3659942439.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>「高效能人士的七个习惯」读书笔记</title>

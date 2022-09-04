@@ -1,6 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Android渲染的整体架构</title>
+    <url>/posts/3659942439.html</url>
+    <content><![CDATA[<h2 id="概述"><a class="markdownIt-Anchor" href="#概述"></a> 概述</h2>
+<p>Android 渲染的整体架构是一个生产者-消费者模型：</p>
+<img src="https://img.gejiba.com/images/dc7119c538dc0fc967645cc30fa096cd.webp" alt="生产者-消费者模型" style="zoom:100%;" />
+<p>生产者生产数据，放入 BufferQueue 中；消费者从中取出数据进行消费，并将消费后的空 Buffer 释放回 BufferQueue；生产者再从中取出一个空的 Buffer 用于存放生产的数据，并放入 BufferQueue 中，如此循环。</p>
+<p><strong>常见的图像生产者</strong>：</p>
+<ul>
+<li>
+<p>OpenGL： Open Graphics Library，一种跨平台的 3D 绘图规范接口。</p>
+</li>
+<li>
+<p>OpenGL ES： OpenGL for Embedded Systems，OpenGL 的子集，能够绘制 <strong>纹理</strong>。</p>
+<blockquote>
+<p>纹理即物体表面的样子。在计算机世界中，只通过几何图形并不能很好地展示现实中的物体，因此我们通常会通过纹理映射的方式将物体表面的图片贴到几何图形上面，从而更好地模拟现实世界。纹理可以理解为物体表面的图片。</p>
+</blockquote>
+</li>
+<li>
+<p>Skia：  一种跨平台的 2D 绘图规范接口。</p>
+</li>
+<li>
+<p>Vulkan： 一种跨平台的 2D 和 3D 绘图规范接口，更轻量级。</p>
+</li>
+</ul>
+<p><strong>常见的图像缓冲区</strong>：</p>
+<ul>
+<li>BufferQueue：里面存放的是 GraphicBuffer。</li>
+</ul>
+<p><strong>常见的图像消费者</strong>：</p>
+<ul>
+<li>SurfaceFlinger：用于叠加 Layer，后续会重点介绍。</li>
+</ul>
+<p>接下来就分别介绍一下这三者。</p>
+<h2 id="图像生产者"><a class="markdownIt-Anchor" href="#图像生产者"></a> 图像生产者</h2>
+<p>一切可以产生图像数据的对象都叫图像生产者。</p>
+<p>这里需要强调的是，UI 组件在绘制到屏幕之前都要经过 Rasterizatioin（<strong>栅格化</strong>）操作，这个过程非常耗时，而 GPU 的引入就是为了加快这个过程的。</p>
+<blockquote>
+<p>所谓栅格化，就是将 UI 组件以像素的形式填充到屏幕的像素晶体管中。</p>
+</blockquote>
+<p>图像的绘制有两种方式：</p>
+<img src="https://img.gejiba.com/images/0c93c24acdcf0377dcd7ed11f2f13241.webp" alt="image-20220904195349934" style="zoom:100%;" />
+<ul>
+<li>
+<p>软件绘制就是使用 Skia 库，通过 CPU 指令来完成绘制的过程。</p>
+</li>
+<li>
+<p>硬件绘制是将 CPU 不擅长的图形计算转换成 GPU 专用指令，由 GPU 来完成绘制任务，以实现更好的性能。现代的 Android 系统都默认开启了硬件加速。</p>
+</li>
+</ul>
+<h2 id="图像缓冲区"><a class="markdownIt-Anchor" href="#图像缓冲区"></a> 图像缓冲区</h2>
+<p>此时图像生产者已经生产好了数据，这些数据会放入图像缓冲区 BufferQueue 中。</p>
+<p>可以思考一下，<strong><span class="p red">当只有一个缓冲区时会存在什么问题呢？</span></strong></p>
+<p>此时图像的显示过程如下：</p>
+<img src="https://img.gejiba.com/images/a9e6e2b4175378b3d786ac7c47f3ade0.webp" alt="image-20220904201018752" style="zoom:90%;" />
+<p>显示器会将显存里的数据按照从左到右、从上到下的顺序同步到屏幕上的每一个像素晶体管，当扫描到右下角的时候，就完成了一帧的绘制，然后会重置扫描点，即再回到左上角开始绘制下一帧。</p>
+<p>这时存在的问题就是，在绘制过程中，对于已经绘制好的帧数据是无法放入 FrameBuffer 去进行显示的，只能等这一帧绘制完成，这种情况下就会存在很大的效率和延时问题。</p>
+<p>于是引入了双缓冲机制。</p>
+<h3 id="双缓冲机制"><a class="markdownIt-Anchor" href="#双缓冲机制"></a> 双缓冲机制</h3>
+<p>双缓冲机制即让绘制和显示器拥有各自的 Buffer。GPU 始终在 BackBuffer 中写入数据，而用 FrameBuffer 来显示数据。</p>
+<img src="https://img.gejiba.com/images/c4cd044aa92ceb6b01ce44d0386c2aba.webp" alt="image-20220904201702821" style="zoom:100%;" />
+<p>当屏幕刷新时，如果 BackBuffer 没有准备就绪，FrameBuffer 并不会发生变化；只有当其准备好后，它们才进行交换，这就是所谓的 <strong>PageFlipping</strong>（画面交换）。</p>
+<p>因此，双缓冲机制基本解决了图像显示的效率问题。而在 Android 4.0 之前，Android 采用的就是这种机制。</p>
+<p>但这种机制仍然存在问题。在看具体的问题之前，我们先来看一下黄油计划。</p>
+<h3 id="黄油计划"><a class="markdownIt-Anchor" href="#黄油计划"></a> 黄油计划</h3>
+<p>Google 在 2012 年的 I/O 大会上宣布了 Project Butter（黄油计划），并且在 Android 4.1 中正式开启了这个机制。理解黄油计划的核心就是 VSync（Vertical Synchronization）。</p>
+<p>当没有 VSync 时：</p>
+<img src="https://img.gejiba.com/images/07983e962643d82b88130bcff046b50c.webp" alt="image-20220904205238423" style="zoom:100%;" />
+<ul>
+<li>第一个 VSync 信号到来时，第 1 帧数据已准备好，因此可以正常显示第 1 帧的画面。</li>
+<li>当第二个 VSync 信号到来时，第 2 帧数据还没有绘制好，因此只能继续显示第 1 帧的画面，这种情况叫做 Jank，即丢帧。</li>
+</ul>
+<p><strong><span class="p red">为什么会出现 Jank 呢？</span></strong></p>
+<p>这是因为在第一个 VSync 信号到来的时候，CPU 还在忙其他事，直到第二个 VSync 信号到来的时候才腾出手来去进行绘制，导致之前的一大段时间都被浪费了，于是便发生了 Jank。</p>
+<p>为了解决这个问题，在 Android 4.1 版本中，系统一旦收到 VSync 信号，CPU 和 GPU 就会立刻开始计算并把数据写入 Buffer。VSync 同步使得 CPU/GPU 充分利用了 16.6 ms 时间，从而减少了 Jank。</p>
+<img src="https://img.gejiba.com/images/856d1d048d9402441756738bb5f75766.webp" alt="image-20220904203541079" style="zoom:100%;" />
+<blockquote>
+<p><strong><span class="p red">16.6 ms 是怎么来的？</span></strong></p>
+<p>现在屏幕的刷新率普遍都是 60 Hz，即一秒钟刷新 60 次。这是经过科学验证是数据，由于人眼的视觉停留效应，对于每秒 60 次的刷新速率并不会感受到屏幕的闪烁。而对于 60 Hz 的刷新率，平均每次刷新的时间就近似等于 16.6 ms。</p>
+</blockquote>
+<p>了解了 VSync，我们再来看下双缓冲机制存在的问题。</p>
+<h3 id="双缓冲机制存在的问题"><a class="markdownIt-Anchor" href="#双缓冲机制存在的问题"></a> 双缓冲机制存在的问题</h3>
+<p>如果界面比较复杂，或者设备硬件的性能本身较低，CPU/GPU 的时间就可能会超过 16.6 ms：</p>
+<img src="https://img.gejiba.com/images/7d1d6415df8c5d02c13f2e154e8e12fd.webp" alt="image-20220904205308950" style="zoom:100%;" />
+<ul>
+<li>当第一个 VSync 信号到来时，由于 B 帧数据还没准备好，因此出现了一次 Jank。</li>
+<li>当第三个 VSync 信号到来时，由于 A 帧数据没准备好，又出现了一次 Jank。</li>
+</ul>
+<p>我们可以发现，当第一个 VSync 到来的时候，CPU 其实并没有进行绘制，而是到第二个 VSync 到来时才开始绘制，因此第二段时间其实是被浪费掉了。</p>
+<p><strong><span class="p red">那为什么在第一个 VSync 到来 CPU 不能进行绘制呢？</span></strong></p>
+<p>这是因为只有两个缓冲区，当第二个 VSync 到来时 GPU 还没有绘制完，因此这个缓冲区是被占用的；而显示缓冲区也还在显示 A 帧的内容，也处于被占用的状态，所以 CPU 无法进行绘制。</p>
+<p>问题分析到这里，解决办法也就很明显了，那就是再增加一个缓冲区。</p>
+<h3 id="三缓冲机制"><a class="markdownIt-Anchor" href="#三缓冲机制"></a> 三缓冲机制</h3>
+<p>即在双缓冲的基础上又增加了一个 GraphicBuffer，使得 CPU、GPU 和 屏幕显示各占一个 Buffer，互不影响。</p>
+<img src="https://img.gejiba.com/images/0b493dd3c3915f5fa55e20de2556306d.webp" alt="image-20220904205322792" style="zoom:100%;" />
+<p>此时第一个 Jank 仍然是不可避免的，但后续有效利用了等待 Vsync 的时间，从而避免了 Jank 的进一步加剧。</p>
+<h3 id="renderthread"><a class="markdownIt-Anchor" href="#renderthread"></a> RenderThread</h3>
+<p>此时 Android 的渲染性能已经有了很大的改善。</p>
+<p>但是从计算 DisplayList，到通过 GPU 将图像绘制到 FrameBuffer，整个过程都在 UI 主线程中完成，UI 线程的任务过于繁重。如果整个渲染过程比较耗时，就可能造成无法响应用户的操作，进而出现卡顿的现象。</p>
+<p>因此在 Android 5.0 中引入了 RenderThread，所有 Open GL 命令的执行都放到了这个线程上，这样即便主线程有耗时操作也能保证动画流程。</p>
+<h2 id="图像消费者"><a class="markdownIt-Anchor" href="#图像消费者"></a> 图像消费者</h2>
+<p>当生产者把绘制好的 GraphicBuffer 数据放入 BufferQueue 中之后，接下来的工作就是以 SurfaceFlinger 为代表的图像消费者来完成了。</p>
+<img src="https://img.gejiba.com/images/b56d2f4d760969dcf10a18b87c5b946c.webp" alt="image-20220904205905044" style="zoom:100%;" />
+<p>Activity 绘制的界面图像都会传递到 SurfaceFlinger，其作用主要是从 BufferQueue 中取出 GraphicBuffer，然后请求 HWComposer 来决定这些 GraphicBuffer 是硬件合成还是自己通过 OpenGL 合成，最终把合成后的 GraphicBuffer 数据展示在屏幕上。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>Android 图像的渲染机制是一个生产者-消费者模型：</p>
+<img src="https://img.gejiba.com/images/f18fdd095d808163febcd5f79de6ee0e.webp" alt="image-20220904210130370" style="zoom:100%;" />
+<p>上层函数通过 <code>draw()</code> 方法进行绘制，该方法会调用到 Surface 的 Canvas 画布中的绘制方法。该方法也没有真正去绘制，而是把绘制指令同步到了 RenderThread。</p>
+<p>RenderThread 通过 dequeue 拿到一个空的 GraphicBuffer，然后使用 OpenGL ES 的绘制接口进行绘制。绘制完成之后，还需要经过 GPU 的栅格化得到最终的 GraphicBuffer。</p>
+<p>这个 GraphicBuffer 会放到图像缓冲区 BufferQueue 中，SurfaceFlinger 从中取出 GraphicBuffer 并通过硬件设备进行 Layer 的合成，最终展示到屏幕上。</p>
+]]></content>
+      <categories>
+        <category>Android之显示服务</category>
+      </categories>
+  </entry>
+  <entry>
     <title>「高效能人士的七个习惯」读书笔记</title>
     <url>/posts/1441608745.html</url>
     <content><![CDATA[<blockquote>
