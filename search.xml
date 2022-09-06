@@ -6,7 +6,7 @@
     <content><![CDATA[<h2 id="概述"><a class="markdownIt-Anchor" href="#概述"></a> 概述</h2>
 <p>Android 渲染的整体架构是一个生产者-消费者模型：</p>
 <img src="https://img.gejiba.com/images/dc7119c538dc0fc967645cc30fa096cd.webp" alt="生产者-消费者模型" style="zoom:100%;" />
-<p>生产者生产数据，放入 BufferQueue 中；消费者从中取出数据进行消费，并将消费后的空 Buffer 释放回 BufferQueue；生产者再从中取出一个空的 Buffer 用于存放生产的数据，并放入 BufferQueue 中，如此循环。</p>
+<p>当用户程序刷新 UI 时，会从 从 BufferQueue 中 dequeue 一个空的 Buffer，然后把 UI 信息填入，再 queue 到 BufferQueue 中。SurfaceFlinger 从 BufferQueue 中 acquire 绘制好的 Buffer 并 release 掉空的 Buffer，然后请求 HWC 进行图像合成，最终送到显示器上进行显示。</p>
 <p><strong>常见的图像生产者</strong>：</p>
 <ul>
 <li>
@@ -102,8 +102,18 @@
 <p>因此在 Android 5.0 中引入了 RenderThread，所有 Open GL 命令的执行都放到了这个线程上，这样即便主线程有耗时操作也能保证动画流程。</p>
 <h2 id="图像消费者"><a class="markdownIt-Anchor" href="#图像消费者"></a> 图像消费者</h2>
 <p>当生产者把绘制好的 GraphicBuffer 数据放入 BufferQueue 中之后，接下来的工作就是以 SurfaceFlinger 为代表的图像消费者来完成了。</p>
+<p>Activity 绘制的界面图像都会传递到 SurfaceFlinger，其作用主要是从 BufferQueue 中取出 GraphicBuffer 并进行合成。Android 中 Layer 的合成机制有两种：</p>
+<ul>
+<li>在 GPU 中合成，即利用 OpenGL ES 进行合成，适合画面基本不变的图像。</li>
+<li>在显示的硬件中进行合成，即 hardware overlay 机制，会将图像直接渲染到计算机视频硬件内部的专用内存缓冲区，适合快速变化的图像。</li>
+</ul>
 <img src="https://img.gejiba.com/images/b56d2f4d760969dcf10a18b87c5b946c.webp" alt="image-20220904205905044" style="zoom:100%;" />
-<p>Activity 绘制的界面图像都会传递到 SurfaceFlinger，其作用主要是从 BufferQueue 中取出 GraphicBuffer，然后请求 HWComposer 来决定这些 GraphicBuffer 是硬件合成还是自己通过 OpenGL 合成，最终把合成后的 GraphicBuffer 数据展示在屏幕上。</p>
+<p>而最终采用哪种机制，则由 HardwareComposer（HWC）来决定。处理流程为：</p>
+<ul>
+<li>SurfaceFlinger 给 HWC 提供 Layer list，询问如何处理这些 Layer。</li>
+<li>HWC 将每个 Layer 标记为 overlay 或 GLES composition，然后反馈给 SurfaceFlinger。</li>
+<li>SurfaceFlinger 只需处理那些 GLES 的合成，最后将 overlay 的和 GLES 合成后的 Buffer 发送给 HWC 处理和显示。</li>
+</ul>
 <h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
 <p>Android 图像的渲染机制是一个生产者-消费者模型：</p>
 <img src="https://img.gejiba.com/images/f18fdd095d808163febcd5f79de6ee0e.webp" alt="image-20220904210130370" style="zoom:100%;" />
