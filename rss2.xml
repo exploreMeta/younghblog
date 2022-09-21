@@ -15,8 +15,34 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Tue, 06 Sep 2022 15:16:03 GMT</pubDate>
+    <pubDate>Wed, 21 Sep 2022 15:28:41 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>JNI学习</title>
+      <link>https://younghblog.gitee.io/posts/2872386792.html</link>
+      <guid>https://younghblog.gitee.io/posts/2872386792.html</guid>
+      <pubDate>Wed, 21 Sep 2022 15:15:22 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;h2 id=&quot;jni的作用&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#jni的作用&quot;&gt;&lt;/a&gt; JNI的作用&lt;/h2&gt;
+&lt;p&gt;JNI 是 Java Native Interface（Java 本地接口）的缩写，能使 Java 和 Native</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/Android%E4%B9%8B%E6%98%BE%E7%A4%BA%E6%9C%8D%E5%8A%A1/">Android之显示服务</category>
+      
+      
+      
+      <comments>https://younghblog.gitee.io/posts/2872386792.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>Android渲染的整体架构</title>
