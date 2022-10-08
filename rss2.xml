@@ -15,8 +15,33 @@
     <atom:link href="https://younghblog.gitee.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>Stay hungry, stay foolish</description>
-    <pubDate>Sun, 25 Sep 2022 01:31:52 GMT</pubDate>
+    <pubDate>Sat, 08 Oct 2022 16:10:13 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>Android画面显示流程</title>
+      <link>https://younghblog.gitee.io/posts/1916506233.html</link>
+      <guid>https://younghblog.gitee.io/posts/1916506233.html</guid>
+      <pubDate>Sat, 08 Oct 2022 15:44:58 GMT</pubDate>
+      
+        
+        
+          
+          
+      <description>&lt;p&gt;本文将会介绍从 App 画出一帧画面到这帧画面被传送到屏幕进行显示的整个过程。这其中会涉及到一些硬件的基础知识，但这些硬件并不是本文关注的重点，介绍它们主要是为了跟软件层面关联起来，以便对 Android</description>
+          
+        
+      
+      
+      
+      
+      <category domain="https://younghblog.gitee.io/categories/Android%E5%9F%BA%E7%A1%80/">Android基础</category>
+      
+      
+      
+      <comments>https://younghblog.gitee.io/posts/1916506233.html#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>Binder机制</title>
